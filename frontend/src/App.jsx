@@ -10,6 +10,7 @@ import Alerts from './pages/Alerts'
 import Metrics from './pages/Metrics'
 import Users from './pages/Users'
 import Profile from './pages/Profile'
+import NotificationChannels from './pages/NotificationChannels'
 import Layout from './components/Layout'
 import PrivateRoute from './components/PrivateRoute'
 
@@ -36,6 +37,7 @@ function App() {
             <Route path="metrics" element={<Metrics />} />
             <Route path="users" element={<Users />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="notification-channels" element={<NotificationChannels />} />
           </Route>
         </Routes>
       </AuthProvider>

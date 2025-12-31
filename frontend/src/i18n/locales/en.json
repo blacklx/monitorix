@@ -36,6 +36,7 @@
     "metrics": "Metrics",
     "users": "Users",
     "profile": "Profile",
+    "notificationChannels": "Notifications",
     "logout": "Logout",
     "language": "Language"
   },

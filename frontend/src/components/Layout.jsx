@@ -49,6 +49,9 @@ const Layout = () => {
               {t('nav.users')}
             </Link>
           )}
+          <Link to="/notification-channels" className={isActive('/notification-channels') ? 'active' : ''}>
+            {t('nav.notificationChannels')}
+          </Link>
         </div>
         <div className="nav-user">
           <Link to="/profile" className={isActive('/profile') ? 'active' : ''}>
