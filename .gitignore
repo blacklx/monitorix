@@ -8,12 +8,17 @@ __pycache__/
 dist/
 build/
 *.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pytype/
 
 # Python virtual environments
 env/
 venv/
 ENV/
 .venv
+.venv*/
 
 # Node
 node_modules/
@@ -23,6 +28,9 @@ yarn-error.log*
 .pnpm-debug.log*
 package-lock.json
 yarn.lock
+pnpm-lock.yaml
+.npm/
+.eslintcache
 
 # Environment
 .env
@@ -30,6 +38,8 @@ yarn.lock
 .env.*.local
 .env.production
 .env.development
+.env.test
+.env.*.backup
 
 # IDE
 .vscode/
@@ -37,40 +47,70 @@ yarn.lock
 *.swp
 *.swo
 *~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
 
 # Logs
 *.log
 logs/
 *.log.*
+log/
+*.log.*
 
 # Deployment
 *.pem
 *.key
+*.crt
+*.cert
 deploy.log
+*.p12
+*.pfx
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
+*.sql
+*.dump
+*.backup.sql
+pg_dump_*
 
 # Build
 frontend/build/
 frontend/dist/
+frontend/.vite/
 backend/__pycache__/
 backend/**/__pycache__/
+*.pyc
+*.pyo
 
-# Docker volumes
+# Docker volumes and data
 postgres_data/
+redis_data/
+docker-data/
+volumes/
 
 # Temporary files
 *.tmp
 *.temp
 *.bak
 *.backup
+*.swp
+*.swo
+*~
 
 # Coverage reports
 htmlcov/
@@ -78,6 +118,59 @@ htmlcov/
 .coverage.*
 coverage.xml
 *.cover
+.tox/
+.hypothesis/
+.pytest_cache/
 
 # Alembic
 alembic.ini.bak
+
+# Cache
+.cache/
+*.cache
+.parcel-cache/
+
+# Sentry
+.sentryclirc
+
+# Local configuration overrides
+config.local.*
+settings.local.*
+
+# Test files
+.pytest_cache/
+test-results/
+coverage/
+
+# Editor directories and files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Version files (keep VERSION, ignore VERSION.md and other version docs)
+VERSION.md
+VERSION.*.md
+
+# Redis data
+redis_data/
+*.rdb
+dump.rdb
+
+# Backup directories and files
+backups/
+*.backup
+*.bak
+*.old
+*.sql.backup
+
+# Misc
+*.orig
+*.rej
+*.patch

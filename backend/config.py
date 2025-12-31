@@ -87,6 +87,13 @@ class Settings(BaseSettings):
     rate_limit_per_hour: int = int(os.getenv("RATE_LIMIT_PER_HOUR", "1000"))
     rate_limit_per_minute: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "100"))
     
+    # Redis Caching
+    redis_enabled: bool = os.getenv("REDIS_ENABLED", "false").lower() == "true"
+    redis_host: str = os.getenv("REDIS_HOST", "redis")
+    redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
+    redis_db: int = int(os.getenv("REDIS_DB", "0"))
+    redis_password: Optional[str] = os.getenv("REDIS_PASSWORD", None)
+    
     class Config:
         env_file = ".env"
 

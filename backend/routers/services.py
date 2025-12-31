@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from database import get_db
 from models import Service, VM
@@ -8,6 +8,7 @@ from auth import get_current_active_user
 from scheduler import check_service
 from uptime import calculate_service_uptime
 from rate_limiter import limiter
+from cache import get, set, get_cache_key, invalidate_cache
 import asyncio
 
 router = APIRouter(prefix="/api/services", tags=["services"])
@@ -26,11 +27,26 @@ async def get_services(
     Optionally filter by VM ID to get only services associated with a specific VM.
     
     **Example**: `/api/services?vm_id=1` returns only services for VM 1
+    
+    Results are cached for 60 seconds.
     """
+    cache_key = get_cache_key("services:list", vm_id=vm_id)
+    
+    # Try cache first
+    cached_services = get(cache_key)
+    if cached_services:
+        return [ServiceResponse(**service) for service in cached_services]
+    
+    # Cache miss - query database
     query = db.query(Service).options(joinedload(Service.vm))
     if vm_id:
         query = query.filter(Service.vm_id == vm_id)
     services = query.all()
+    
+    # Serialize and cache
+    services_data = [ServiceResponse.from_orm(service).dict() for service in services]
+    set(cache_key, services_data, ttl=60)
+    
     return services
 
 
@@ -56,6 +72,11 @@ async def create_service(
     db.add(service)
     db.commit()
     db.refresh(service)
+    
+    # Invalidate cache
+    invalidate_cache("services")
+    invalidate_cache("dashboard")
+    
     return service
 
 
@@ -99,6 +120,11 @@ async def bulk_create_services(
                 "service": service_data.dict(),
                 "error": str(e)
             })
+    
+    # Invalidate cache after bulk create
+    if created:
+        invalidate_cache("services")
+        invalidate_cache("dashboard")
     
     return BulkServiceResponse(created=created, failed=failed)
 

@@ -9,6 +9,7 @@ from email_notifications import send_alert_notification
 from webhooks import send_alert_webhooks
 from notification_channels import send_alert_notifications
 from alert_rules import evaluate_alert_rules
+from cache import invalidate_cache
 from datetime import datetime
 import logging
 from typing import Dict, List
@@ -283,6 +284,10 @@ async def sync_vms(node: Node):
             
             db.commit()
             
+            # Invalidate cache
+            invalidate_cache("vms")
+            invalidate_cache("dashboard")
+            
             # Broadcast update via WebSocket
             if _broadcast_update:
                 try:
@@ -390,6 +395,10 @@ async def check_service(service: Service):
                 ).update({"is_resolved": True, "resolved_at": datetime.utcnow()}                    )
             
             db.commit()
+            
+            # Invalidate cache
+            invalidate_cache("services")
+            invalidate_cache("dashboard")
             
             # Broadcast update via WebSocket
             if _broadcast_update:

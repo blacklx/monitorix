@@ -16,4 +16,5 @@ python-dotenv==1.0.0
 httpx==0.25.2
 slowapi==0.1.9
 sentry-sdk[fastapi]==1.38.0
+redis==5.0.1
 

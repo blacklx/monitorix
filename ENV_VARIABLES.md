@@ -71,7 +71,16 @@
    - `RATE_LIMIT_PER_HOUR` - Requests per hour (standard: `1000`)
    - `RATE_LIMIT_PER_MINUTE` - Requests per minute (standard: `100`)
 
-12. **CORS Configuration**
+12. **Redis Caching (valgfritt)**
+   - `REDIS_ENABLED` - Aktiver Redis caching (standard: `false`)
+   - `REDIS_HOST` - Redis server host (standard: `redis`)
+   - `REDIS_PORT` - Redis server port (standard: `6379`)
+   - `REDIS_DB` - Redis database number (standard: `0`)
+   - `REDIS_PASSWORD` - Redis password (valgfritt, standard: ingen)
+   - **Hvorfor**: Forbedrer ytelse ved å cache ofte brukte data (dashboard stats, node/VM/service lister)
+   - **Merk**: Hvis Redis ikke er tilgjengelig, fungerer applikasjonen normalt uten caching
+
+13. **CORS Configuration**
    - `CORS_ORIGINS` - Allowed origins (comma-separated, or `*` for all) - **Important**: In production, specify your frontend URL instead of `*`
    - `CORS_ALLOW_CREDENTIALS` - Allow credentials (standard: `true`)
    - `CORS_ALLOW_METHODS` - Allowed HTTP methods (comma-separated, or `*` for all, standard: `*`)

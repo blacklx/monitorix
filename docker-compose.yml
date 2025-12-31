@@ -18,6 +18,20 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: monitorix_redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-} ${REDIS_PASSWORD:+-a ${REDIS_PASSWORD}}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -27,10 +41,17 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-monitorix}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-monitorix}
       SECRET_KEY: ${SECRET_KEY:-changeme-secret-key}
       PROXMOX_NODES: ${PROXMOX_NODES:-}
+      REDIS_ENABLED: ${REDIS_ENABLED:-false}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     ports:
       - "8000:8000"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     volumes:
       - ./backend:/app
@@ -64,4 +85,5 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
 

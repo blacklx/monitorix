@@ -8,6 +8,7 @@ from auth import get_current_active_user
 from uptime import calculate_service_uptime
 from scheduler import sync_vms
 from sqlalchemy import func, and_
+from cache import get, set, get_cache_key, invalidate_cache
 
 router = APIRouter(prefix="/api/vms", tags=["vms"])
 
@@ -28,7 +29,17 @@ async def get_vms(
     **Examples**:
     - `/api/vms?node_id=1` - Get all VMs on node 1
     - `/api/vms?tag=production` - Get all VMs tagged with "production"
+    
+    Results are cached for 60 seconds.
     """
+    cache_key = get_cache_key("vms:list", node_id=node_id, tag=tag)
+    
+    # Try cache first
+    cached_vms = get(cache_key)
+    if cached_vms:
+        return [VMResponse(**vm) for vm in cached_vms]
+    
+    # Cache miss - query database
     query = db.query(VM).options(joinedload(VM.node))
     if node_id:
         query = query.filter(VM.node_id == node_id)
@@ -39,6 +50,11 @@ async def get_vms(
         from sqlalchemy.dialects.postgresql import JSONB
         query = query.filter(cast(VM.tags, JSONB).contains([tag]))
     vms = query.all()
+    
+    # Serialize and cache
+    vms_data = [VMResponse.from_orm(vm).dict() for vm in vms]
+    set(cache_key, vms_data, ttl=60)
+    
     return vms
 
 

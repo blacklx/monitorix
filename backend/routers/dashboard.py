@@ -6,6 +6,7 @@ from models import Node, VM, Service, HealthCheck, Alert
 from schemas import DashboardStats
 from auth import get_current_active_user
 from datetime import datetime, timedelta
+from cache import get, set, get_cache_key
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -25,8 +26,16 @@ async def get_dashboard_stats(
     - Active alerts count
     
     This endpoint is optimized for dashboard display and provides a quick
-    overview of the entire monitoring system.
+    overview of the entire monitoring system. Results are cached for 30 seconds.
     """
+    cache_key = get_cache_key("dashboard:stats")
+    
+    # Try cache first
+    cached_stats = get(cache_key)
+    if cached_stats:
+        return DashboardStats(**cached_stats)
+    
+    # Cache miss - query database
     total_nodes = db.query(Node).count()
     online_nodes = db.query(Node).filter(Node.status == "online").count()
     
@@ -46,7 +55,7 @@ async def get_dashboard_stats(
     
     active_alerts = db.query(Alert).filter(Alert.is_resolved == False).count()
     
-    return DashboardStats(
+    stats = DashboardStats(
         total_nodes=total_nodes,
         online_nodes=online_nodes,
         total_vms=total_vms,
@@ -55,4 +64,9 @@ async def get_dashboard_stats(
         healthy_services=healthy_services,
         active_alerts=active_alerts
     )
+    
+    # Cache for 30 seconds (dashboard updates frequently)
+    set(cache_key, stats.dict(), ttl=30)
+    
+    return stats
 

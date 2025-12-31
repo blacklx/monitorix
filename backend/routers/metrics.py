@@ -7,6 +7,7 @@ from database import get_db
 from models import Metric
 from schemas import MetricResponse
 from auth import get_current_active_user
+from cache import get, set, get_cache_key
 import csv
 import json
 import io
@@ -117,6 +118,14 @@ async def get_metrics(
     - `/api/metrics?vm_id=5&metric_type=cpu&hours=12` - Get 12 hours of detailed CPU metrics for VM 5
     - `/api/metrics?node_id=1&hours=720&aggregate=true` - Get 30 days of daily aggregated metrics
     """
+    # Check cache first (only for non-aggregated or short periods)
+    cache_key = None
+    if not aggregate or hours <= 24:
+        cache_key = get_cache_key("metrics", node_id=node_id, vm_id=vm_id, metric_type=metric_type, hours=hours)
+        cached_metrics = get(cache_key)
+        if cached_metrics:
+            return [MetricResponse(**m) for m in cached_metrics]
+    
     since = datetime.utcnow() - timedelta(hours=hours)
     
     # Determine aggregation strategy
@@ -216,6 +225,12 @@ async def get_metrics(
             limit = 500
         
         metrics = query.order_by(Metric.recorded_at.desc()).limit(limit).all()
+        
+        # Serialize and cache (only for short periods)
+        if cache_key:
+            metrics_data = [MetricResponse.from_orm(m).dict() for m in metrics]
+            set(cache_key, metrics_data, ttl=120)  # Cache for 2 minutes
+        
         return metrics
 
 

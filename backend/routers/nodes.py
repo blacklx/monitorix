@@ -9,6 +9,7 @@ from proxmox_client import ProxmoxClient
 from scheduler import check_node, sync_vms
 from uptime import calculate_node_uptime
 from rate_limiter import limiter
+from cache import get, set, get_cache_key, invalidate_cache
 import asyncio
 
 router = APIRouter(prefix="/api/nodes", tags=["nodes"])
@@ -27,7 +28,17 @@ async def get_nodes(
     Optionally filter by tag to get only nodes with a specific tag.
     
     **Example**: `/api/nodes?tag=production` returns only nodes tagged with "production"
+    
+    Results are cached for 60 seconds.
     """
+    cache_key = get_cache_key("nodes:list", tag=tag)
+    
+    # Try cache first
+    cached_nodes = get(cache_key)
+    if cached_nodes:
+        return [NodeResponse(**node) for node in cached_nodes]
+    
+    # Cache miss - query database
     query = db.query(Node)
     if tag:
         # Filter nodes that have this tag in their tags array
@@ -36,6 +47,11 @@ async def get_nodes(
         from sqlalchemy.dialects.postgresql import JSONB
         query = query.filter(cast(Node.tags, JSONB).contains([tag]))
     nodes = query.all()
+    
+    # Serialize and cache
+    nodes_data = [NodeResponse.from_orm(node).dict() for node in nodes]
+    set(cache_key, nodes_data, ttl=60)
+    
     return nodes
 
 
@@ -80,6 +96,10 @@ async def create_node(
     await check_node(node)
     await sync_vms(node)
     db.commit()
+    
+    # Invalidate cache
+    invalidate_cache("nodes")
+    invalidate_cache("dashboard")
     
     return node
 
@@ -134,6 +154,11 @@ async def bulk_create_nodes(
             asyncio.create_task(sync_vms(node))
             
             created.append(node)
+    
+    # Invalidate cache after bulk create
+    if created:
+        invalidate_cache("nodes")
+        invalidate_cache("dashboard")
         except Exception as e:
             db.rollback()
             failed.append({
@@ -194,6 +219,12 @@ async def update_node(
     
     db.commit()
     db.refresh(node)
+    
+    # Invalidate cache
+    invalidate_cache("nodes")
+    invalidate_cache("dashboard")
+    invalidate_cache(f"node:{node_id}")
+    
     return node
 
 
@@ -212,6 +243,11 @@ async def delete_node(
         )
     db.delete(node)
     db.commit()
+    
+    # Invalidate cache
+    invalidate_cache("nodes")
+    invalidate_cache("dashboard")
+    invalidate_cache(f"node:{node_id}")
 
 
 @router.post("/{node_id}/sync", response_model=NodeResponse)
@@ -232,6 +268,12 @@ async def sync_node(
     await sync_vms(node)
     db.commit()
     db.refresh(node)
+    
+    # Invalidate cache
+    invalidate_cache("nodes")
+    invalidate_cache("dashboard")
+    invalidate_cache(f"node:{node_id}")
+    
     return node
 
 
