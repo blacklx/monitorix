@@ -117,6 +117,30 @@ if [ ${#MISSING_PACKAGES[@]} -gt 0 ] || [ "$NEEDS_DOCKER_GROUP" = true ]; then
         1|y|Y|yes|YES)
             print_info "Installing missing packages..."
             
+            # Check if sudo is available and user has sudo privileges
+            if ! command -v sudo > /dev/null 2>&1; then
+                print_error "sudo command not found. Cannot install packages automatically."
+                print_error "Please install prerequisites manually or install sudo first."
+                exit 1
+            fi
+            
+            # Test sudo access
+            print_info "Checking sudo access..."
+            if ! sudo -n true 2>/dev/null; then
+                # If non-interactive sudo fails, try interactive
+                if ! sudo -v; then
+                    print_error "Cannot use sudo. You may need to:"
+                    print_error "  1. Enter your password when prompted"
+                    print_error "  2. Ensure your user has sudo privileges"
+                    print_error "  3. Or run this script as root"
+                    print_error ""
+                    print_error "Alternatively, choose option 2 to see manual installation instructions."
+                    exit 1
+                fi
+            fi
+            
+            print_info "Sudo access confirmed"
+            
             # Detect OS
             if [ -f /etc/os-release ]; then
                 . /etc/os-release

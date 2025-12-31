@@ -170,6 +170,27 @@ if [ ${#MISSING_PACKAGES[@]} -gt 0 ] || [ "$NEEDS_DOCKER_GROUP" = true ]; then
         1|y|Y|yes|YES)
             print_info "Installing missing packages..."
             
+            # Check if sudo is available on remote host
+            print_info "Checking sudo access on remote host..."
+            if ! $SSH_CMD $HOST "command -v sudo > /dev/null 2>&1"; then
+                print_error "sudo command not found on remote host. Cannot install packages automatically."
+                print_error "Please install prerequisites manually on the remote host."
+                exit 1
+            fi
+            
+            # Test sudo access on remote host
+            if ! $SSH_CMD $HOST "sudo -n true 2>/dev/null || sudo -v"; then
+                print_error "Cannot use sudo on remote host. You may need to:"
+                print_error "  1. Ensure SSH key has passwordless sudo access"
+                print_error "  2. Or configure sudoers to allow passwordless sudo"
+                print_error "  3. Or run deployment as root user"
+                print_error ""
+                print_error "Alternatively, choose option 2 to see manual installation instructions."
+                exit 1
+            fi
+            
+            print_info "Sudo access confirmed on remote host"
+            
             # Detect OS
             OS_TYPE=$($SSH_CMD $HOST "if [ -f /etc/os-release ]; then . /etc/os-release && echo \$ID; else echo 'unknown'; fi")
             
