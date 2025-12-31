@@ -299,6 +299,18 @@ async def check_service(service: Service):
                         service_name=service.name,
                         vm_name=vm_name
                     )
+                    
+                    # Send notification channel notifications (Slack, Discord)
+                    await send_alert_notifications(
+                        db=db,
+                        alert=alert,
+                        alert_type="service_down",
+                        severity="critical",
+                        title=f"Service {service.name} is down",
+                        message=result.get("error_message", "Service check failed"),
+                        service_name=service.name,
+                        vm_name=vm_name
+                    )
             else:
                 # Resolve existing alerts
                 db.query(Alert).filter(
