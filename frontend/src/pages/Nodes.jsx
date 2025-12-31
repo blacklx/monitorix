@@ -25,6 +25,10 @@ const Nodes = () => {
   const [error, setError] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [validationErrors, setValidationErrors] = useState({})
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  const [bulkInput, setBulkInput] = useState('')
+  const [bulkError, setBulkError] = useState(null)
+  const [bulkResult, setBulkResult] = useState(null)
 
   useEffect(() => {
     fetchNodes()
@@ -125,6 +129,65 @@ const Nodes = () => {
     }
   }
 
+  const handleBulkImport = async () => {
+    setBulkError(null)
+    setBulkResult(null)
+    
+    if (!bulkInput.trim()) {
+      setBulkError(t('common.fieldRequired'))
+      return
+    }
+    
+    try {
+      // Parse bulk input
+      const lines = bulkInput.trim().split('\n').filter(line => line.trim())
+      const nodes = []
+      
+      for (const line of lines) {
+        const parts = line.split(',').map(p => p.trim())
+        if (parts.length < 4) {
+          throw new Error(`Invalid format: ${line}. Expected: name,url,username,token[,is_local]`)
+        }
+        
+        const [name, url, username, token, is_local_str] = parts
+        const is_local = is_local_str ? is_local_str.toLowerCase() === 'true' : true
+        
+        // Validate node data
+        const validation = validateNode({ name, url, username, token, is_local })
+        if (!validation.isValid) {
+          throw new Error(`Invalid node data for ${name}: ${Object.values(validation.errors).join(', ')}`)
+        }
+        
+        nodes.push({ name, url, username, token, is_local })
+      }
+      
+      if (nodes.length === 0) {
+        setBulkError('No valid nodes found')
+        return
+      }
+      
+      // Send bulk create request
+      const response = await axios.post(`${API_URL}/api/nodes/bulk`, { nodes })
+      
+      setBulkResult({
+        created: response.data.created.length,
+        failed: response.data.failed.length,
+        failedDetails: response.data.failed
+      })
+      
+      if (response.data.created.length > 0) {
+        fetchNodes()
+        setBulkInput('')
+        setTimeout(() => {
+          setShowBulkModal(false)
+          setBulkResult(null)
+        }, 3000)
+      }
+    } catch (error) {
+      setBulkError(error.response?.data?.detail || error.message || t('common.error'))
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
@@ -183,9 +246,14 @@ const Nodes = () => {
     <div className="nodes">
       <div className="page-header">
         <h1>{t('nodes.title')}</h1>
-        <button className="add-button" onClick={handleAdd}>
-          {t('nodes.addNode')}
-        </button>
+        <div>
+          <button className="add-button" onClick={() => setShowBulkModal(true)} style={{ marginRight: '10px' }}>
+            {t('nodes.bulkImport')}
+          </button>
+          <button className="add-button" onClick={handleAdd}>
+            {t('nodes.addNode')}
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -400,6 +468,99 @@ const Nodes = () => {
               <button className="delete-button" onClick={() => handleDelete(deleteConfirm)}>
                 {t('common.delete')}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBulkModal && (
+        <div className="modal-overlay" onClick={() => setShowBulkModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{t('nodes.bulkImportTitle')}</h2>
+              <button className="close-button" onClick={() => setShowBulkModal(false)}>
+                {t('common.close')}
+              </button>
+            </div>
+            
+            <div style={{ padding: '20px' }}>
+              <p style={{ marginBottom: '15px', color: '#666' }}>
+                {t('nodes.bulkImportDescription')}
+              </p>
+              
+              <div className="form-group">
+                <label>{t('nodes.bulkImportExample')}</label>
+                <textarea
+                  value={bulkInput}
+                  onChange={(e) => {
+                    setBulkInput(e.target.value)
+                    setBulkError(null)
+                    setBulkResult(null)
+                  }}
+                  placeholder="node1,https://192.168.1.10:8006,user@pam,token123,true&#10;node2,https://192.168.1.11:8006,user@pam,token456,false"
+                  rows={10}
+                  style={{ 
+                    width: '100%', 
+                    fontFamily: 'monospace',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px'
+                  }}
+                />
+              </div>
+
+              {bulkError && (
+                <div className="error-message" style={{ marginBottom: '15px' }}>
+                  {bulkError}
+                </div>
+              )}
+
+              {bulkResult && (
+                <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
+                  <h3>{t('nodes.bulkImportResults')}</h3>
+                  <p style={{ color: '#27ae60' }}>
+                    {t('nodes.bulkImportSuccess', { count: bulkResult.created })}
+                  </p>
+                  {bulkResult.failed > 0 && (
+                    <>
+                      <p style={{ color: '#e74c3c' }}>
+                        {t('nodes.bulkImportFailed', { count: bulkResult.failed })}
+                      </p>
+                      <details style={{ marginTop: '10px' }}>
+                        <summary style={{ cursor: 'pointer' }}>Failed nodes:</summary>
+                        <ul style={{ marginTop: '10px', paddingLeft: '20px' }}>
+                          {bulkResult.failedDetails.map((item, idx) => (
+                            <li key={idx} style={{ marginBottom: '5px' }}>
+                              <strong>{item.node.name}:</strong> {item.error}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                <button 
+                  className="add-button" 
+                  onClick={handleBulkImport}
+                  disabled={!bulkInput.trim()}
+                >
+                  {t('nodes.bulkImport')}
+                </button>
+                <button 
+                  className="link-button" 
+                  onClick={() => {
+                    setShowBulkModal(false)
+                    setBulkInput('')
+                    setBulkError(null)
+                    setBulkResult(null)
+                  }}
+                >
+                  {t('common.cancel')}
+                </button>
+              </div>
             </div>
           </div>
         </div>

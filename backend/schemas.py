@@ -63,6 +63,15 @@ class NodeResponse(BaseModel):
         from_attributes = True
 
 
+class BulkNodeCreate(BaseModel):
+    nodes: List[NodeCreate]
+
+
+class BulkNodeResponse(BaseModel):
+    created: List[NodeResponse]
+    failed: List[dict]  # List of {node_data, error}
+
+
 # VM schemas
 class VMResponse(BaseModel):
     id: int
@@ -127,6 +136,15 @@ class ServiceResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class BulkServiceCreate(BaseModel):
+    services: List[ServiceCreate]
+
+
+class BulkServiceResponse(BaseModel):
+    created: List[ServiceResponse]
+    failed: List[dict]  # List of {service_data, error}
 
 
 # Health check schemas

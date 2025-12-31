@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
 from models import Service, VM
-from schemas import ServiceCreate, ServiceUpdate, ServiceResponse
+from schemas import ServiceCreate, ServiceUpdate, ServiceResponse, BulkServiceCreate, BulkServiceResponse
 from auth import get_current_active_user
 from scheduler import check_service
 from uptime import calculate_service_uptime
@@ -50,6 +50,50 @@ async def create_service(
     db.commit()
     db.refresh(service)
     return service
+
+
+@router.post("/bulk", response_model=BulkServiceResponse)
+@limiter.limit("5/minute")
+async def bulk_create_services(
+    request: Request,
+    bulk_data: BulkServiceCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """Create multiple services at once"""
+    created = []
+    failed = []
+    
+    for service_data in bulk_data.services:
+        try:
+            # Validate VM if provided
+            if service_data.vm_id:
+                vm = db.query(VM).filter(VM.id == service_data.vm_id).first()
+                if not vm:
+                    failed.append({
+                        "service": service_data.dict(),
+                        "error": "VM not found"
+                    })
+                    continue
+            
+            # Create service
+            service = Service(**service_data.dict())
+            db.add(service)
+            db.commit()
+            db.refresh(service)
+            
+            # Initial check (don't wait for completion)
+            asyncio.create_task(check_service(service))
+            
+            created.append(service)
+        except Exception as e:
+            db.rollback()
+            failed.append({
+                "service": service_data.dict(),
+                "error": str(e)
+            })
+    
+    return BulkServiceResponse(created=created, failed=failed)
 
 
 @router.get("/{service_id}", response_model=ServiceResponse)

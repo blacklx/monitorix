@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
 from models import Node
-from schemas import NodeCreate, NodeUpdate, NodeResponse
+from schemas import NodeCreate, NodeUpdate, NodeResponse, BulkNodeCreate, BulkNodeResponse
 from auth import get_current_active_user
 from proxmox_client import ProxmoxClient
 from scheduler import check_node, sync_vms
@@ -66,6 +66,65 @@ async def create_node(
     db.commit()
     
     return node
+
+
+@router.post("/bulk", response_model=BulkNodeResponse)
+@limiter.limit("5/minute")
+async def bulk_create_nodes(
+    request: Request,
+    bulk_data: BulkNodeCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """Create multiple nodes at once"""
+    created = []
+    failed = []
+    
+    for node_data in bulk_data.nodes:
+        try:
+            # Check if node name already exists
+            existing = db.query(Node).filter(Node.name == node_data.name).first()
+            if existing:
+                failed.append({
+                    "node": node_data.dict(),
+                    "error": "Node with this name already exists"
+                })
+                continue
+            
+            # Test connection
+            client = ProxmoxClient(node_data.url, node_data.username, node_data.token)
+            if not client.test_connection():
+                failed.append({
+                    "node": node_data.dict(),
+                    "error": "Failed to connect to Proxmox node"
+                })
+                continue
+            
+            # Create node
+            node = Node(
+                name=node_data.name,
+                url=node_data.url,
+                username=node_data.username,
+                token=node_data.token,
+                is_local=node_data.is_local
+            )
+            db.add(node)
+            db.commit()
+            db.refresh(node)
+            
+            # Initial sync (don't wait for completion)
+            asyncio.create_task(check_node(node))
+            asyncio.create_task(sync_vms(node))
+            
+            created.append(node)
+        except Exception as e:
+            db.rollback()
+            failed.append({
+                "node": node_data.dict(),
+                "error": str(e)
+            })
+    
+    return BulkNodeResponse(created=created, failed=failed)
 
 
 @router.get("/{node_id}", response_model=NodeResponse)
