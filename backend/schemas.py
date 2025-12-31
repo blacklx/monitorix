@@ -237,3 +237,36 @@ class WebhookResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Notification channel schemas
+class NotificationChannelCreate(BaseModel):
+    name: str
+    type: str  # slack, discord
+    webhook_url: str
+    alert_types: Optional[List[str]] = None
+    severity_filter: Optional[List[str]] = None
+    is_active: bool = True
+
+
+class NotificationChannelUpdate(BaseModel):
+    name: Optional[str] = None
+    webhook_url: Optional[str] = None
+    alert_types: Optional[List[str]] = None
+    severity_filter: Optional[List[str]] = None
+    is_active: Optional[bool] = None
+
+
+class NotificationChannelResponse(BaseModel):
+    id: int
+    name: str
+    type: str
+    webhook_url: str
+    alert_types: Optional[List[str]] = None
+    severity_filter: Optional[List[str]] = None
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

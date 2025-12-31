@@ -7,6 +7,7 @@ from proxmox_client import ProxmoxClient
 from health_checks import HealthChecker
 from email_notifications import send_alert_notification
 from webhooks import send_alert_webhooks
+from notification_channels import send_alert_notifications
 from datetime import datetime
 import logging
 from typing import Dict, List
@@ -67,6 +68,17 @@ async def check_node(node: Node) -> Dict:
                 
                 # Send webhook notifications
                 await send_alert_webhooks(
+                    db=db,
+                    alert=alert,
+                    alert_type="node_down",
+                    severity="critical",
+                    title=f"Node {node.name} is offline",
+                    message=f"Node {node.name} is no longer responding",
+                    node_name=node.name
+                )
+                
+                # Send notification channel notifications (Slack, Discord)
+                await send_alert_notifications(
                     db=db,
                     alert=alert,
                     alert_type="node_down",

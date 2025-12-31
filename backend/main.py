@@ -6,7 +6,7 @@ import json
 import logging
 from datetime import datetime
 from database import init_db, get_db
-from routers import auth, nodes, vms, services, dashboard, metrics, alerts, webhooks, health_checks
+from routers import auth, nodes, vms, services, dashboard, metrics, alerts, webhooks, health_checks, notification_channels
 from scheduler import start_scheduler, stop_scheduler, set_broadcast_function
 from config import settings
 from rate_limiter import limiter, _rate_limit_exceeded_handler
@@ -162,6 +162,7 @@ app.include_router(dashboard.router)
 app.include_router(metrics.router)
 app.include_router(alerts.router)
 app.include_router(webhooks.router)
+app.include_router(notification_channels.router)
 app.include_router(health_checks.router)
 
 

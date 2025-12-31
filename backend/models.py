@@ -150,3 +150,17 @@ class Webhook(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class NotificationChannel(Base):
+    __tablename__ = "notification_channels"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    type = Column(String, nullable=False)  # slack, discord
+    webhook_url = Column(String, nullable=False)
+    alert_types = Column(JSON, nullable=True)  # List of alert types to trigger on
+    severity_filter = Column(JSON, nullable=True)  # List of severities to trigger on (info, warning, critical)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
