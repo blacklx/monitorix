@@ -34,6 +34,8 @@
     "services": "Services",
     "alerts": "Alerts",
     "metrics": "Metrics",
+    "users": "Users",
+    "profile": "Profile",
     "logout": "Logout",
     "language": "Language"
   },
