@@ -14,8 +14,10 @@ class Settings(BaseSettings):
     secret_key: str = os.getenv("SECRET_KEY", "changeme-secret-key")
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
-    allow_registration: bool = os.getenv("ALLOW_REGISTRATION", "true").lower() == "true"
-    registration_token: Optional[str] = os.getenv("REGISTRATION_TOKEN", None)
+    # Admin user creation
+    admin_username: str = os.getenv("ADMIN_USERNAME", "admin")
+    admin_email: str = os.getenv("ADMIN_EMAIL", "admin@monitorix.local")
+    admin_password: Optional[str] = os.getenv("ADMIN_PASSWORD", None)  # Auto-generated if not set
     
     # Proxmox
     proxmox_nodes: str = os.getenv("PROXMOX_NODES", "")

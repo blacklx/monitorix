@@ -57,17 +57,8 @@ export const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization']
   }
 
-  const register = async (username, email, password) => {
-    await axios.post(`${API_URL}/api/auth/register`, {
-      username,
-      email,
-      password,
-    })
-    return login(username, password)
-  }
-
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, register }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   )

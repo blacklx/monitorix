@@ -38,16 +38,23 @@
   },
   "auth": {
     "login": "Login",
-    "register": "Register",
     "username": "Username",
     "password": "Password",
     "email": "Email",
     "loginButton": "Login",
-    "registerButton": "Register",
-    "needAccount": "Need an account? Register",
-    "haveAccount": "Already have an account? Login",
     "loginFailed": "Login failed",
-    "registerFailed": "Registration failed"
+    "forgotPassword": "Forgot Password?",
+    "sendResetLink": "Send Reset Link",
+    "resetPassword": "Reset Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "backToLogin": "Back to Login",
+    "emailRequired": "Email is required",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "forgotPasswordFailed": "Failed to send reset link",
+    "resetPasswordFailed": "Failed to reset password",
+    "passwordResetSuccess": "Password has been reset successfully. You can now login with your new password."
   },
   "dashboard": {
     "title": "Dashboard",

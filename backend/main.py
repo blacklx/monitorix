@@ -47,6 +47,50 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
+def create_admin_user_if_needed():
+    """Create admin user if no users exist"""
+    from database import SessionLocal
+    from models import User
+    from auth import get_password_hash
+    import secrets
+    
+    db = SessionLocal()
+    try:
+        # Check if any users exist
+        user_count = db.query(User).count()
+        if user_count > 0:
+            logger.info("Users already exist, skipping admin user creation")
+            return None
+        
+        # Generate password if not set
+        if settings.admin_password:
+            admin_password = settings.admin_password
+        else:
+            admin_password = secrets.token_urlsafe(16)
+            logger.info(f"Generated admin password: {admin_password}")
+        
+        # Create admin user
+        hashed_password = get_password_hash(admin_password)
+        admin_user = User(
+            username=settings.admin_username,
+            email=settings.admin_email,
+            hashed_password=hashed_password,
+            is_admin=True,
+            is_active=True
+        )
+        db.add(admin_user)
+        db.commit()
+        db.refresh(admin_user)
+        logger.info(f"Created admin user: {settings.admin_username}")
+        return admin_password
+    except Exception as e:
+        logger.error(f"Failed to create admin user: {e}")
+        db.rollback()
+        return None
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -58,6 +102,27 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Migration failed, falling back to init_db: {e}")
         logger.info("Initializing database...")
         init_db()
+    
+    # Create admin user if needed
+    logger.info("Checking for admin user...")
+    admin_password = create_admin_user_if_needed()
+    if admin_password:
+        logger.warning("=" * 60)
+        logger.warning("ADMIN USER CREATED")
+        logger.warning(f"Username: {settings.admin_username}")
+        logger.warning(f"Email: {settings.admin_email}")
+        logger.warning(f"Password: {admin_password}")
+        logger.warning("=" * 60)
+        logger.warning("SAVE THIS PASSWORD - IT WILL NOT BE SHOWN AGAIN!")
+        logger.warning("=" * 60)
+        # Also print to stdout for easier extraction
+        print(f"\n{'=' * 60}")
+        print(f"ADMIN USER CREATED")
+        print(f"Username: {settings.admin_username}")
+        print(f"Email: {settings.admin_email}")
+        print(f"Password: {admin_password}")
+        print(f"{'=' * 60}\n")
+    
     logger.info("Starting scheduler...")
     # Set broadcast function for scheduler
     set_broadcast_function(broadcast_update)

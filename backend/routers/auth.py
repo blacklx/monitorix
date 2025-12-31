@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from database import get_db
 from models import User
-from schemas import Token, UserCreate, UserResponse
+from schemas import Token, UserResponse
 from auth import (
     authenticate_user,
     create_access_token,
@@ -17,53 +17,7 @@ from rate_limiter import limiter
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-@limiter.limit("5/minute")
-async def register(request: Request, user_data: UserCreate, db: Session = Depends(get_db)):
-    """Register a new user"""
-    # Check if registration is allowed
-    if not settings.allow_registration:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Registration is disabled. Please contact an administrator."
-        )
-    
-    # Check if registration token is required and valid
-    if settings.registration_token:
-        # Token should be passed in the request (could be in header or body)
-        # For simplicity, we'll check if it's in the request headers
-        provided_token = request.headers.get("X-Registration-Token")
-        if not provided_token or provided_token != settings.registration_token:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid or missing registration token"
-            )
-    
-    # Check if user already exists
-    existing_user = db.query(User).filter(
-        (User.username == user_data.username) | (User.email == user_data.email)
-    ).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username or email already registered"
-        )
-    
-    # Check if this is the first user (make them admin)
-    is_first_user = db.query(User).count() == 0
-    
-    # Create new user
-    hashed_password = get_password_hash(user_data.password)
-    user = User(
-        username=user_data.username,
-        email=user_data.email,
-        hashed_password=hashed_password,
-        is_admin=is_first_user  # First user becomes admin
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
+# Registration endpoint removed - admin user is created automatically during setup
 
 
 @router.post("/login", response_model=Token)
@@ -94,11 +48,68 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
 
-@router.get("/registration-status")
-async def get_registration_status():
-    """Check if registration is enabled"""
+@router.post("/forgot-password")
+@limiter.limit("5/hour")
+async def forgot_password(request: Request, email: str, db: Session = Depends(get_db)):
+    """Request password reset"""
+    from datetime import datetime, timedelta
+    import secrets
+    
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        # Don't reveal if user exists for security
+        return {"message": "If the email exists, a password reset link has been sent"}
+    
+    # Generate reset token
+    reset_token = secrets.token_urlsafe(32)
+    reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+    
+    user.reset_token = reset_token
+    user.reset_token_expires = reset_token_expires
+    db.commit()
+    
+    # TODO: Send email with reset link
+    # For now, we'll return the token (in production, send via email)
+    logger.info(f"Password reset requested for {email}. Token: {reset_token}")
+    
     return {
-        "registration_enabled": settings.allow_registration,
-        "requires_token": settings.registration_token is not None
+        "message": "If the email exists, a password reset link has been sent",
+        "reset_token": reset_token  # Remove this in production - send via email only
     }
+
+
+@router.post("/reset-password")
+@limiter.limit("10/hour")
+async def reset_password(
+    request: Request,
+    token: str,
+    new_password: str,
+    db: Session = Depends(get_db)
+):
+    """Reset password with token"""
+    from datetime import datetime
+    
+    user = db.query(User).filter(User.reset_token == token).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+    
+    if user.reset_token_expires < datetime.utcnow():
+        user.reset_token = None
+        user.reset_token_expires = None
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reset token has expired"
+        )
+    
+    # Update password
+    user.hashed_password = get_password_hash(new_password)
+    user.reset_token = None
+    user.reset_token_expires = None
+    db.commit()
+    
+    return {"message": "Password has been reset successfully"}
 

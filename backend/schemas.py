@@ -4,12 +4,6 @@ from datetime import datetime
 
 
 # User schemas
-class UserCreate(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
-
-
 class UserResponse(BaseModel):
     id: int
     username: str

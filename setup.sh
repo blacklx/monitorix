@@ -301,6 +301,7 @@ if [ ! -f .env ]; then
     # Generate secure passwords
     POSTGRES_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
     SECRET_KEY=$(openssl rand -base64 48 | tr -d "=+/" | cut -c1-50)
+    ADMIN_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-20)
     
     # Create .env file
     cat > .env << EOF
@@ -315,6 +316,11 @@ DATABASE_URL=postgresql://monitorix:${POSTGRES_PASSWORD}@postgres:5432/monitorix
 
 # Security
 SECRET_KEY=${SECRET_KEY}
+
+# Admin User (auto-created on first startup)
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@monitorix.local
+ADMIN_PASSWORD=${ADMIN_PASSWORD}
 
 # Proxmox Configuration
 # Format: name:url:username:token (comma-separated for multiple nodes)
@@ -345,11 +351,14 @@ VITE_API_URL=http://localhost:8000
 EOF
     
     print_info ".env file created with auto-generated passwords"
+    ADMIN_PASSWORD_SET=true
 else
     print_info ".env file already exists, using existing configuration"
     # Read existing passwords for summary
     POSTGRES_PASSWORD=$(grep "^POSTGRES_PASSWORD=" .env | cut -d'=' -f2 || echo "***")
     SECRET_KEY=$(grep "^SECRET_KEY=" .env | cut -d'=' -f2 || echo "***")
+    ADMIN_PASSWORD=$(grep "^ADMIN_PASSWORD=" .env | cut -d'=' -f2 || echo "")
+    ADMIN_PASSWORD_SET=false
 fi
 
 # Build and start services
@@ -368,11 +377,21 @@ docker-compose up -d
 
 # Wait for services to start
 print_info "Waiting for services to start..."
-sleep 10
+sleep 15
 
 # Check service status
 print_info "Checking service status..."
 docker-compose ps
+
+# Get admin password from backend logs if it was auto-generated
+if [ "$ADMIN_PASSWORD_SET" = false ] || [ -z "$ADMIN_PASSWORD" ]; then
+    print_info "Checking for auto-generated admin password..."
+    sleep 5
+    ADMIN_PASSWORD_FROM_LOG=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | tail -1 | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
+    if [ -n "$ADMIN_PASSWORD_FROM_LOG" ]; then
+        ADMIN_PASSWORD="$ADMIN_PASSWORD_FROM_LOG"
+    fi
+fi
 
 # Get local IP
 LOCAL_IP=$(hostname -I | awk '{print $1}')
@@ -402,8 +421,18 @@ print_info "   PostgreSQL User:     monitorix"
 print_info "   PostgreSQL Password:  ${POSTGRES_PASSWORD}"
 print_info "   Database Name:       monitorix"
 print_info ""
+print_info "👤 Admin User:"
+print_info "   Username:            admin"
+print_info "   Email:              admin@monitorix.local"
+if [ -n "$ADMIN_PASSWORD" ] && [ "$ADMIN_PASSWORD" != "***" ]; then
+    print_info "   Password:            ${ADMIN_PASSWORD}"
+else
+    print_warn "   Password:            (Check backend logs: docker-compose logs backend | grep Password)"
+fi
+print_info ""
 print_warn "⚠️  IMPORTANT: Save these credentials!"
 print_warn "   The PostgreSQL password is stored in: .env"
+print_warn "   Admin password is shown above (or in backend logs if auto-generated)"
 print_warn "   Keep this file secure and back it up."
 print_info ""
 print_info "📋 Next Steps:"
