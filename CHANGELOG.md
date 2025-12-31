@@ -74,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved error handling in frontend components
 - Enhanced user experience with loading states
 
-## [1.1.0] - 2024-01-XX
+## [1.1.0] - 2024-11-28
 
 ### Added
 - **Multi-language support (i18n)** - Full internationalization support
@@ -118,7 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `DEPLOY.md` with local and remote deployment options
 - Enhanced `INSTALL.md` with automated setup section
 
-## [1.0.0] - 2024-01-XX
+## [1.0.0] - 2024-11-15
 
 ### Added
 - Initial release of Monitorix
