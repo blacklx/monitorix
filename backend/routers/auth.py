@@ -9,7 +9,8 @@ from auth import (
     authenticate_user,
     create_access_token,
     get_password_hash,
-    get_current_active_user
+    get_current_active_user,
+    get_user_by_username
 )
 from config import settings
 from rate_limiter import limiter
@@ -27,7 +28,10 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    """Login and get access token"""
+    """Login and get access token and refresh token"""
+    from datetime import datetime
+    from auth import create_refresh_token
+    
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -35,11 +39,109 @@ async def login(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # Create access token
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    # Create refresh token
+    refresh_token = create_refresh_token(data={"sub": user.username})
+    refresh_token_expires = datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
+    
+    # Store refresh token in database
+    user.refresh_token = refresh_token
+    user.refresh_token_expires = refresh_token_expires
+    db.commit()
+    
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
+
+@router.post("/refresh", response_model=Token)
+@limiter.limit("20/minute")
+async def refresh_token(
+    request: Request,
+    refresh_token: str,
+    db: Session = Depends(get_db)
+):
+    """Refresh access token using refresh token"""
+    from datetime import datetime
+    from auth import verify_refresh_token, create_refresh_token
+    
+    # Verify refresh token
+    payload = verify_refresh_token(refresh_token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    username: str = payload.get("sub")
+    if not username:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+        )
+    
+    # Get user and verify refresh token matches
+    user = get_user_by_username(db, username=username)
+    if not user or user.refresh_token != refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+        )
+    
+    # Check if refresh token is expired
+    if user.refresh_token_expires and user.refresh_token_expires < datetime.utcnow():
+        # Clear expired token
+        user.refresh_token = None
+        user.refresh_token_expires = None
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token has expired",
+        )
+    
+    # Create new access token
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    
+    # Optionally rotate refresh token (create new one)
+    new_refresh_token = create_refresh_token(data={"sub": user.username})
+    new_refresh_token_expires = datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
+    
+    # Update refresh token in database
+    user.refresh_token = new_refresh_token
+    user.refresh_token_expires = new_refresh_token_expires
+    db.commit()
+    
+    return {
+        "access_token": access_token,
+        "refresh_token": new_refresh_token,
+        "token_type": "bearer"
+    }
+
+
+@router.post("/logout")
+@limiter.limit("20/minute")
+async def logout(
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Logout and invalidate refresh token"""
+    current_user.refresh_token = None
+    current_user.refresh_token_expires = None
+    db.commit()
+    return {"message": "Logged out successfully"}
 
 
 @router.get("/me", response_model=UserResponse)

@@ -17,6 +17,8 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     reset_token = Column(String, nullable=True)
     reset_token_expires = Column(DateTime, nullable=True)
+    refresh_token = Column(String, nullable=True)
+    refresh_token_expires = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     alerts = relationship("Alert", back_populates="user")

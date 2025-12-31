@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     secret_key: str = os.getenv("SECRET_KEY", "changeme-secret-key")
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7  # Refresh tokens valid for 7 days
     # Admin user creation
     admin_username: str = os.getenv("ADMIN_USERNAME", "admin")
     admin_email: str = os.getenv("ADMIN_EMAIL", "admin@monitorix.local")
