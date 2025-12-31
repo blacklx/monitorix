@@ -4,87 +4,15 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
-.venv
 *.egg-info/
 dist/
 build/
-
-# Node
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# Environment
-.env
-.env.local
-.env.*.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-logs/
-
-# Deployment
-*.pem
-*.key
-deploy.log
-
-# Database
-*.db
-*.sqlite
-
-# Build
-frontend/build/
-frontend/dist/
-backend/__pycache__/
-backend/**/__pycache__/
-
-# Docker volumes
-postgres_data/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.backup
-
-# Coverage reports
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-*.cover
+*.egg
 
 # Python virtual environments
+env/
 venv/
 ENV/
-env/
 .venv
 
 # Node
@@ -103,6 +31,17 @@ yarn.lock
 .env.production
 .env.development
 
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
 # Logs
 *.log
 logs/
@@ -118,17 +57,27 @@ deploy.log
 *.sqlite
 *.sqlite3
 
+# Build
+frontend/build/
+frontend/dist/
+backend/__pycache__/
+backend/**/__pycache__/
+
+# Docker volumes
+postgres_data/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
 # Alembic
 alembic.ini.bak
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.egg-info/
-dist/
-build/
-*.egg
-
