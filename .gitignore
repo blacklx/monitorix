@@ -50,5 +50,85 @@ deploy.log
 
 # Build
 frontend/build/
+frontend/dist/
 backend/__pycache__/
+backend/**/__pycache__/
+
+# Docker volumes
+postgres_data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Python virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Deployment
+*.pem
+*.key
+deploy.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Alembic
+alembic.ini.bak
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
 
