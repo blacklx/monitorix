@@ -1,0 +1,153 @@
+# Environment Variables Guide
+
+## Hva MÅ være i .env?
+
+### Kritiske (MÅ være der)
+
+1. **Database Configuration**
+   - `POSTGRES_USER` - Database brukernavn (standard: `monitorix`)
+   - `POSTGRES_PASSWORD` - Database passord (autogenerert)
+   - `POSTGRES_DB` - Database navn (standard: `monitorix`)
+   - `DATABASE_URL` - Full database connection string
+   - **Hvorfor**: Nødvendig for å koble til PostgreSQL
+
+2. **Security**
+   - `SECRET_KEY` - For JWT token signing (autogenerert)
+   - **Hvorfor**: Brukes til å signere og verifisere JWT tokens
+
+### Bootstrap (kun første gang)
+
+3. **Admin User Creation (kun første opprettelse)**
+   - `ADMIN_USERNAME` - Admin brukernavn (standard: `admin`)
+   - `ADMIN_EMAIL` - Admin email (standard: `admin@monitorix.local`)
+   - `ADMIN_PASSWORD` - Admin passord (autogenerert)
+   - **Viktig**: Dette brukes KUN for å opprette admin-brukeren første gang
+   - **Etter opprettelse**: Passordet lagres (hashet) i PostgreSQL-databasen
+   - **Ikke nødvendig etter første opprettelse**: Kan fjernes fra .env etter at admin-brukeren er opprettet
+
+### Konfigurasjon (anbefalt)
+
+4. **Proxmox**
+   - `PROXMOX_NODES` - Proxmox node konfigurasjon
+   - `PROXMOX_VERIFY_SSL` - SSL verifisering (standard: `true`)
+   - `PROXMOX_CA_BUNDLE` - Custom CA bundle (valgfritt)
+
+5. **Frontend**
+   - `FRONTEND_URL` - Frontend URL for password reset links
+   - `REACT_APP_API_URL` / `VITE_API_URL` - API URL for frontend
+
+6. **Health Checks**
+   - `HEALTH_CHECK_INTERVAL` - Sjekk intervall (standard: 60)
+   - `HTTP_TIMEOUT` - HTTP timeout (standard: 5)
+   - `PING_TIMEOUT` - Ping timeout (standard: 3)
+
+7. **Email (valgfritt)**
+   - `ALERT_EMAIL_ENABLED` - Aktiver email varsler
+   - `ALERT_EMAIL_SMTP_HOST` - SMTP server
+   - `ALERT_EMAIL_SMTP_PORT` - SMTP port
+   - `ALERT_EMAIL_SMTP_USER` - SMTP brukernavn
+   - `ALERT_EMAIL_SMTP_PASSWORD` - SMTP passord
+   - `ALERT_EMAIL_FROM` - Avsender email
+   - `ALERT_EMAIL_TO` - Mottaker email
+
+8. **Metrics**
+   - `METRICS_RETENTION_DAYS` - Hvor lenge metrics lagres (standard: 30)
+   - `METRICS_CLEANUP_ENABLED` - Aktiver automatisk cleanup (standard: `true`)
+
+## Hva skal IKKE være i .env?
+
+### ❌ Web UI brukere/passord (etter første opprettelse)
+
+**Hvorfor ikke:**
+- Web UI brukere og passord lagres i PostgreSQL-databasen (`users`-tabellen)
+- Passordene er hashet med bcrypt
+- `ADMIN_PASSWORD` i .env brukes KUN for første opprettelse
+- Etter at admin-brukeren er opprettet, kan `ADMIN_PASSWORD` fjernes fra .env
+
+**Hvor lagres det:**
+- `users`-tabellen i PostgreSQL:
+  - `username` - Brukernavn
+  - `email` - Email
+  - `hashed_password` - Hashet passord (bcrypt)
+  - `is_admin` - Admin status
+  - `is_active` - Aktiv status
+
+### ❌ Andre sensitive data som bør ligge i databasen
+
+- Alle brukerdata
+- Alle applikasjonsdata (nodes, VMs, services, alerts, etc.)
+
+## Oppsummering
+
+### MÅ være i .env:
+- ✅ Database credentials (for å koble til databasen)
+- ✅ SECRET_KEY (for JWT signing)
+- ✅ ADMIN_PASSWORD (kun for første opprettelse, kan fjernes etterpå)
+
+### Bør være i .env (konfigurasjon):
+- ✅ Proxmox konfigurasjon
+- ✅ Email konfigurasjon (hvis brukt)
+- ✅ Frontend URL
+- ✅ Health check settings
+
+### Skal IKKE være i .env:
+- ❌ Web UI brukere/passord (lagres i databasen)
+- ❌ Applikasjonsdata (lagres i databasen)
+
+## Eksempel: Minimal .env
+
+```env
+# Database (MÅ)
+POSTGRES_USER=monitorix
+POSTGRES_PASSWORD=<autogenerert>
+POSTGRES_DB=monitorix
+DATABASE_URL=postgresql://monitorix:<password>@postgres:5432/monitorix
+
+# Security (MÅ)
+SECRET_KEY=<autogenerert>
+
+# Admin (kun første gang, kan fjernes etter opprettelse)
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@monitorix.local
+ADMIN_PASSWORD=<autogenerert>
+
+# Proxmox (anbefalt)
+PROXMOX_NODES=
+PROXMOX_VERIFY_SSL=true
+
+# Frontend (anbefalt)
+FRONTEND_URL=http://localhost:3000
+```
+
+## Eksempel: .env etter første opprettelse
+
+```env
+# Database (MÅ)
+POSTGRES_USER=monitorix
+POSTGRES_PASSWORD=<autogenerert>
+POSTGRES_DB=monitorix
+DATABASE_URL=postgresql://monitorix:<password>@postgres:5432/monitorix
+
+# Security (MÅ)
+SECRET_KEY=<autogenerert>
+
+# Admin kan fjernes etter første opprettelse
+# ADMIN_USERNAME=admin
+# ADMIN_EMAIL=admin@monitorix.local
+# ADMIN_PASSWORD=<autogenerert>  ← Kan fjernes!
+
+# Proxmox
+PROXMOX_NODES=node1:https://192.168.1.10:8006:user@pam:token123
+PROXMOX_VERIFY_SSL=true
+
+# Frontend
+FRONTEND_URL=http://localhost:3000
+```
+
+## Sikkerhet
+
+- `.env` filen har automatisk `chmod 600` (kun eier kan lese/skrive)
+- `.env` er i `.gitignore` (ikke committet til Git)
+- Passordene er autogenererte (ikke hardkodede)
+- Web UI passord er hashet i databasen (bcrypt)
+

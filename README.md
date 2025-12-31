@@ -230,11 +230,23 @@ See [INSTALL.md](INSTALL.md) for more troubleshooting.
 
 The `.env` file contains sensitive credentials (database passwords, secret keys, etc.). 
 
+**What MUST be in .env:**
+- Database credentials (`POSTGRES_PASSWORD`, `DATABASE_URL`) - Required to connect to PostgreSQL
+- `SECRET_KEY` - Required for JWT token signing
+- `ADMIN_PASSWORD` - Only needed for initial admin user creation (can be removed after first setup)
+
+**What should NOT be in .env:**
+- Web UI user passwords - These are stored (hashed) in the PostgreSQL database after initial creation
+- Application data - All application data (users, nodes, VMs, services) is stored in the database
+
 **Security measures:**
 - ✅ `.env` file is automatically excluded from Git (in `.gitignore`)
 - ✅ File permissions are automatically set to `600` (owner read/write only)
 - ✅ Passwords are auto-generated with cryptographically secure random values
 - ✅ `.env` file is never exposed via web server or API
+- ✅ Web UI passwords are hashed (bcrypt) and stored in the database, not in `.env`
+
+See [ENV_VARIABLES.md](ENV_VARIABLES.md) for detailed information about environment variables.
 
 **⚠️ Important for production:**
 - Never commit `.env` to version control
