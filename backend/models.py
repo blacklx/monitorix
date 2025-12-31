@@ -164,3 +164,22 @@ class NotificationChannel(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class AlertRule(Base):
+    __tablename__ = "alert_rules"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    metric_type = Column(String, nullable=False)  # cpu, memory, disk, response_time
+    operator = Column(String, nullable=False)  # >, <, >=, <=, ==
+    threshold = Column(Float, nullable=False)
+    severity = Column(String, default="warning")  # info, warning, critical
+    node_id = Column(Integer, ForeignKey("nodes.id"), nullable=True)  # None = global
+    vm_id = Column(Integer, ForeignKey("vms.id"), nullable=True)  # None = all VMs
+    service_id = Column(Integer, ForeignKey("services.id"), nullable=True)  # None = all services
+    cooldown_minutes = Column(Integer, default=5)  # Minutes before alerting again
+    is_active = Column(Boolean, default=True)
+    last_triggered = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

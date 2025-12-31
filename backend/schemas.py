@@ -291,3 +291,50 @@ class NotificationChannelResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Alert rule schemas
+class AlertRuleCreate(BaseModel):
+    name: str
+    metric_type: str  # cpu, memory, disk, response_time
+    operator: str  # >, <, >=, <=, ==
+    threshold: float
+    severity: str = "warning"  # info, warning, critical
+    node_id: Optional[int] = None
+    vm_id: Optional[int] = None
+    service_id: Optional[int] = None
+    cooldown_minutes: int = 5
+    is_active: bool = True
+
+
+class AlertRuleUpdate(BaseModel):
+    name: Optional[str] = None
+    metric_type: Optional[str] = None
+    operator: Optional[str] = None
+    threshold: Optional[float] = None
+    severity: Optional[str] = None
+    node_id: Optional[int] = None
+    vm_id: Optional[int] = None
+    service_id: Optional[int] = None
+    cooldown_minutes: Optional[int] = None
+    is_active: Optional[bool] = None
+
+
+class AlertRuleResponse(BaseModel):
+    id: int
+    name: str
+    metric_type: str
+    operator: str
+    threshold: float
+    severity: str
+    node_id: Optional[int] = None
+    vm_id: Optional[int] = None
+    service_id: Optional[int] = None
+    cooldown_minutes: int
+    is_active: bool
+    last_triggered: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

@@ -8,6 +8,7 @@ from health_checks import HealthChecker
 from email_notifications import send_alert_notification
 from webhooks import send_alert_webhooks
 from notification_channels import send_alert_notifications
+from alert_rules import evaluate_alert_rules
 from datetime import datetime
 import logging
 from typing import Dict, List
