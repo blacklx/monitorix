@@ -21,13 +21,15 @@ services:
   redis:
     image: redis:7-alpine
     container_name: monitorix_redis
-    command: redis-server --requirepass ${REDIS_PASSWORD:-} ${REDIS_PASSWORD:+-a ${REDIS_PASSWORD}}
+    command: redis-server ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     volumes:
       - redis_data:/data
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "${REDIS_PASSWORD:+-a ${REDIS_PASSWORD}}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,6 +48,7 @@ services:
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_DB: ${REDIS_DB:-0}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      CELERY_ENABLED: ${CELERY_ENABLED:-false}
     ports:
       - "8000:8000"
     depends_on:
@@ -58,6 +61,37 @@ services:
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: monitorix_celery_worker
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-monitorix}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-monitorix}
+      SECRET_KEY: ${SECRET_KEY:-changeme-secret-key}
+      PROXMOX_NODES: ${PROXMOX_NODES:-}
+      REDIS_ENABLED: ${REDIS_ENABLED:-true}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      CELERY_ENABLED: ${CELERY_ENABLED:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - ./backend/backups:/app/backups
+    command: celery -A celery_app worker --loglevel=info --concurrency=4
+    healthcheck:
+      test: ["CMD", "celery", "-A", "celery_app", "inspect", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3

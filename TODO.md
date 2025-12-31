@@ -59,8 +59,8 @@ This document tracks planned improvements, new features, and known issues.
 - [x] ✅ **Database query optimization** - Add indexes for frequently queried fields (status, checked_at, recorded_at) - Comprehensive indexes implemented in migration 002
 - [x] ✅ **Metrics aggregation** - Aggregate metrics for better performance - Automatic hourly/daily aggregation for long time periods, detailed metrics for recent data
 - [x] ✅ **Performance optimization** - Optimize database queries (use joinedload for eager loading) - Implemented eager loading in VMs, Services, Health Checks, Alerts, Metrics, and Audit Logs endpoints
-- [ ] 📝 **Caching** - Add Redis for caching frequently accessed data
-- [ ] 📝 **Background jobs** - Use Celery or similar for heavy tasks
+- [x] ✅ **Caching** - Add Redis for caching frequently accessed data - Redis caching implemented with graceful degradation, cache invalidation on data changes, and configurable TTL
+- [x] ✅ **Background jobs** - Use Celery or similar for heavy tasks - Celery implemented with Redis broker, background tasks for bulk operations, metrics cleanup, VM sync, backups, and exports. Graceful fallback to synchronous execution if Celery is disabled.
 - [x] ✅ **Database indexing** - Optimize database indexes (add composite indexes) - Comprehensive indexes implemented in migration 002
 - [x] ✅ **API versioning** - API versioning support implemented with header-based versioning (X-API-Version, Accept header), version utilities, and version info endpoint
 - [x] ✅ **OpenAPI specification** - Complete API documentation - Enhanced with detailed descriptions, examples, tags metadata, and improved endpoint documentation
@@ -100,7 +100,7 @@ This document tracks planned improvements, new features, and known issues.
 - [ ] 📝 **CI/CD pipeline** - Automatic testing and deployment
 - [ ] 📝 **Docker optimizations** - Multi-stage builds, smaller images
 - [ ] 📝 **Health checks** - Container health checks
-- [ ] 📝 **Monitoring** - Monitor the system itself
+- [x] ✅ **Monitoring** - Monitor the system itself (System metrics implemented)
 - [x] ✅ **Logging** - Structured JSON logging implemented with auto-detection (JSON in production, text in development), configurable log levels, and optional file logging
 - [x] ✅ **Error tracking** - Sentry error tracking implemented with FastAPI integration, automatic exception capture, user context, and performance monitoring
 
@@ -145,22 +145,22 @@ This document tracks planned improvements, new features, and known issues.
 
 ## 🔒 Security
 
-- [ ] 📝 **SSL/TLS** - Enable SSL verification for Proxmox
+- [x] ✅ **SSL/TLS** - Enable SSL verification for Proxmox (Configurable via PROXMOX_VERIFY_SSL, enabled by default)
 - [x] ✅ **Rate limiting** - Rate limiting implemented
 - [x] ✅ **Input validation** - Enhanced input validation with sanitization, XSS protection, URL/email validation, and comprehensive field validators in Pydantic schemas
 - [x] ✅ **SQL injection protection** - SQLAlchemy uses parameterized queries by default, plus additional validation layer in input_validation.py
 - [x] ✅ **XSS protection** - HTML escaping in sanitize_string, XSS pattern detection, CSP headers, and input sanitization in schemas
-- [ ] 📝 **CSRF protection** - Add CSRF tokens
+- [x] ✅ **CSRF protection** - Add CSRF tokens - CSRF middleware implemented with automatic token generation, cookie-based storage, header validation for state-changing requests, and automatic token handling in frontend axios interceptors
 - [x] ✅ **Security headers** - Security headers middleware implemented (CSP, X-Frame-Options, HSTS, etc.)
 - [x] ✅ **Password policy** - Comprehensive password policy implemented with configurable requirements (length, complexity, common password checks)
-- [ ] 📝 **2FA support** - Two-factor authentication
+- [x] ✅ **2FA support** - Two-factor authentication (TOTP-based 2FA implemented with QR code setup, enable/disable, and login verification)
 
 ## 📊 Metrics and Analytics
 
-- [ ] 📝 **System metrics** - Monitor the system itself
+- [x] ✅ **System metrics** - Monitor the system itself (Backend server CPU, memory, disk, network metrics with automatic collection every 5 minutes, displayed in Dashboard)
 - [ ] 📝 **Usage analytics** - Track how the system is used
 - [ ] 📝 **Performance metrics** - Track performance
-- [ ] 📝 **Error tracking** - Track and analyze errors
+- [x] ✅ **Error tracking** - Track and analyze errors (Sentry integration implemented)
 
 ## 🌍 Internationalization
 

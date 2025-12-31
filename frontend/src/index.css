@@ -26,6 +26,48 @@
   --warning: #f39c12;
 }
 
+[data-theme="blue"] {
+  --bg-primary: #e3f2fd;
+  --bg-secondary: #ffffff;
+  --text-primary: #1565c0;
+  --text-secondary: #1976d2;
+  --border-color: #90caf9;
+  --shadow: rgba(21, 101, 192, 0.1);
+  --accent: #1976d2;
+  --accent-hover: #1565c0;
+  --success: #27ae60;
+  --error: #e74c3c;
+  --warning: #f39c12;
+}
+
+[data-theme="green"] {
+  --bg-primary: #e8f5e9;
+  --bg-secondary: #ffffff;
+  --text-primary: #2e7d32;
+  --text-secondary: #388e3c;
+  --border-color: #a5d6a7;
+  --shadow: rgba(46, 125, 50, 0.1);
+  --accent: #388e3c;
+  --accent-hover: #2e7d32;
+  --success: #27ae60;
+  --error: #e74c3c;
+  --warning: #f39c12;
+}
+
+[data-theme="purple"] {
+  --bg-primary: #f3e5f5;
+  --bg-secondary: #ffffff;
+  --text-primary: #7b1fa2;
+  --text-secondary: #9c27b0;
+  --border-color: #ce93d8;
+  --shadow: rgba(123, 31, 162, 0.1);
+  --accent: #9c27b0;
+  --accent-hover: #7b1fa2;
+  --success: #27ae60;
+  --error: #e74c3c;
+  --warning: #f39c12;
+}
+
 * {
   margin: 0;
   padding: 0;

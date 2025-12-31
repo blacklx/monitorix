@@ -47,7 +47,8 @@
     "backup": "Varmuuskopio",
     "auditLogs": "Tarkastusloki",
     "logout": "Kirjaudu ulos",
-    "language": "Kieli"
+    "language": "Kieli",
+    "theme": "Teema"
   },
   "auth": {
     "login": "Kirjaudu sisään",
@@ -70,7 +71,13 @@
     "resetPasswordFailed": "Salasanan nollaus epäonnistui",
     "passwordResetSuccess": "Salasana on nollattu. Voit nyt kirjautua sisään uudella salasanallasi.",
     "checkEmail": "Tarkista sähköpostisi nollauslinkkiä varten.",
-    "emailNotConfigured": "Sähköposti ei ole määritelty. Tarkista backend-lokit nollaustokenista (vain kehitys)."
+    "emailNotConfigured": "Sähköposti ei ole määritelty. Tarkista backend-lokit nollaustokenista (vain kehitys).",
+    "twoFactorAuth": "Kaksivaiheinen tunnistautuminen",
+    "totpToken": "TOTP Token",
+    "enterTotpToken": "Syötä 6-numeroinen koodi autentikaattorisovelluksestasi",
+    "invalidTotpToken": "Virheellinen TOTP token. Syötä 6-numeroinen koodi.",
+    "totpVerificationFailed": "TOTP vahvistus epäonnistui",
+    "2faRequired": "2FA token vaaditaan"
   },
   "dashboard": {
     "title": "Kojelauta",
@@ -81,7 +88,20 @@
     "services": "Palvelut",
     "healthy": "Kunnossa",
     "alerts": "Hälytykset",
-    "active": "Aktiiviset"
+    "active": "Aktiiviset",
+    "systemMetrics": "Järjestelmämittarit",
+    "cpu": "CPU",
+    "memory": "Muisti",
+    "disk": "Levy",
+    "uptime": "Käyttöaika",
+    "processMemory": "Prosessimuisti",
+    "gb": "GB",
+    "mb": "MB",
+    "hours": "tuntia",
+    "minutes": "minuuttia",
+    "days": "päivää",
+    "usage": "Käyttö",
+    "system": "Järjestelmä"
   },
   "nodes": {
     "title": "Proxmox Solmut",
@@ -286,7 +306,17 @@
     "passwordTooShort": "Salasanan on oltava vähintään 8 merkkiä pitkä",
     "passwordsDoNotMatch": "Salasanat eivät täsmää",
     "profileUpdated": "Profiili päivitetty",
-    "passwordChanged": "Salasana vaihdettu"
+    "passwordChanged": "Salasana vaihdettu",
+    "twoFactorAuth": "Kaksivaiheinen tunnistautuminen",
+    "2faDescription": "Kaksivaiheinen tunnistautuminen lisää ylimääräisen turvallisuustason tilillesi. Sinun täytyy käyttää autentikaattorisovellusta (kuten Google Authenticator tai Authy) koodien luomiseen kirjautumisen yhteydessä.",
+    "setup2FA": "Aseta 2FA",
+    "enable2FA": "Ota 2FA käyttöön",
+    "disable2FA": "Poista 2FA käytöstä",
+    "2faEnabled": "Kaksivaiheinen tunnistautuminen on käytössä",
+    "2faDisabled": "Kaksivaiheinen tunnistautuminen on poistettu käytöstä",
+    "2faSetupInstructions": "Skannaa tämä QR-koodi autentikaattorisovelluksellasi, syötä sitten 6-numeroinen koodi ottaaksesi 2FA:n käyttöön:",
+    "enterTotpToken": "Syötä 6-numeroinen koodi",
+    "secretKey": "Salainen avain"
   },
   "notificationChannels": {
     "title": "Ilmoituskanavat",

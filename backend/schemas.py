@@ -14,6 +14,7 @@ class UserResponse(BaseModel):
     email: str
     is_admin: bool = False
     is_active: bool
+    totp_enabled: bool = False
     created_at: datetime
 
     class Config:
@@ -105,6 +106,27 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
+class TwoFactorSetupResponse(BaseModel):
+    secret: str
+    uri: str
+    qr_code: str
+    message: str
+
+
+class TwoFactorVerifyRequest(BaseModel):
+    token: str = Field(..., min_length=6, max_length=6, description="6-digit TOTP token")
+
+
+class TwoFactorEnableRequest(BaseModel):
+    token: str = Field(..., min_length=6, max_length=6, description="6-digit TOTP token to verify setup")
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+    totp_token: Optional[str] = Field(None, min_length=6, max_length=6, description="6-digit TOTP token (required if 2FA is enabled)")
+
+
 # Node schemas
 class NodeCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
@@ -182,8 +204,10 @@ class BulkNodeCreate(BaseModel):
 
 
 class BulkNodeResponse(BaseModel):
-    created: List[NodeResponse]
-    failed: List[dict]  # List of {node_data, error}
+    created: List[NodeResponse] = []
+    failed: List[dict] = []  # List of {node_data, error}
+    task_id: Optional[str] = None
+    message: Optional[str] = None
 
 
 # VM schemas
@@ -296,8 +320,10 @@ class BulkServiceCreate(BaseModel):
 
 
 class BulkServiceResponse(BaseModel):
-    created: List[ServiceResponse]
-    failed: List[dict]  # List of {service_data, error}
+    created: List[ServiceResponse] = []
+    failed: List[dict] = []  # List of {service_data, error}
+    task_id: Optional[str] = None
+    message: Optional[str] = None
 
 
 # Health check schemas

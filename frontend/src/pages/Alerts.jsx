@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { formatShortDateTime, formatDateForFilename } from '../utils/dateFormat'
+import { requestNotificationPermission, showAlertNotification, isNotificationSupported } from '../utils/notifications'
+import { useWebSocket } from '../hooks/useWebSocket'
 import './Alerts.css'
 
 const API_URL = import.meta.env.REACT_APP_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -173,6 +175,23 @@ const Alerts = () => {
               <span className="stat-item warning">{stats.warning} {t('alerts.warning')}</span>
               <span className="stat-item total">{stats.unresolved} {t('alerts.unresolved')}</span>
             </div>
+          )}
+          {isNotificationSupported() && (
+            <label className="toggle-notifications" title={notificationsEnabled ? t('alerts.notificationsEnabled') : t('alerts.notificationsDisabled')}>
+              <input
+                type="checkbox"
+                checked={notificationsEnabled}
+                onChange={async (e) => {
+                  if (e.target.checked) {
+                    const enabled = await requestNotificationPermission()
+                    setNotificationsEnabled(enabled)
+                  } else {
+                    setNotificationsEnabled(false)
+                  }
+                }}
+              />
+              🔔 {notificationsEnabled ? t('alerts.notificationsEnabled') : t('alerts.enableNotifications')}
+            </label>
           )}
           <label className="toggle-resolved">
             <input

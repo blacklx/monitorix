@@ -47,7 +47,8 @@
     "backup": "Sicherung",
     "auditLogs": "Prüfprotokolle",
     "logout": "Abmelden",
-    "language": "Sprache"
+    "language": "Sprache",
+    "theme": "Thema"
   },
   "auth": {
     "login": "Anmelden",
@@ -70,7 +71,13 @@
     "resetPasswordFailed": "Fehler beim Zurücksetzen des Passworts",
     "passwordResetSuccess": "Das Passwort wurde zurückgesetzt. Sie können sich jetzt mit Ihrem neuen Passwort anmelden.",
     "checkEmail": "Bitte überprüfen Sie Ihre E-Mail für den Zurücksetzungslink.",
-    "emailNotConfigured": "E-Mail ist nicht konfiguriert. Überprüfen Sie die Backend-Protokolle für das Zurücksetzungstoken (nur Entwicklung)."
+    "emailNotConfigured": "E-Mail ist nicht konfiguriert. Überprüfen Sie die Backend-Protokolle für das Zurücksetzungstoken (nur Entwicklung).",
+    "twoFactorAuth": "Zwei-Faktor-Authentifizierung",
+    "totpToken": "TOTP Token",
+    "enterTotpToken": "Geben Sie den 6-stelligen Code von Ihrer Authentifizierungs-App ein",
+    "invalidTotpToken": "Ungültiger TOTP Token. Bitte geben Sie einen 6-stelligen Code ein.",
+    "totpVerificationFailed": "TOTP-Verifizierung fehlgeschlagen",
+    "2faRequired": "2FA Token erforderlich"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -81,7 +88,20 @@
     "services": "Dienste",
     "healthy": "Gesund",
     "alerts": "Warnungen",
-    "active": "Aktiv"
+    "active": "Aktiv",
+    "systemMetrics": "Systemmetriken",
+    "cpu": "CPU",
+    "memory": "Arbeitsspeicher",
+    "disk": "Festplatte",
+    "uptime": "Betriebszeit",
+    "processMemory": "Prozessspeicher",
+    "gb": "GB",
+    "mb": "MB",
+    "hours": "Stunden",
+    "minutes": "Minuten",
+    "days": "Tage",
+    "usage": "Nutzung",
+    "system": "System"
   },
   "nodes": {
     "title": "Proxmox Knoten",
@@ -286,7 +306,17 @@
     "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen lang sein",
     "passwordsDoNotMatch": "Die Passwörter stimmen nicht überein",
     "profileUpdated": "Profil aktualisiert",
-    "passwordChanged": "Passwort geändert"
+    "passwordChanged": "Passwort geändert",
+    "twoFactorAuth": "Zwei-Faktor-Authentifizierung",
+    "2faDescription": "Die Zwei-Faktor-Authentifizierung fügt Ihrem Konto eine zusätzliche Sicherheitsebene hinzu. Sie müssen eine Authentifizierungs-App (wie Google Authenticator oder Authy) verwenden, um Codes bei der Anmeldung zu generieren.",
+    "setup2FA": "2FA einrichten",
+    "enable2FA": "2FA aktivieren",
+    "disable2FA": "2FA deaktivieren",
+    "2faEnabled": "Zwei-Faktor-Authentifizierung ist aktiviert",
+    "2faDisabled": "Zwei-Faktor-Authentifizierung wurde deaktiviert",
+    "2faSetupInstructions": "Scannen Sie diesen QR-Code mit Ihrer Authentifizierungs-App, geben Sie dann den 6-stelligen Code ein, um 2FA zu aktivieren:",
+    "enterTotpToken": "Geben Sie den 6-stelligen Code ein",
+    "secretKey": "Geheimer Schlüssel"
   },
   "notificationChannels": {
     "title": "Benachrichtigungskanäle",

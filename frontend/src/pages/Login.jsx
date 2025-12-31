@@ -22,6 +22,8 @@ const Login = () => {
   const [resetToken, setResetToken] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [requires2FA, setRequires2FA] = useState(false)
+  const [totpToken, setTotpToken] = useState('')
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -46,10 +48,32 @@ const Login = () => {
     }
 
     try {
-      await login(username, password)
-      navigate('/dashboard')
+      const result = await login(username, password)
+      if (result && result.requires_2fa) {
+        setRequires2FA(true)
+        setError('')
+      } else {
+        navigate('/dashboard')
+      }
     } catch (err) {
       setError(err.response?.data?.detail || t('auth.loginFailed'))
+    }
+  }
+
+  const handle2FASubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    
+    if (!totpToken || totpToken.length !== 6) {
+      setError(t('auth.invalidTotpToken'))
+      return
+    }
+
+    try {
+      await login(username, password, totpToken)
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err.response?.data?.detail || t('auth.totpVerificationFailed'))
     }
   }
 
@@ -181,6 +205,42 @@ const Login = () => {
                   setShowForgotPassword(false)
                   setForgotEmail('')
                   setForgotMessage('')
+                  setError('')
+                }}
+              >
+                {t('auth.backToLogin')}
+              </button>
+            </form>
+          </div>
+        )}
+        {requires2FA && (
+          <div>
+            <h2>{t('auth.twoFactorAuth')}</h2>
+            <p>{t('auth.enterTotpToken')}</p>
+            <form onSubmit={handle2FASubmit}>
+              <div className="form-group">
+                <label>{t('auth.totpToken')}</label>
+                <input
+                  type="text"
+                  value={totpToken}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+                    setTotpToken(value)
+                  }}
+                  placeholder="000000"
+                  maxLength={6}
+                  required
+                  autoFocus
+                />
+              </div>
+              {error && <div className="error">{error}</div>}
+              <button type="submit">{t('auth.loginButton')}</button>
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => {
+                  setRequires2FA(false)
+                  setTotpToken('')
                   setError('')
                 }}
               >

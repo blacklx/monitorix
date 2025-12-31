@@ -22,6 +22,9 @@ const Profile = () => {
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
   const [activeTab, setActiveTab] = useState('profile')
+  const [twoFactorSetup, setTwoFactorSetup] = useState(null)
+  const [twoFactorVerification, setTwoFactorVerification] = useState('')
+  const [twoFactorLoading, setTwoFactorLoading] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -101,6 +104,12 @@ const Profile = () => {
           onClick={() => setActiveTab('password')}
         >
           {t('profile.changePassword')}
+        </button>
+        <button
+          className={`tab-button ${activeTab === '2fa' ? 'active' : ''}`}
+          onClick={() => setActiveTab('2fa')}
+        >
+          {t('profile.twoFactorAuth')}
         </button>
       </div>
 
@@ -201,6 +210,138 @@ const Profile = () => {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {activeTab === '2fa' && (
+        <div className="profile-section">
+          <h3>{t('profile.twoFactorAuth')}</h3>
+          {user?.totp_enabled ? (
+            <div>
+              <p className="success-message">{t('profile.2faEnabled')}</p>
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                setError(null)
+                setSuccess(null)
+                setTwoFactorLoading(true)
+                try {
+                  await axios.post(`${API_URL}/api/auth/2fa/disable`, {
+                    token: twoFactorVerification
+                  })
+                  setSuccess(t('profile.2faDisabled'))
+                  setTwoFactorVerification('')
+                  window.location.reload()
+                } catch (error) {
+                  setError(error.response?.data?.detail || t('common.error'))
+                } finally {
+                  setTwoFactorLoading(false)
+                }
+              }}>
+                <div className="form-group">
+                  <label>{t('profile.enterTotpToken')}</label>
+                  <input
+                    type="text"
+                    value={twoFactorVerification}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+                      setTwoFactorVerification(value)
+                    }}
+                    placeholder="000000"
+                    maxLength={6}
+                    required
+                  />
+                </div>
+                <div className="form-actions">
+                  <button type="submit" disabled={twoFactorLoading}>
+                    {t('profile.disable2FA')}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <div>
+              {twoFactorSetup ? (
+                <div>
+                  <p>{t('profile.2faSetupInstructions')}</p>
+                  <div className="qr-code-container">
+                    <img src={twoFactorSetup.qr_code} alt="QR Code" />
+                  </div>
+                  <p className="secret-info">{t('profile.secretKey')}: {twoFactorSetup.secret}</p>
+                  <form onSubmit={async (e) => {
+                    e.preventDefault()
+                    setError(null)
+                    setSuccess(null)
+                    setTwoFactorLoading(true)
+                    try {
+                      await axios.post(`${API_URL}/api/auth/2fa/enable`, {
+                        token: twoFactorVerification
+                      })
+                      setSuccess(t('profile.2faEnabled'))
+                      setTwoFactorSetup(null)
+                      setTwoFactorVerification('')
+                      window.location.reload()
+                    } catch (error) {
+                      setError(error.response?.data?.detail || t('common.error'))
+                    } finally {
+                      setTwoFactorLoading(false)
+                    }
+                  }}>
+                    <div className="form-group">
+                      <label>{t('profile.enterTotpToken')}</label>
+                      <input
+                        type="text"
+                        value={twoFactorVerification}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+                          setTwoFactorVerification(value)
+                        }}
+                        placeholder="000000"
+                        maxLength={6}
+                        required
+                      />
+                    </div>
+                    <div className="form-actions">
+                      <button type="submit" disabled={twoFactorLoading}>
+                        {t('profile.enable2FA')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTwoFactorSetup(null)
+                          setTwoFactorVerification('')
+                          setError(null)
+                        }}
+                      >
+                        {t('common.cancel')}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              ) : (
+                <div>
+                  <p>{t('profile.2faDescription')}</p>
+                  <button
+                    onClick={async () => {
+                      setError(null)
+                      setSuccess(null)
+                      setTwoFactorLoading(true)
+                      try {
+                        const response = await axios.post(`${API_URL}/api/auth/2fa/setup`)
+                        setTwoFactorSetup(response.data)
+                      } catch (error) {
+                        setError(error.response?.data?.detail || t('common.error'))
+                      } finally {
+                        setTwoFactorLoading(false)
+                      }
+                    }}
+                    disabled={twoFactorLoading}
+                  >
+                    {t('profile.setup2FA')}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

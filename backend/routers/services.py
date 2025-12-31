@@ -9,7 +9,11 @@ from scheduler import check_service
 from uptime import calculate_service_uptime
 from rate_limiter import limiter
 from cache import get, set, get_cache_key, invalidate_cache
+from config import settings
 import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/services", tags=["services"])
 
@@ -88,7 +92,35 @@ async def bulk_create_services(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)
 ):
-    """Create multiple services at once"""
+    """
+    Create multiple services at once.
+    
+    If Celery is enabled, this will run as a background job.
+    Otherwise, it runs synchronously.
+    """
+    # Use Celery if enabled and Redis is available
+    if settings.celery_enabled and settings.redis_enabled:
+        try:
+            from tasks import bulk_create_services_task
+            
+            # Prepare data for Celery task
+            services_data = [service.dict() for service in bulk_data.services]
+            
+            # Start background task
+            task = bulk_create_services_task.delay(services_data)
+            
+            # Return task ID for status checking
+            return BulkServiceResponse(
+                created=[],
+                failed=[],
+                task_id=task.id,
+                message="Bulk service creation started in background. Use task_id to check status."
+            )
+        except Exception as e:
+            logger.warning(f"Celery task failed, falling back to synchronous: {e}")
+            # Fall through to synchronous execution
+    
+    # Synchronous execution (fallback or if Celery disabled)
     created = []
     failed = []
     

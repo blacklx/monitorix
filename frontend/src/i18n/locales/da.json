@@ -47,7 +47,8 @@
     "backup": "Sikkerhedskopi",
     "auditLogs": "Revisionslogge",
     "logout": "Log ud",
-    "language": "Sprog"
+    "language": "Sprog",
+    "theme": "Tema"
   },
   "auth": {
     "login": "Log ind",
@@ -70,7 +71,13 @@
     "resetPasswordFailed": "Kunne ikke nulstille adgangskode",
     "passwordResetSuccess": "Adgangskoden er blevet nulstillet. Du kan nu logge ind med din nye adgangskode.",
     "checkEmail": "Tjek din e-mail for nulstillingslinket.",
-    "emailNotConfigured": "E-mail er ikke konfigureret. Tjek backend-logfiler for nulstillings-token (kun udvikling)."
+    "emailNotConfigured": "E-mail er ikke konfigureret. Tjek backend-logfiler for nulstillings-token (kun udvikling).",
+    "twoFactorAuth": "To-faktor godkendelse",
+    "totpToken": "TOTP Token",
+    "enterTotpToken": "Indtast 6-cifret kode fra din godkendelsesapp",
+    "invalidTotpToken": "Ugyldig TOTP token. Indtast venligst en 6-cifret kode.",
+    "totpVerificationFailed": "TOTP verifikation fejlede",
+    "2faRequired": "2FA token påkrævet"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -81,7 +88,20 @@
     "services": "Tjenester",
     "healthy": "Sunde",
     "alerts": "Advarsler",
-    "active": "Aktive"
+    "active": "Aktive",
+    "systemMetrics": "Systemmålinger",
+    "cpu": "CPU",
+    "memory": "Hukommelse",
+    "disk": "Disk",
+    "uptime": "Oppetid",
+    "processMemory": "Proceshukommelse",
+    "gb": "GB",
+    "mb": "MB",
+    "hours": "timer",
+    "minutes": "minutter",
+    "days": "dage",
+    "usage": "Brug",
+    "system": "System"
   },
   "nodes": {
     "title": "Proxmox Noder",
@@ -286,7 +306,17 @@
     "passwordTooShort": "Adgangskoden skal være mindst 8 tegn lang",
     "passwordsDoNotMatch": "Adgangskoderne matcher ikke",
     "profileUpdated": "Profil opdateret",
-    "passwordChanged": "Adgangskode ændret"
+    "passwordChanged": "Adgangskode ændret",
+    "twoFactorAuth": "To-faktor godkendelse",
+    "2faDescription": "To-faktor godkendelse tilføjer et ekstra sikkerhedslag til din konto. Du skal bruge en godkendelsesapp (som Google Authenticator eller Authy) til at generere koder ved login.",
+    "setup2FA": "Konfigurer 2FA",
+    "enable2FA": "Aktiver 2FA",
+    "disable2FA": "Deaktiver 2FA",
+    "2faEnabled": "To-faktor godkendelse er aktiveret",
+    "2faDisabled": "To-faktor godkendelse er blevet deaktiveret",
+    "2faSetupInstructions": "Scan denne QR-kode med din godkendelsesapp, indtast derefter 6-cifret kode for at aktivere 2FA:",
+    "enterTotpToken": "Indtast 6-cifret kode",
+    "secretKey": "Hemmelig nøgle"
   },
   "notificationChannels": {
     "title": "Notifikationskanaler",

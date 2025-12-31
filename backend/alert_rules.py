@@ -212,5 +212,23 @@ async def evaluate_alert_rules(
                 service_name=service_name
             )
             
+            # Broadcast alert via WebSocket (import from scheduler)
+            try:
+                from scheduler import _broadcast_update
+                if _broadcast_update:
+                    await _broadcast_update("alert", {
+                        "id": alert.id,
+                        "alert_type": alert.alert_type,
+                        "severity": alert.severity,
+                        "title": alert.title,
+                        "message": alert.message,
+                        "node_id": alert.node_id,
+                        "vm_id": alert.vm_id,
+                        "service_id": alert.service_id,
+                        "created_at": alert.created_at.isoformat() if alert.created_at else None
+                    })
+            except Exception as e:
+                logger.error(f"Failed to broadcast alert: {e}")
+            
             logger.info(f"Alert rule '{rule.name}' triggered: {message}")
 

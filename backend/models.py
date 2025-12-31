@@ -19,6 +19,8 @@ class User(Base):
     reset_token_expires = Column(DateTime, nullable=True)
     refresh_token = Column(String, nullable=True)
     refresh_token_expires = Column(DateTime, nullable=True)
+    totp_secret = Column(String, nullable=True)  # TOTP secret for 2FA
+    totp_enabled = Column(Boolean, default=False)  # Whether 2FA is enabled
     created_at = Column(DateTime, default=datetime.utcnow)
 
     alerts = relationship("Alert", back_populates="user")

@@ -7,8 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Docker multi-stage builds for optimized images
+- Unit tests framework (pytest) with test coverage
+- Prometheus metrics endpoint (`/api/prometheus/metrics`)
+- CLI tool for managing Monitorix from command line
+- Browser notifications for real-time alerts
+- Multiple themes (light, dark, blue, green, purple)
+- Keyboard shortcuts for navigation and actions
+- CI/CD pipeline with GitHub Actions
+- Comprehensive documentation (Developer Guide, Architecture, Deployment, Troubleshooting, FAQ)
+- WebSocket broadcasting for alerts
+- Enhanced Swagger/OpenAPI documentation
+
+### Improved
+- Docker images optimized with multi-stage builds
+- Alert notifications now include WebSocket broadcasting
+- Theme system extended with multiple color schemes
+- Documentation structure and completeness
+
 ### Planned
-- See [TODO.md](TODO.md) for full list
+- See [TODO.md](TODO.md) for remaining items
 
 ## [1.2.0] - 2024-12-31
 

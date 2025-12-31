@@ -112,7 +112,35 @@ async def bulk_create_nodes(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)
 ):
-    """Create multiple nodes at once"""
+    """
+    Create multiple nodes at once.
+    
+    If Celery is enabled, this will run as a background job.
+    Otherwise, it runs synchronously.
+    """
+    # Use Celery if enabled and Redis is available
+    if settings.celery_enabled and settings.redis_enabled:
+        try:
+            from tasks import bulk_create_nodes_task
+            
+            # Prepare data for Celery task
+            nodes_data = [node.dict() for node in bulk_data.nodes]
+            
+            # Start background task
+            task = bulk_create_nodes_task.delay(nodes_data)
+            
+            # Return task ID for status checking
+            return BulkNodeResponse(
+                created=[],
+                failed=[],
+                task_id=task.id,
+                message="Bulk node creation started in background. Use task_id to check status."
+            )
+        except Exception as e:
+            logger.warning(f"Celery task failed, falling back to synchronous: {e}")
+            # Fall through to synchronous execution
+    
+    # Synchronous execution (fallback or if Celery disabled)
     created = []
     failed = []
     
@@ -154,17 +182,17 @@ async def bulk_create_nodes(
             asyncio.create_task(sync_vms(node))
             
             created.append(node)
-    
-    # Invalidate cache after bulk create
-    if created:
-        invalidate_cache("nodes")
-        invalidate_cache("dashboard")
         except Exception as e:
             db.rollback()
             failed.append({
                 "node": node_data.dict(),
                 "error": str(e)
             })
+    
+    # Invalidate cache after bulk create
+    if created:
+        invalidate_cache("nodes")
+        invalidate_cache("dashboard")
     
     return BulkNodeResponse(created=created, failed=failed)
 

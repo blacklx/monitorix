@@ -44,7 +44,8 @@ A complete status dashboard system for monitoring Proxmox nodes, VMs, and servic
 - ✅ Metrics graphs (CPU, Memory, Disk over time)
 - ✅ Uptime statistics for nodes and services
 - ✅ Filtering and search for VMs and services
-- ✅ Dark mode support with theme toggle
+- ✅ Multiple themes (light, dark, blue, green, purple) with theme selector
+- ✅ Keyboard shortcuts for power users
 - ✅ Responsive design (mobile and tablet optimized)
 - ✅ Loading states and error handling
 - ✅ **Multi-language support** (Norwegian, Swedish, Danish, Finnish, French, German, English)
@@ -62,16 +63,29 @@ A complete status dashboard system for monitoring Proxmox nodes, VMs, and servic
 - ✅ Alert history and resolution tracking
 - ✅ Email notifications via SMTP
 - ✅ Webhook support for custom integrations
+- ✅ Slack and Discord notification channels
+- ✅ Browser notifications for real-time alerts
 - ✅ Configurable alert types and severity
+- ✅ Configurable alert rules with thresholds
 
 ### Security & Data Management
 - ✅ JWT-based authentication
 - ✅ User registration and login
 - ✅ API-based access control
 - ✅ API rate limiting
+- ✅ CSRF protection
+- ✅ Security headers (CSP, HSTS, X-Frame-Options, etc.)
+- ✅ Two-factor authentication (2FA) with TOTP
+- ✅ Comprehensive password policy
+- ✅ Input validation and sanitization
 - ✅ Database migrations with Alembic
 - ✅ Automatic schema migrations on startup
 - ✅ Metrics retention policy with automatic cleanup
+- ✅ Redis caching for improved performance
+- ✅ Celery for background job processing
+- ✅ Prometheus metrics endpoint
+- ✅ CLI tool for management
+- ✅ System metrics monitoring
 
 ## 🛠 Technology Stack
 
@@ -81,6 +95,8 @@ A complete status dashboard system for monitoring Proxmox nodes, VMs, and servic
 - **PostgreSQL** - Relational database
 - **Proxmoxer** - Proxmox API client
 - **APScheduler** - Background job scheduling
+- **Celery** - Distributed task queue for heavy background jobs (optional)
+- **Redis** - Caching and Celery message broker (optional)
 - **WebSockets** - Real-time communication
 
 ### Frontend
@@ -160,6 +176,10 @@ See [INSTALL.md](INSTALL.md) for detailed installation guide or [QUICKSTART.md](
 - **[UPGRADE.md](UPGRADE.md)** - Safe upgrade guide
 - **[VERSION.md](VERSION.md)** - Version history
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture
+- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** - Developer guide
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment guide
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Troubleshooting guide
+- **[FAQ.md](FAQ.md)** - Frequently asked questions
 - **[ENV_VARIABLES.md](ENV_VARIABLES.md)** - Environment variables reference
 - **[TODO.md](TODO.md)** - Planned improvements and features
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines

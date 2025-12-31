@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from database import get_db
 from models import User
-from schemas import Token, UserResponse, RefreshTokenRequest
+from schemas import Token, UserResponse, RefreshTokenRequest, TwoFactorSetupResponse, TwoFactorVerifyRequest, TwoFactorEnableRequest, LoginRequest
 from auth import (
     authenticate_user,
     create_access_token,
@@ -14,6 +14,8 @@ from auth import (
 )
 from config import settings
 from rate_limiter import limiter
+from audit_log import log_action, get_client_ip, get_user_agent
+from middleware.csrf import get_csrf_token
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,6 +26,23 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 # Registration endpoint removed - admin user is created automatically during setup
 
 
+@router.get("/csrf-token")
+async def get_csrf_token(request: Request):
+    """
+    Get CSRF token for frontend.
+    
+    Returns the CSRF token that should be included in X-CSRF-Token header
+    for all state-changing requests (POST, PUT, DELETE, PATCH).
+    """
+    from middleware.csrf import get_csrf_token
+    token = get_csrf_token(request)
+    if not token:
+        # Generate new token if missing
+        import secrets
+        token = secrets.token_urlsafe(32)
+    return {"csrf_token": token}
+
+
 @router.post("/login", response_model=Token)
 @limiter.limit("10/minute")
 async def login(
@@ -31,49 +50,125 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    """Login and get access token and refresh token"""
+    """
+    Login and get access token and refresh token.
+    
+    If 2FA is enabled for the user, the totp_token must be provided
+    in the request body (not form_data, as OAuth2PasswordRequestForm
+    doesn't support additional fields). Use a custom login endpoint
+    or include totp_token in a separate request.
+    """
     from datetime import datetime
-    from auth import create_refresh_token
+    from auth import create_refresh_token, get_password_hash
     
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
+        log_action(db, "login_failed", f"Attempted login for username: {form_data.username}", get_client_ip(request), get_user_agent(request), success=False)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    # Check if 2FA is enabled - if so, user must use /login/verify-2fa endpoint
+    if user.totp_enabled and user.totp_secret:
+        log_action(db, "login_failed", f"User '{user.username}' attempted login but 2FA is required", get_client_ip(request), get_user_agent(request), user_id=user.id, success=False)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="2FA token required. Please use /api/auth/login/verify-2fa endpoint.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
     # Create access token
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.username, "user_id": user.id, "is_admin": user.is_admin}, expires_delta=access_token_expires
     )
     
     # Create refresh token
-    refresh_token = create_refresh_token(data={"sub": user.username})
-    refresh_token_expires = datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
-    
-    # Store refresh token in database
-    user.refresh_token = refresh_token
-    user.refresh_token_expires = refresh_token_expires
-    db.commit()
-    
-    # Log successful login
-    log_action(
-        db=db,
-        user_id=user.id,
-        action="login",
-        resource_type="auth",
-        ip_address=get_client_ip(request),
-        user_agent=get_user_agent(request),
-        success=True
+    refresh_token_expires = timedelta(days=settings.refresh_token_expire_days)
+    refresh_token = create_refresh_token(
+        data={"sub": user.username, "user_id": user.id, "is_admin": user.is_admin},
+        expires_delta=refresh_token_expires
     )
     
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer"
-    }
+    # Store refresh token hash in DB
+    user.refresh_token_hash = get_password_hash(refresh_token)
+    db.commit()
+    
+    log_action(db, "login_success", f"User '{user.username}' logged in", get_client_ip(request), get_user_agent(request), user_id=user.id)
+    logger.info(f"User '{user.username}' logged in successfully.")
+    
+    return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
+
+
+@router.post("/login/verify-2fa", response_model=Token)
+@limiter.limit("10/minute")
+async def login_verify_2fa(
+    request: Request,
+    login_data: LoginRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Complete login with 2FA token.
+    
+    This endpoint is used after initial login when 2FA is enabled.
+    """
+    from datetime import datetime
+    from auth import create_access_token, create_refresh_token, get_password_hash
+    from two_factor import verify_totp
+    
+    user = authenticate_user(db, login_data.username, login_data.password)
+    if not user:
+        log_action(db, "login_failed", f"Attempted login for username: {login_data.username}", get_client_ip(request), get_user_agent(request), success=False)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Verify 2FA is enabled
+    if not user.totp_enabled or not user.totp_secret:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="2FA is not enabled for this user"
+        )
+    
+    # Verify TOTP token
+    if not login_data.totp_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="TOTP token is required"
+        )
+    
+    if not verify_totp(user.totp_secret, login_data.totp_token):
+        log_action(db, "login_failed", f"Invalid 2FA token for user '{login_data.username}'", get_client_ip(request), get_user_agent(request), user_id=user.id, success=False)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid 2FA token"
+        )
+    
+    # Create access token
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+    access_token = create_access_token(
+        data={"sub": user.username, "user_id": user.id, "is_admin": user.is_admin}, expires_delta=access_token_expires
+    )
+    
+    # Create refresh token
+    refresh_token_expires = timedelta(days=settings.refresh_token_expire_days)
+    refresh_token = create_refresh_token(
+        data={"sub": user.username, "user_id": user.id, "is_admin": user.is_admin},
+        expires_delta=refresh_token_expires
+    )
+    
+    # Store refresh token hash in DB
+    user.refresh_token_hash = get_password_hash(refresh_token)
+    db.commit()
+    
+    log_action(db, "login_success", f"User '{user.username}' logged in with 2FA", get_client_ip(request), get_user_agent(request), user_id=user.id)
+    logger.info(f"User '{user.username}' logged in successfully with 2FA.")
+    
+    return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
 
 
 @router.post("/refresh", response_model=Token)

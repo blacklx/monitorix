@@ -47,7 +47,8 @@
     "backup": "Säkerhetskopia",
     "auditLogs": "Revisionsloggar",
     "logout": "Logga ut",
-    "language": "Språk"
+    "language": "Språk",
+    "theme": "Tema"
   },
   "auth": {
     "login": "Logga in",
@@ -70,7 +71,13 @@
     "resetPasswordFailed": "Kunde inte återställa lösenord",
     "passwordResetSuccess": "Lösenordet har återställts. Du kan nu logga in med ditt nya lösenord.",
     "checkEmail": "Kontrollera din e-post för återställningslänken.",
-    "emailNotConfigured": "E-post är inte konfigurerad. Kontrollera backend-loggar för återställningstoken (endast utveckling)."
+    "emailNotConfigured": "E-post är inte konfigurerad. Kontrollera backend-loggar för återställningstoken (endast utveckling).",
+    "twoFactorAuth": "Tvåfaktorsautentisering",
+    "totpToken": "TOTP Token",
+    "enterTotpToken": "Ange 6-siffrig kod från din autentiseringsapp",
+    "invalidTotpToken": "Ogiltig TOTP token. Vänligen ange en 6-siffrig kod.",
+    "totpVerificationFailed": "TOTP verifiering misslyckades",
+    "2faRequired": "2FA token krävs"
   },
   "dashboard": {
     "title": "Instrumentpanel",
@@ -81,7 +88,20 @@
     "services": "Tjänster",
     "healthy": "Friska",
     "alerts": "Varningar",
-    "active": "Aktiva"
+    "active": "Aktiva",
+    "systemMetrics": "Systemmätningar",
+    "cpu": "CPU",
+    "memory": "Minne",
+    "disk": "Disk",
+    "uptime": "Upptid",
+    "processMemory": "Processminne",
+    "gb": "GB",
+    "mb": "MB",
+    "hours": "timmar",
+    "minutes": "minuter",
+    "days": "dagar",
+    "usage": "Användning",
+    "system": "System"
   },
   "nodes": {
     "title": "Proxmox Noder",
@@ -286,7 +306,17 @@
     "passwordTooShort": "Lösenordet måste vara minst 8 tecken långt",
     "passwordsDoNotMatch": "Lösenorden matchar inte",
     "profileUpdated": "Profil uppdaterad",
-    "passwordChanged": "Lösenord ändrat"
+    "passwordChanged": "Lösenord ändrat",
+    "twoFactorAuth": "Tvåfaktorsautentisering",
+    "2faDescription": "Tvåfaktorsautentisering lägger till ett extra säkerhetslager på ditt konto. Du behöver använda en autentiseringsapp (som Google Authenticator eller Authy) för att generera koder vid inloggning.",
+    "setup2FA": "Konfigurera 2FA",
+    "enable2FA": "Aktivera 2FA",
+    "disable2FA": "Inaktivera 2FA",
+    "2faEnabled": "Tvåfaktorsautentisering är aktiverad",
+    "2faDisabled": "Tvåfaktorsautentisering har inaktiverats",
+    "2faSetupInstructions": "Skanna denna QR-kod med din autentiseringsapp, ange sedan 6-siffrig kod för att aktivera 2FA:",
+    "enterTotpToken": "Ange 6-siffrig kod",
+    "secretKey": "Hemlig nyckel"
   },
   "notificationChannels": {
     "title": "Aviseringskanaler",

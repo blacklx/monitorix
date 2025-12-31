@@ -3,15 +3,19 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { useWebSocket } from '../hooks/useWebSocket'
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import VersionInfo from './VersionInfo'
 import './Layout.css'
 
 const Layout = () => {
   const { user, logout } = useAuth()
   const { t, i18n } = useTranslation()
-  const { theme, toggleTheme } = useTheme()
+  const { theme, themes, toggleTheme, setTheme } = useTheme()
   const location = useLocation()
   const { isConnected, isReconnecting, reconnectAttempt, connectionError } = useWebSocket(() => {})
+  
+  // Enable keyboard shortcuts
+  useKeyboardShortcuts(null, null)
 
   const isActive = (path) => location.pathname === path
 
@@ -88,6 +92,16 @@ const Layout = () => {
                   : t('common.disconnected')}
             </span>
           </div>
+          <select
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            className="theme-select"
+            title={t('nav.theme')}
+          >
+            {themes.map(t => (
+              <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+            ))}
+          </select>
           <select
             value={i18n.language}
             onChange={(e) => changeLanguage(e.target.value)}

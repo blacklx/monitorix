@@ -1,338 +1,242 @@
-# System Architecture
+# Monitorix Architecture
 
-This document describes the system architecture for Monitorix.
+This document describes the architecture of the Monitorix monitoring system.
 
-## 🏗 Overview
+## Overview
 
-The system consists of three main components:
+Monitorix is a comprehensive monitoring solution for Proxmox infrastructure, providing real-time monitoring, alerting, and metrics collection.
 
-1. **Backend API** - FastAPI-based REST API and WebSocket server
-2. **Frontend** - React-based web interface
-3. **Database** - PostgreSQL for data storage
-
-All components run in Docker containers and are orchestrated with Docker Compose.
-
-## 📊 System Diagram
+## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Nginx Proxy Manager                   │
-│              (Optional, for public access)                │
-└────────────────────┬────────────────────────────────────┘
-                     │
-        ┌────────────┴────────────┐
-        │                         │
-        ▼                         ▼
-┌───────────────┐         ┌───────────────┐
-│   Frontend    │         │    Backend    │
-│   (React)     │◄────────┤   (FastAPI)   │
-│   Port 3000   │  API    │   Port 8000   │
-└───────────────┘         └───────┬───────┘
-                                   │
-                    ┌──────────────┼──────────────┐
-                    │              │              │
-                    ▼              ▼              ▼
-            ┌───────────┐  ┌───────────┐  ┌───────────┐
-            │PostgreSQL │  │ Proxmox   │  │  Health   │
-            │  Database │  │   Nodes   │  │  Checks   │
-            │ Port 5432 │  │           │  │           │
-            └───────────┘  └───────────┘  └───────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                        Frontend (React)                      │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
+│  │ Dashboard│  │   Nodes  │  │    VMs   │  │ Services │  │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘  │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              WebSocket (Real-time Updates)            │  │
+│  └──────────────────────────────────────────────────────┘  │
+└──────────────────────┬─────────────────────────────────────┘
+                       │ HTTP/WebSocket
+                       │
+┌──────────────────────▼─────────────────────────────────────┐
+│                    Backend (FastAPI)                        │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │                    API Layer                         │  │
+│  │  ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐ │  │
+│  │  │  Auth  │  │  Nodes  │  │   VMs  │  │Services│ │  │
+│  │  └────────┘  └────────┘  └────────┘  └────────┘ │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              Business Logic Layer                     │  │
+│  │  ┌──────────────┐  ┌──────────────┐                │  │
+│  │  │  Scheduler   │  │ Alert Rules  │                │  │
+│  │  │  (APScheduler)│  │  Evaluation  │                │  │
+│  │  └──────────────┘  └──────────────┘                │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              Data Access Layer                        │  │
+│  │  ┌──────────────┐  ┌──────────────┐                │  │
+│  │  │ SQLAlchemy   │  │   Cache      │                │  │
+│  │  │    ORM       │  │  (Redis)     │                │  │
+│  │  └──────────────┘  └──────────────┘                │  │
+│  └──────────────────────────────────────────────────────┘  │
+└──────────────────────┬─────────────────────────────────────┘
+                       │
+        ┌──────────────┼──────────────┐
+        │              │              │
+┌───────▼──────┐ ┌─────▼──────┐ ┌─────▼──────┐
+│  PostgreSQL  │ │   Redis    │ │  Proxmox   │
+│  (Database)  │ │  (Cache)   │ │    API     │
+└──────────────┘ └────────────┘ └────────────┘
 ```
 
-## 🔧 Components
-
-### Backend API
-
-**Technology**: FastAPI (Python 3.11)
-
-**Main Components**:
-- `main.py` - FastAPI application and WebSocket server
-- `routers/` - API endpoints organized in modules
-- `models.py` - SQLAlchemy database models
-- `proxmox_client.py` - Proxmox API client
-- `health_checks.py` - Health check implementations
-- `scheduler.py` - Background job scheduler
-- `auth.py` - JWT authentication
-- `database.py` - Database configuration
-
-**API Endpoints**:
-- `/api/auth/*` - Authentication (login, register)
-- `/api/nodes/*` - Proxmox node management
-- `/api/vms/*` - VM information
-- `/api/services/*` - Service management
-- `/api/dashboard/*` - Dashboard statistics
-- `/api/metrics/*` - Metrics data
-- `/api/alerts/*` - Alert management
-- `/api/health-checks/*` - Health check results
-- `/ws` - WebSocket endpoint
-
-**Background Jobs**:
-- Node checks (every 60 seconds)
-- Service health checks (every 60 seconds)
-- Metrics collection
+## Components
 
 ### Frontend
 
-**Technology**: React 18, Vite
-
-**Main Components**:
-- `App.jsx` - Main application with routing
-- `pages/` - Page components (Dashboard, Nodes, VMs, etc.)
-- `components/` - Reusable components
-- `contexts/` - React contexts (Auth, etc.)
-- `hooks/` - Custom React hooks (useWebSocket)
-- `i18n/` - Internationalization configuration and translations
-  - `config.js` - i18next configuration
-  - `locales/` - Translation files for 7 languages (English, Norwegian, Swedish, Danish, Finnish, French, German)
-- `utils/` - Utility functions
-  - `dateFormat.js` - Localized date/time formatting with date-fns
-  - `validation.js` - Form validation utilities
-  - `errorHandler.js` - Centralized error handling
-
-**Routing**:
-- `/login` - Login page
-- `/dashboard` - Main dashboard
-- `/nodes` - Proxmox nodes
-- `/vms` - Virtual machines
-- `/services` - Service health checks
-- `/alerts` - Alert management
-
-**State Management**:
-- React Context API for global state (Auth)
-- Local state with useState/useReducer
-- WebSocket for real-time updates
-- i18next for language management
-
-### Database
-
-**Technology**: PostgreSQL 15
-
-**Tables**:
-- `users` - Users and authentication
-- `nodes` - Proxmox nodes
-- `vms` - Virtual machines
-- `services` - Services to monitor
-- `health_checks` - Health check results
-- `metrics` - Time-series metrics
-- `alerts` - Alerts and notifications
-
-**Relations**:
-- Nodes → VMs (one-to-many)
-- VMs → Services (one-to-many)
-- Services → Health Checks (one-to-many)
-- Nodes/VMs → Metrics (one-to-many)
-
-## 🔄 Data Flow
-
-### Node Sync Flow
-
-```
-1. Scheduler triggers node check (every 60s)
-2. ProxmoxClient connects to Proxmox API
-3. Fetch node status and VM list
-4. Update database (nodes, vms tables)
-5. Store metrics (metrics table)
-6. Broadcast update via WebSocket
-7. Frontend receives update and re-renders
-```
-
-### Health Check Flow
-
-```
-1. Scheduler triggers service check (every 60s)
-2. HealthChecker performs check (HTTP/ping/port)
-3. Store result in health_checks table
-4. If service is down, create alert
-5. Broadcast update via WebSocket
-6. Frontend updates service status
-```
-
-### Authentication Flow
-
-```
-1. User submits login form
-2. Frontend sends POST /api/auth/login
-3. Backend validates credentials
-4. Backend generates JWT token
-5. Frontend stores token in localStorage
-6. Frontend includes token in API requests
-7. Backend validates token on each request
-```
-
-## 🔌 Integrations
-
-### Proxmox API
-
-**Library**: `proxmoxer`
-
-**Endpoints Used**:
-- `/api2/json/version` - API version
-- `/api2/json/nodes` - Node list
-- `/api2/json/nodes/{node}/status` - Node status
-- `/api2/json/nodes/{node}/qemu` - QEMU VMs
-- `/api2/json/nodes/{node}/lxc` - LXC containers
-- `/api2/json/nodes/{node}/qemu/{vmid}/status/current` - VM status
-
-**Authentication**: API Token (PVETokenID)
-
-### Health Checks
-
-**HTTP/HTTPS**:
-- Async HTTP requests with `httpx`
-- Configurable timeout
-- Status code validation
-
-**Ping**:
-- System `ping` command
-- Cross-platform (Windows/Linux)
-- Configurable timeout
-
-**Port**:
-- Socket connection test
-- TCP connect check
-- Configurable timeout
-
-## 🔐 Security
-
-### Authentication
-
-- JWT tokens with HS256 algorithm
-- Token expiration (30 minutes)
-- Password hashing with bcrypt
-
-### API Security
-
-- CORS middleware
-- Input validation with Pydantic
-- SQL injection protection (SQLAlchemy ORM)
-- Rate limiting (planned)
-
-### Database Security
-
-- Password-protected PostgreSQL
-- Connection pooling
-- Prepared statements (via SQLAlchemy)
-
-## 📈 Scalability
-
-### Current Limitations
-
-- Single instance backend
-- In-memory WebSocket connections
-- No caching layer
-- Synchronous database operations
-
-### Future Improvements
-
-- Redis for caching and session management
-- Celery for background jobs
-- Database connection pooling
-- Metrics aggregation
-- Horizontal scaling support
-
-## 🚀 Deployment
-
-### Docker Compose
-
-**Services**:
-- `postgres` - PostgreSQL database
-- `backend` - FastAPI backend
-- `frontend` - React frontend (Nginx)
-
-**Networking**:
-- Containers communicate via Docker network
-- Ports exposed to host for access
-
-### Nginx Proxy Manager
-
-**Backend**:
-- Proxy to `monitorix_backend:8000`
-- WebSocket support enabled
-
-**Frontend**:
-- Proxy to `monitorix_frontend:80`
-- Static file serving
-
-## 📊 Monitoring
-
-### Metrics Collection
-
-- CPU usage (node and VM)
-- Memory usage (node and VM)
-- Disk usage (node and VM)
-- Network (planned)
-- Response times (health checks)
-
-### Storage
-
-- Metrics stored in PostgreSQL
-- Time-series data with timestamp
-- Retention policy (planned)
-
-## 🔄 Backup and Recovery
-
-### Database Backup
-
-```bash
-docker-compose exec postgres pg_dump -U monitorix monitorix > backup.sql
-```
-
-### Restore
-
-```bash
-docker-compose exec -T postgres psql -U monitorix monitorix < backup.sql
-```
-
-## 🐛 Error Handling
+- **Technology**: React 18+ with Vite
+- **State Management**: React Context API
+- **Real-time Updates**: WebSocket connection
+- **Internationalization**: react-i18next
+- **Styling**: CSS Modules
 
 ### Backend
 
-- Try/except blocks for error handling
-- Logging with Python logging
-- HTTP error responses with FastAPI
-
-### Frontend
-
-- Try/catch for async operations
-- Error boundaries (planned)
-- User-friendly error messages
+- **Framework**: FastAPI
+- **Database ORM**: SQLAlchemy
+- **Task Scheduling**: APScheduler
+- **Caching**: Redis (optional)
+- **Background Jobs**: Celery (optional)
+- **Authentication**: JWT tokens with refresh tokens
+- **API Documentation**: OpenAPI/Swagger
 
 ### Database
 
-- Connection retry logic
-- Transaction rollback on errors
-- Connection pooling for resilience
+- **Type**: PostgreSQL 15+
+- **Migrations**: Alembic
+- **Models**: SQLAlchemy ORM
 
-## 📚 Technology Stack
+### External Services
 
-### Backend Dependencies
+- **Proxmox API**: For monitoring Proxmox nodes and VMs
+- **Email (SMTP)**: For alert notifications
+- **Slack/Discord**: For notification channels
+- **Webhooks**: For custom integrations
 
-- `fastapi` - Web framework
-- `uvicorn` - ASGI server
-- `sqlalchemy` - ORM
-- `psycopg2-binary` - PostgreSQL driver
-- `proxmoxer` - Proxmox API client
-- `aiohttp` - Async HTTP client
-- `apscheduler` - Job scheduler
-- `python-jose` - JWT handling
-- `passlib` - Password hashing
+## Data Flow
 
-### Frontend Dependencies
+### Monitoring Flow
 
-- `react` - UI library
-- `react-router-dom` - Routing
-- `react-i18next` - Internationalization
-- `i18next` - i18n framework
-- `axios` - HTTP client
-- `vite` - Build tool
+1. **Scheduler** runs periodic checks (every 1-5 minutes)
+2. **Proxmox Client** connects to Proxmox API
+3. **Metrics** are collected and stored in database
+4. **Alert Rules** are evaluated
+5. **Alerts** are created if thresholds are exceeded
+6. **Notifications** are sent (email, Slack, Discord, webhooks)
+7. **WebSocket** broadcasts updates to frontend
 
-### Infrastructure
+### Real-time Updates
 
-- `docker` - Containerization
-- `docker-compose` - Orchestration
-- `nginx` - Web server
-- `postgresql` - Database
+1. Frontend establishes WebSocket connection
+2. Backend broadcasts updates on:
+   - Node status changes
+   - VM status changes
+   - Service health check results
+   - New alerts
+   - Metrics updates
+3. Frontend receives updates and updates UI
 
----
+## Security
 
-**Last updated**: 2024-01-XX
+### Authentication
+
+- JWT-based authentication
+- Access tokens (short-lived, 30 minutes)
+- Refresh tokens (long-lived, 7 days)
+- Two-factor authentication (TOTP)
+
+### Authorization
+
+- Role-based access control (Admin/User)
+- Endpoint-level permissions
+- Resource-level permissions
+
+### Security Features
+
+- CSRF protection
+- Security headers (CSP, HSTS, etc.)
+- Input validation and sanitization
+- SQL injection protection (SQLAlchemy parameterized queries)
+- XSS protection
+- Rate limiting
+- Password policy enforcement
+
+## Scalability
+
+### Horizontal Scaling
+
+- Stateless backend (can run multiple instances)
+- Shared database (PostgreSQL)
+- Shared cache (Redis)
+- Load balancer for frontend
+
+### Performance Optimizations
+
+- Database indexing
+- Query optimization (eager loading)
+- Caching (Redis)
+- Metrics aggregation
+- Background job processing (Celery)
+
+## Deployment
+
+### Docker Compose
+
+- All services containerized
+- Easy local development
+- Production-ready configuration
+
+### Components
+
+- `backend`: FastAPI application
+- `frontend`: React application (served by Nginx)
+- `postgres`: PostgreSQL database
+- `redis`: Redis cache (optional)
+- `celery_worker`: Celery worker (optional)
+
+## Monitoring
+
+### System Metrics
+
+- Backend server CPU, memory, disk usage
+- Process memory usage
+- Network I/O
+- System uptime
+
+### Application Metrics
+
+- API response times
+- Database query performance
+- Cache hit rates
+- Alert processing times
+
+### Prometheus Integration
+
+- Prometheus metrics endpoint: `/api/prometheus/metrics`
+- Exposes system and application metrics
+- Compatible with Grafana
+
+## Error Handling
+
+### Backend
+
+- Custom exception classes
+- Structured error responses
+- Global exception handlers
+- Sentry integration (optional)
+
+### Frontend
+
+- Error boundaries
+- User-friendly error messages
+- Retry mechanisms
+- Offline detection
+
+## Logging
+
+### Structured Logging
+
+- JSON logging in production
+- Text logging in development
+- Log levels: DEBUG, INFO, WARNING, ERROR
+- Contextual information
+
+### Log Aggregation
+
+- Compatible with log aggregation tools
+- Structured JSON format
+- Request/response logging
+- Audit logging
+
+## Backup and Restore
+
+### Database Backups
+
+- Manual backup via UI
+- Automatic backup scheduling (via Celery)
+- Backup storage in `backups/` directory
+- Restore functionality
+
+## Future Enhancements
+
+- Kubernetes monitoring
+- Docker container monitoring
+- SNMP support
+- Grafana integration
+- Mobile app / PWA
+- CLI tool improvements

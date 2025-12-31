@@ -94,6 +94,12 @@ class Settings(BaseSettings):
     redis_db: int = int(os.getenv("REDIS_DB", "0"))
     redis_password: Optional[str] = os.getenv("REDIS_PASSWORD", None)
     
+    # Celery Background Jobs
+    celery_enabled: bool = os.getenv("CELERY_ENABLED", "false").lower() == "true"
+    
+    # CSRF Protection
+    csrf_enabled: bool = os.getenv("CSRF_ENABLED", "true").lower() == "true"
+    
     class Config:
         env_file = ".env"
 

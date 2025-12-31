@@ -18,6 +18,17 @@
   margin-bottom: 2rem;
 }
 
+.system-metrics-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+.system-metrics-section h2 {
+  margin-bottom: 1.5rem;
+  color: var(--text-color, #333);
+}
+
 .stat-card {
   background: var(--bg-secondary);
   padding: 1.5rem;

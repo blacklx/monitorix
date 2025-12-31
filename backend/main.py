@@ -22,13 +22,14 @@ import json
 import logging
 from datetime import datetime
 from database import init_db, get_db
-from routers import auth, nodes, vms, services, dashboard, metrics, alerts, webhooks, health_checks, notification_channels, users, alert_rules, export, backup, audit_logs, version
+from routers import auth, nodes, vms, services, dashboard, metrics, alerts, webhooks, health_checks, notification_channels, users, alert_rules, export, backup, audit_logs, version, tasks as tasks_router, system_metrics, prometheus
 from scheduler import start_scheduler, stop_scheduler, set_broadcast_function
 from config import settings
 from rate_limiter import limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from exceptions import global_exception_handler, validation_exception_handler, MonitorixException
 from middleware.security_headers import SecurityHeadersMiddleware
+from middleware.csrf import CSRFMiddleware
 
 # Initialize Sentry early (before logging setup to catch all errors)
 from sentry_config import init_sentry
@@ -276,11 +277,15 @@ app = FastAPI(
             "name": "backup",
             "description": "Database backup and restore operations (admin only).",
         },
-        {
-            "name": "audit-logs",
-            "description": "Audit log viewing and statistics (admin only).",
-        },
-    ],
+            {
+                "name": "audit-logs",
+                "description": "Audit log viewing and statistics (admin only).",
+            },
+            {
+                "name": "system-metrics",
+                "description": "System metrics for the Monitorix backend server (CPU, memory, disk, network).",
+            },
+        ],
     contact={
         "name": "Monitorix",
         "url": "https://github.com/blacklx/monitorix",
@@ -299,6 +304,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Only enable HSTS if explicitly enabled (should be used with HTTPS)
 enable_hsts = settings.enable_hsts
 app.add_middleware(SecurityHeadersMiddleware, enable_hsts=enable_hsts)
+
+# CSRF protection middleware (add before CORS to validate tokens)
+app.add_middleware(CSRFMiddleware, enabled=settings.csrf_enabled)
 
 # CORS middleware
 app.add_middleware(
@@ -328,6 +336,9 @@ app.include_router(export.router)
 app.include_router(backup.router)
 app.include_router(audit_logs.router)
 app.include_router(version.router)
+app.include_router(tasks_router.router)
+app.include_router(system_metrics.router)
+app.include_router(prometheus.router)
 
 # API versioning support
 # Current implementation uses /api prefix (equivalent to v1)

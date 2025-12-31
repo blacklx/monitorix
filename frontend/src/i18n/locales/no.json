@@ -47,7 +47,8 @@
     "backup": "Sikkerhetskopi",
     "auditLogs": "Revisjonslogger",
     "logout": "Logg ut",
-    "language": "Språk"
+    "language": "Språk",
+    "theme": "Tema"
   },
   "auth": {
     "login": "Logg inn",
@@ -70,7 +71,13 @@
     "resetPasswordFailed": "Kunne ikke tilbakestille passord",
     "passwordResetSuccess": "Passordet har blitt tilbakestilt. Du kan nå logge inn med ditt nye passord.",
     "checkEmail": "Sjekk e-posten din for tilbakestillingslenken.",
-    "emailNotConfigured": "E-post er ikke konfigurert. Sjekk backend-logger for tilbakestillingstoken (kun utvikling)."
+    "emailNotConfigured": "E-post er ikke konfigurert. Sjekk backend-logger for tilbakestillingstoken (kun utvikling).",
+    "twoFactorAuth": "To-faktor autentisering",
+    "totpToken": "TOTP Token",
+    "enterTotpToken": "Skriv inn 6-sifret kode fra autentiseringsappen din",
+    "invalidTotpToken": "Ugyldig TOTP token. Vennligst skriv inn en 6-sifret kode.",
+    "totpVerificationFailed": "TOTP verifisering feilet",
+    "2faRequired": "2FA token påkrevd"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -81,7 +88,20 @@
     "services": "Tjenester",
     "healthy": "Friske",
     "alerts": "Varsler",
-    "active": "Aktive"
+    "active": "Aktive",
+    "systemMetrics": "Systemmålinger",
+    "cpu": "CPU",
+    "memory": "Minne",
+    "disk": "Disk",
+    "uptime": "Oppetid",
+    "processMemory": "Prosessminne",
+    "gb": "GB",
+    "mb": "MB",
+    "hours": "timer",
+    "minutes": "minutter",
+    "days": "dager",
+    "usage": "Bruk",
+    "system": "System"
   },
   "nodes": {
     "title": "Proxmox Noder",
@@ -286,7 +306,17 @@
     "passwordTooShort": "Passordet må være minst 8 tegn langt",
     "passwordsDoNotMatch": "Passordene stemmer ikke overens",
     "profileUpdated": "Profil oppdatert",
-    "passwordChanged": "Passord endret"
+    "passwordChanged": "Passord endret",
+    "twoFactorAuth": "To-faktor autentisering",
+    "2faDescription": "To-faktor autentisering legger til et ekstra sikkerhetslag på kontoen din. Du må bruke en autentiseringsapp (som Google Authenticator eller Authy) for å generere koder ved innlogging.",
+    "setup2FA": "Sett opp 2FA",
+    "enable2FA": "Aktiver 2FA",
+    "disable2FA": "Deaktiver 2FA",
+    "2faEnabled": "To-faktor autentisering er aktivert",
+    "2faDisabled": "To-faktor autentisering har blitt deaktivert",
+    "2faSetupInstructions": "Skann denne QR-koden med autentiseringsappen din, deretter skriv inn 6-sifret kode for å aktivere 2FA:",
+    "enterTotpToken": "Skriv inn 6-sifret kode",
+    "secretKey": "Hemmelig nøkkel"
   },
   "notificationChannels": {
     "title": "Varslingskanaler",

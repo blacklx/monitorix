@@ -9,7 +9,26 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(localStorage.getItem('token'))
   const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refreshToken'))
+  const [csrfToken, setCsrfToken] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  // Fetch CSRF token on mount
+  useEffect(() => {
+    fetchCsrfToken()
+  }, [])
+
+  const fetchCsrfToken = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/auth/csrf-token`)
+      const token = response.data.csrf_token
+      setCsrfToken(token)
+      // Set default header for all requests
+      axios.defaults.headers.common['X-CSRF-Token'] = token
+    } catch (error) {
+      console.error('Failed to fetch CSRF token:', error)
+      // Continue without CSRF token (will fail if CSRF is enabled on backend)
+    }
+  }
 
   useEffect(() => {
     if (token) {
@@ -20,12 +39,45 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token])
 
-  // Setup axios interceptor for automatic token refresh
+  // Setup axios interceptor for automatic token refresh and CSRF token handling
   useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
+    // Request interceptor: Add CSRF token to state-changing requests
+    const requestInterceptor = axios.interceptors.request.use(
+      (config) => {
+        // Add CSRF token to state-changing methods
+        if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(config.method?.toUpperCase())) {
+          if (csrfToken) {
+            config.headers['X-CSRF-Token'] = csrfToken
+          }
+        }
+        return config
+      },
+      (error) => {
+        return Promise.reject(error)
+      }
+    )
+
+    // Response interceptor: Handle token refresh and CSRF token errors
+    const responseInterceptor = axios.interceptors.response.use(
       (response) => response,
       async (error) => {
         const originalRequest = error.config
+
+        // Handle CSRF token errors (403)
+        if (error.response?.status === 403 && error.response?.data?.detail?.includes('CSRF')) {
+          // Try to fetch new CSRF token and retry
+          try {
+            await fetchCsrfToken()
+            // Get the updated token from axios defaults (set by fetchCsrfToken)
+            const updatedToken = axios.defaults.headers.common['X-CSRF-Token']
+            if (updatedToken) {
+              originalRequest.headers['X-CSRF-Token'] = updatedToken
+              return axios(originalRequest)
+            }
+          } catch (csrfError) {
+            console.error('Failed to refresh CSRF token:', csrfError)
+          }
+        }
 
         // If error is 401 and we haven't already retried
         if (error.response?.status === 401 && !originalRequest._retry) {
@@ -45,8 +97,11 @@ export const AuthProvider = ({ children }) => {
               localStorage.setItem('refreshToken', newRefreshToken)
               axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
 
-              // Retry original request
+              // Retry original request with new token and CSRF token
               originalRequest.headers['Authorization'] = `Bearer ${access_token}`
+              if (csrfToken) {
+                originalRequest.headers['X-CSRF-Token'] = csrfToken
+              }
               return axios(originalRequest)
             } catch (refreshError) {
               // Refresh failed, logout user
@@ -65,9 +120,10 @@ export const AuthProvider = ({ children }) => {
     )
 
     return () => {
-      axios.interceptors.response.eject(interceptor)
+      axios.interceptors.request.eject(requestInterceptor)
+      axios.interceptors.response.eject(responseInterceptor)
     }
-  }, [refreshToken])
+  }, [refreshToken, csrfToken])
 
   const fetchUser = async () => {
     try {
@@ -81,26 +137,57 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const login = async (username, password) => {
-    const formData = new FormData()
-    formData.append('username', username)
-    formData.append('password', password)
+      const login = async (username, password, totpToken = null) => {
+        try {
+          // If TOTP token is provided, use the verify-2fa endpoint
+          if (totpToken) {
+            const response = await axios.post(`${API_URL}/api/auth/login/verify-2fa`, {
+              username,
+              password,
+              totp_token: totpToken
+            })
+            const { access_token, refresh_token } = response.data
+            setToken(access_token)
+            setRefreshToken(refresh_token)
+            localStorage.setItem('token', access_token)
+            localStorage.setItem('refreshToken', refresh_token)
+            axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
+            await fetchUser()
+            return true
+          } else {
+            // Regular login
+            const formData = new FormData()
+            formData.append('username', username)
+            formData.append('password', password)
 
-    const response = await axios.post(`${API_URL}/api/auth/login`, formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    })
+            const response = await axios.post(`${API_URL}/api/auth/login`, formData, {
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+            })
 
-    const { access_token, refresh_token } = response.data
-    setToken(access_token)
-    setRefreshToken(refresh_token)
-    localStorage.setItem('token', access_token)
-    localStorage.setItem('refreshToken', refresh_token)
-    axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
-    await fetchUser()
-    return true
-  }
+            // Check if 2FA is required
+            if (response.data.requires_2fa) {
+              return { requires_2fa: true }
+            }
+
+            const { access_token, refresh_token } = response.data
+            setToken(access_token)
+            setRefreshToken(refresh_token)
+            localStorage.setItem('token', access_token)
+            localStorage.setItem('refreshToken', refresh_token)
+            axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
+            await fetchUser()
+            return true
+          }
+        } catch (error) {
+          // Check if error indicates 2FA is required
+          if (error.response?.status === 401 && error.response?.data?.detail?.includes('2FA')) {
+            return { requires_2fa: true }
+          }
+          throw error
+        }
+      }
 
   const logout = async () => {
     // Call logout endpoint to invalidate refresh token

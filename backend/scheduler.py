@@ -89,6 +89,21 @@ async def check_node(node: Node) -> Dict:
                     message=f"Node {node.name} is no longer responding",
                     node_name=node.name
                 )
+                
+                # Broadcast alert via WebSocket
+                if _broadcast_update:
+                    try:
+                        await _broadcast_update("alert", {
+                            "id": alert.id,
+                            "alert_type": alert.alert_type,
+                            "severity": alert.severity,
+                            "title": alert.title,
+                            "message": alert.message,
+                            "node_id": alert.node_id,
+                            "created_at": alert.created_at.isoformat() if alert.created_at else None
+                        })
+                    except Exception as e:
+                        logger.error(f"Failed to broadcast alert: {e}")
             
             return {"status": "offline"}
         
@@ -387,6 +402,21 @@ async def check_service(service: Service):
                         service_name=service.name,
                         vm_name=vm_name
                     )
+                    
+                    # Broadcast alert via WebSocket
+                    if _broadcast_update:
+                        try:
+                            await _broadcast_update("alert", {
+                                "id": alert.id,
+                                "alert_type": alert.alert_type,
+                                "severity": alert.severity,
+                                "title": alert.title,
+                                "message": alert.message,
+                                "service_id": alert.service_id,
+                                "created_at": alert.created_at.isoformat() if alert.created_at else None
+                            })
+                        except Exception as e:
+                            logger.error(f"Failed to broadcast alert: {e}")
             else:
                 # Resolve existing alerts
                 db.query(Alert).filter(
@@ -445,6 +475,66 @@ async def run_service_checks():
         db.close()
 
 
+async def collect_system_metrics():
+    """Collect and store system metrics for the Monitorix backend server"""
+    from system_metrics import get_system_metrics
+    
+    db = SessionLocal()
+    try:
+        metrics = get_system_metrics()
+        
+        if "error" in metrics:
+            logger.warning(f"Failed to collect system metrics: {metrics.get('error')}")
+            return
+        
+        timestamp = datetime.utcnow()
+        
+        # Store CPU metric
+        cpu_metric = Metric(
+            node_id=None,
+            vm_id=None,
+            metric_type="cpu",
+            value=metrics["cpu"]["percent"],
+            unit="percent",
+            recorded_at=timestamp
+        )
+        db.add(cpu_metric)
+        
+        # Store memory metric
+        memory_metric = Metric(
+            node_id=None,
+            vm_id=None,
+            metric_type="memory",
+            value=metrics["memory"]["percent"],
+            unit="percent",
+            recorded_at=timestamp
+        )
+        db.add(memory_metric)
+        
+        # Store disk metric
+        disk_metric = Metric(
+            node_id=None,
+            vm_id=None,
+            metric_type="disk",
+            value=metrics["disk"]["percent"],
+            unit="percent",
+            recorded_at=timestamp
+        )
+        db.add(disk_metric)
+        
+        db.commit()
+        
+        # Invalidate cache
+        invalidate_cache("system:metrics:*")
+        
+        logger.debug(f"System metrics collected: CPU={metrics['cpu']['percent']:.1f}%, Memory={metrics['memory']['percent']:.1f}%, Disk={metrics['disk']['percent']:.1f}%")
+    except Exception as e:
+        logger.error(f"Error collecting system metrics: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
 async def cleanup_old_metrics():
     """Clean up old metrics based on retention policy"""
     from config import settings
@@ -489,10 +579,37 @@ def start_scheduler():
     )
     
     # Run metrics cleanup daily at 2 AM
+    # Use Celery task if enabled, otherwise use scheduler
+    if settings.celery_enabled and settings.redis_enabled:
+        try:
+            from tasks import cleanup_metrics_task
+            scheduler.add_job(
+                lambda: cleanup_metrics_task.delay(),
+                trigger=IntervalTrigger(hours=24),
+                id="metrics_cleanup",
+                replace_existing=True
+            )
+        except Exception as e:
+            logger.warning(f"Failed to use Celery for metrics cleanup, using scheduler: {e}")
+            scheduler.add_job(
+                cleanup_old_metrics,
+                trigger=IntervalTrigger(hours=24),
+                id="metrics_cleanup",
+                replace_existing=True
+            )
+    else:
+        scheduler.add_job(
+            cleanup_old_metrics,
+            trigger=IntervalTrigger(hours=24),
+            id="metrics_cleanup",
+            replace_existing=True
+        )
+    
+    # Collect system metrics every 5 minutes
     scheduler.add_job(
-        cleanup_old_metrics,
-        trigger=IntervalTrigger(hours=24),
-        id="metrics_cleanup",
+        collect_system_metrics,
+        trigger=IntervalTrigger(minutes=5),
+        id="system_metrics",
         replace_existing=True
     )
     

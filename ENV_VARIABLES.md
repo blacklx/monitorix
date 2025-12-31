@@ -80,6 +80,22 @@
     - **Why**: Improves performance by caching frequently accessed data (dashboard stats, node/VM/service lists)
     - **Note**: If Redis is not available, the application works normally without caching
 
+13. **Celery Background Jobs (optional)**
+    - `CELERY_ENABLED` - Enable Celery for background jobs (default: `false`)
+    - **Why**: Improves performance for heavy tasks by running them in background workers
+    - **Note**: Requires Redis to be enabled (`REDIS_ENABLED=true`)
+    - **Tasks**: Bulk operations, metrics cleanup, VM synchronization, backups, exports
+    - **Note**: If Celery is not available, tasks run synchronously (slower but functional)
+
+14. **CSRF Protection (Security)**
+    - `CSRF_ENABLED` - Enable CSRF protection (default: `true`)
+    - **Why**: Protects against Cross-Site Request Forgery attacks
+    - **How it works**: 
+      - CSRF tokens are automatically generated and stored in HTTP-only cookies
+      - Frontend must include token in `X-CSRF-Token` header for all state-changing requests (POST, PUT, DELETE, PATCH)
+      - Tokens are automatically handled by the frontend
+    - **Note**: Can be disabled for development/testing, but should always be enabled in production
+
 ## What should NOT be in .env?
 
 ### ❌ Admin Password

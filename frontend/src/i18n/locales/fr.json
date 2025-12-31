@@ -47,7 +47,8 @@
     "backup": "Sauvegarde",
     "auditLogs": "Journaux d'audit",
     "logout": "Déconnexion",
-    "language": "Langue"
+    "language": "Langue",
+    "theme": "Thème"
   },
   "auth": {
     "login": "Connexion",
@@ -70,7 +71,13 @@
     "resetPasswordFailed": "Échec de la réinitialisation du mot de passe",
     "passwordResetSuccess": "Le mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
     "checkEmail": "Veuillez vérifier votre e-mail pour le lien de réinitialisation.",
-    "emailNotConfigured": "L'e-mail n'est pas configuré. Vérifiez les journaux backend pour le token de réinitialisation (développement uniquement)."
+    "emailNotConfigured": "L'e-mail n'est pas configuré. Vérifiez les journaux backend pour le token de réinitialisation (développement uniquement).",
+    "twoFactorAuth": "Authentification à deux facteurs",
+    "totpToken": "Token TOTP",
+    "enterTotpToken": "Entrez le code à 6 chiffres de votre application d'authentification",
+    "invalidTotpToken": "Token TOTP invalide. Veuillez entrer un code à 6 chiffres.",
+    "totpVerificationFailed": "Échec de la vérification TOTP",
+    "2faRequired": "Token 2FA requis"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -81,7 +88,20 @@
     "services": "Services",
     "healthy": "Sains",
     "alerts": "Alertes",
-    "active": "Actives"
+    "active": "Actives",
+    "systemMetrics": "Métriques système",
+    "cpu": "CPU",
+    "memory": "Mémoire",
+    "disk": "Disque",
+    "uptime": "Temps de fonctionnement",
+    "processMemory": "Mémoire du processus",
+    "gb": "Go",
+    "mb": "Mo",
+    "hours": "heures",
+    "minutes": "minutes",
+    "days": "jours",
+    "usage": "Utilisation",
+    "system": "Système"
   },
   "nodes": {
     "title": "Nœuds Proxmox",
@@ -286,7 +306,17 @@
     "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
     "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
     "profileUpdated": "Profil mis à jour",
-    "passwordChanged": "Mot de passe modifié"
+    "passwordChanged": "Mot de passe modifié",
+    "twoFactorAuth": "Authentification à deux facteurs",
+    "2faDescription": "L'authentification à deux facteurs ajoute une couche de sécurité supplémentaire à votre compte. Vous devrez utiliser une application d'authentification (comme Google Authenticator ou Authy) pour générer des codes lors de la connexion.",
+    "setup2FA": "Configurer 2FA",
+    "enable2FA": "Activer 2FA",
+    "disable2FA": "Désactiver 2FA",
+    "2faEnabled": "L'authentification à deux facteurs est activée",
+    "2faDisabled": "L'authentification à deux facteurs a été désactivée",
+    "2faSetupInstructions": "Scannez ce code QR avec votre application d'authentification, puis entrez le code à 6 chiffres pour activer 2FA:",
+    "enterTotpToken": "Entrez le code à 6 chiffres",
+    "secretKey": "Clé secrète"
   },
   "notificationChannels": {
     "title": "Canaux de notification",

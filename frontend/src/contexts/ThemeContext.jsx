@@ -2,11 +2,13 @@ import { createContext, useState, useContext, useEffect } from 'react'
 
 const ThemeContext = createContext(null)
 
+const THEMES = ['light', 'dark', 'blue', 'green', 'purple']
+
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     // Check localStorage first, then system preference
     const savedTheme = localStorage.getItem('theme')
-    if (savedTheme) {
+    if (savedTheme && THEMES.includes(savedTheme)) {
       return savedTheme
     }
     // Check system preference
@@ -23,11 +25,19 @@ export const ThemeProvider = ({ children }) => {
   }, [theme])
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light')
+    const currentIndex = THEMES.indexOf(theme)
+    const nextIndex = (currentIndex + 1) % THEMES.length
+    setTheme(THEMES[nextIndex])
+  }
+
+  const setThemeByName = (themeName) => {
+    if (THEMES.includes(themeName)) {
+      setTheme(themeName)
+    }
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, themes: THEMES, toggleTheme, setTheme: setThemeByName }}>
       {children}
     </ThemeContext.Provider>
   )
