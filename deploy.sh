@@ -370,7 +370,7 @@ print_info "Setting up .env file if needed..."
 $SSH_CMD $HOST "cd $REMOTE_DIR && if [ ! -f .env ]; then
     POSTGRES_PASSWORD=\$(openssl rand -base64 32 | tr -d '=+/' | cut -c1-25)
     SECRET_KEY=\$(openssl rand -base64 48 | tr -d '=+/' | cut -c1-50)
-    cat > .env << 'ENVEOF'
+    cat > .env << EOF
 # Monitorix Environment Configuration
 # Auto-generated on \$(date)
 
@@ -407,10 +407,7 @@ METRICS_CLEANUP_ENABLED=true
 # Frontend API URL
 REACT_APP_API_URL=http://localhost:8000
 VITE_API_URL=http://localhost:8000
-ENVEOF
-    # Replace placeholders
-    sed -i \"s/\${POSTGRES_PASSWORD}/\$POSTGRES_PASSWORD/g\" .env
-    sed -i \"s/\${SECRET_KEY}/\$SECRET_KEY/g\" .env
+EOF
     echo 'Created .env with auto-generated passwords'
 fi"
 
