@@ -273,6 +273,39 @@
     "passwordsDoNotMatch": "Passwords do not match",
     "profileUpdated": "Profile updated successfully",
     "passwordChanged": "Password changed successfully"
+  },
+  "notificationChannels": {
+    "title": "Notification Channels",
+    "addChannel": "Add Channel",
+    "editChannel": "Edit Channel",
+    "deleteChannel": "Delete Channel",
+    "name": "Name",
+    "type": "Type",
+    "webhookUrl": "Webhook URL",
+    "alertTypes": "Alert Types",
+    "severityFilter": "Severity Filter",
+    "active": "Active",
+    "inactive": "Inactive",
+    "test": "Test",
+    "testSuccess": "Test notification sent successfully",
+    "testFailed": "Failed to send test notification",
+    "noChannels": "No notification channels configured",
+    "confirmDelete": "Are you sure you want to delete this notification channel?",
+    "typeCannotChange": "Channel type cannot be changed after creation",
+    "alertTypesHint": "Leave empty to receive all alert types",
+    "severityFilterHint": "Leave empty to receive all severity levels",
+    "alertType": {
+      "node_down": "Node Down",
+      "vm_down": "VM Down",
+      "service_down": "Service Down",
+      "high_usage": "High Usage",
+      "test": "Test"
+    },
+    "severity": {
+      "info": "Info",
+      "warning": "Warning",
+      "critical": "Critical"
+    }
   }
 }
 
