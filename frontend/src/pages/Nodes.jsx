@@ -128,23 +128,46 @@ const Nodes = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
+    setValidationErrors({})
+    
+    // Validate form data
+    // For edit mode, create a complete data object for validation (use existing values if not changed)
+    const dataToValidate = editingNode ? {
+      name: formData.name,
+      url: formData.url,
+      username: formData.username || editingNode.username,
+      token: formData.token || 'placeholder-for-validation' // Token is optional in edit mode
+    } : formData
+    
+    const validation = validateNode(dataToValidate)
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors)
+      return
+    }
+    
+    if (editingNode) {
+      // Update existing node - only send changed fields
+      const updateData = {}
+      if (formData.name !== editingNode.name) updateData.name = formData.name
+      if (formData.url !== editingNode.url) updateData.url = formData.url
+      if (formData.username && formData.username !== editingNode.username) updateData.username = formData.username
+      if (formData.token && formData.token.trim().length > 0) updateData.token = formData.token
+      if (formData.is_local !== editingNode.is_local) updateData.is_local = formData.is_local
+      
+      try {
+        await axios.put(`${API_URL}/api/nodes/${editingNode.id}`, updateData)
+        setShowModal(false)
+        fetchNodes()
+        return
+      } catch (error) {
+        setError(error.response?.data?.detail || t('common.error'))
+        return
+      }
+    }
     
     try {
-      if (editingNode) {
-        // Update existing node
-        const updateData = {}
-        if (formData.name !== editingNode.name) updateData.name = formData.name
-        if (formData.url !== editingNode.url) updateData.url = formData.url
-        if (formData.username) updateData.username = formData.username
-        if (formData.token) updateData.token = formData.token
-        if (formData.is_local !== editingNode.is_local) updateData.is_local = formData.is_local
-        
-        await axios.put(`${API_URL}/api/nodes/${editingNode.id}`, updateData)
-      } else {
-        // Create new node
-        await axios.post(`${API_URL}/api/nodes`, formData)
-      }
-      
+      // Create new node
+      await axios.post(`${API_URL}/api/nodes`, formData)
       setShowModal(false)
       fetchNodes()
     } catch (error) {

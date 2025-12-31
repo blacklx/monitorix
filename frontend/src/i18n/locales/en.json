@@ -50,6 +50,7 @@
     "confirmPassword": "Confirm Password",
     "backToLogin": "Back to Login",
     "emailRequired": "Email is required",
+    "invalidEmail": "Invalid email format",
     "passwordTooShort": "Password must be at least 8 characters",
     "passwordsDoNotMatch": "Passwords do not match",
     "forgotPasswordFailed": "Failed to send reset link",

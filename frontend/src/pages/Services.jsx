@@ -395,16 +395,31 @@ const Services = () => {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value })
+                    if (validationErrors.name) {
+                      setValidationErrors({ ...validationErrors, name: null })
+                    }
+                  }}
+                  className={validationErrors.name ? 'error' : ''}
                   required
                 />
+                {validationErrors.name && (
+                  <span className="field-error">{validationErrors.name}</span>
+                )}
               </div>
 
               <div className="form-group">
                 <label>{t('services.serviceType')}</label>
                 <select
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, type: e.target.value })
+                    if (validationErrors.type) {
+                      setValidationErrors({ ...validationErrors, type: null })
+                    }
+                  }}
+                  className={validationErrors.type ? 'error' : ''}
                   required
                 >
                   <option value="http">{t('services.types.http')}</option>
@@ -413,6 +428,9 @@ const Services = () => {
                   <option value="port">{t('services.types.port')}</option>
                   <option value="custom">{t('services.types.custom')}</option>
                 </select>
+                {validationErrors.type && (
+                  <span className="field-error">{validationErrors.type}</span>
+                )}
               </div>
 
               {formData.type === 'custom' && (
@@ -445,10 +463,19 @@ const Services = () => {
                 <input
                   type="text"
                   value={formData.target}
-                  onChange={(e) => setFormData({ ...formData, target: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, target: e.target.value })
+                    if (validationErrors.target) {
+                      setValidationErrors({ ...validationErrors, target: null })
+                    }
+                  }}
                   placeholder={formData.type === 'ping' ? '192.168.1.1' : formData.type === 'port' ? '192.168.1.1' : 'https://example.com'}
+                  className={validationErrors.target ? 'error' : ''}
                   required
                 />
+                {validationErrors.target && (
+                  <span className="field-error">{validationErrors.target}</span>
+                )}
               </div>
 
               {(requiresPort || formData.type === 'http' || formData.type === 'https') && (
@@ -457,12 +484,21 @@ const Services = () => {
                   <input
                     type="number"
                     value={formData.port || ''}
-                    onChange={(e) => setFormData({ ...formData, port: e.target.value ? parseInt(e.target.value) : null })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, port: e.target.value ? parseInt(e.target.value) : null })
+                      if (validationErrors.port) {
+                        setValidationErrors({ ...validationErrors, port: null })
+                      }
+                    }}
                     min="1"
                     max="65535"
                     placeholder={formData.type === 'http' ? '80' : formData.type === 'https' ? '443' : ''}
+                    className={validationErrors.port ? 'error' : ''}
                     required={requiresPort}
                   />
+                  {validationErrors.port && (
+                    <span className="field-error">{validationErrors.port}</span>
+                  )}
                 </div>
               )}
 
@@ -472,11 +508,20 @@ const Services = () => {
                   <input
                     type="number"
                     value={formData.expected_status}
-                    onChange={(e) => setFormData({ ...formData, expected_status: parseInt(e.target.value) })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, expected_status: parseInt(e.target.value) })
+                      if (validationErrors.expected_status) {
+                        setValidationErrors({ ...validationErrors, expected_status: null })
+                      }
+                    }}
                     min="100"
                     max="599"
+                    className={validationErrors.expected_status ? 'error' : ''}
                     required
                   />
+                  {validationErrors.expected_status && (
+                    <span className="field-error">{validationErrors.expected_status}</span>
+                  )}
                 </div>
               )}
 
@@ -500,10 +545,19 @@ const Services = () => {
                 <input
                   type="number"
                   value={formData.check_interval}
-                  onChange={(e) => setFormData({ ...formData, check_interval: parseInt(e.target.value) })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, check_interval: parseInt(e.target.value) })
+                    if (validationErrors.check_interval) {
+                      setValidationErrors({ ...validationErrors, check_interval: null })
+                    }
+                  }}
                   min="10"
+                  className={validationErrors.check_interval ? 'error' : ''}
                   required
                 />
+                {validationErrors.check_interval && (
+                  <span className="field-error">{validationErrors.check_interval}</span>
+                )}
               </div>
 
               <div className="form-group">
@@ -511,11 +565,20 @@ const Services = () => {
                 <input
                   type="number"
                   value={formData.timeout}
-                  onChange={(e) => setFormData({ ...formData, timeout: parseInt(e.target.value) })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, timeout: parseInt(e.target.value) })
+                    if (validationErrors.timeout) {
+                      setValidationErrors({ ...validationErrors, timeout: null })
+                    }
+                  }}
                   min="1"
                   max="60"
+                  className={validationErrors.timeout ? 'error' : ''}
                   required
                 />
+                {validationErrors.timeout && (
+                  <span className="field-error">{validationErrors.timeout}</span>
+                )}
               </div>
 
               <div className="form-group">
