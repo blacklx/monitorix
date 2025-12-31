@@ -294,14 +294,62 @@ fi
 print_info "All prerequisites verified successfully"
 echo ""
 
-# Check if .env exists
+# Generate passwords and create .env file
 if [ ! -f .env ]; then
-    print_info "Creating .env file from .env.example..."
-    cp .env.example .env
-    print_warn "Please edit .env file with your configuration:"
-    print_warn "  nano .env"
-    echo ""
-    read -p "Press Enter to continue after editing .env, or Ctrl+C to exit..."
+    print_info "Creating .env file with auto-generated passwords..."
+    
+    # Generate secure passwords
+    POSTGRES_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
+    SECRET_KEY=$(openssl rand -base64 48 | tr -d "=+/" | cut -c1-50)
+    
+    # Create .env file
+    cat > .env << EOF
+# Monitorix Environment Configuration
+# Auto-generated on $(date)
+
+# Database Configuration
+POSTGRES_USER=monitorix
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+POSTGRES_DB=monitorix
+DATABASE_URL=postgresql://monitorix:${POSTGRES_PASSWORD}@postgres:5432/monitorix
+
+# Security
+SECRET_KEY=${SECRET_KEY}
+
+# Proxmox Configuration
+# Format: name:url:username:token (comma-separated for multiple nodes)
+# Example: node1:https://192.168.1.10:8006:user@pam:monitorix=abc123-def456-...
+PROXMOX_NODES=
+
+# Health Check Settings
+HEALTH_CHECK_INTERVAL=60
+HTTP_TIMEOUT=5
+PING_TIMEOUT=3
+
+# Email Alerts (Optional)
+ALERT_EMAIL_ENABLED=false
+ALERT_EMAIL_SMTP_HOST=
+ALERT_EMAIL_SMTP_PORT=587
+ALERT_EMAIL_SMTP_USER=
+ALERT_EMAIL_SMTP_PASSWORD=
+ALERT_EMAIL_FROM=
+ALERT_EMAIL_TO=
+
+# Metrics Retention
+METRICS_RETENTION_DAYS=30
+METRICS_CLEANUP_ENABLED=true
+
+# Frontend API URL
+REACT_APP_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8000
+EOF
+    
+    print_info ".env file created with auto-generated passwords"
+else
+    print_info ".env file already exists, using existing configuration"
+    # Read existing passwords for summary
+    POSTGRES_PASSWORD=$(grep "^POSTGRES_PASSWORD=" .env | cut -d'=' -f2 || echo "***")
+    SECRET_KEY=$(grep "^SECRET_KEY=" .env | cut -d'=' -f2 || echo "***")
 fi
 
 # Build and start services
@@ -334,26 +382,46 @@ print_info "=========================================="
 print_info "Setup completed successfully!"
 print_info "=========================================="
 print_info ""
-print_info "Access your dashboard:"
-print_info "  Frontend:  http://localhost:3000"
-print_info "  Backend:   http://localhost:8000"
-print_info "  API Docs:  http://localhost:8000/docs"
+print_info "╔══════════════════════════════════════════════════════════╗"
+print_info "║                    INSTALLATION SUMMARY                   ║"
+print_info "╚══════════════════════════════════════════════════════════╝"
+print_info ""
+print_info "📍 Access URLs:"
+print_info "   Frontend:  http://localhost:3000"
+print_info "   Backend:   http://localhost:8000"
+print_info "   API Docs:  http://localhost:8000/docs"
 if [ -n "$LOCAL_IP" ]; then
     print_info ""
-    print_info "Or from other machines on your network:"
-    print_info "  Frontend:  http://$LOCAL_IP:3000"
-    print_info "  Backend:   http://$LOCAL_IP:8000"
+    print_info "   Network access:"
+    print_info "   Frontend:  http://$LOCAL_IP:3000"
+    print_info "   Backend:   http://$LOCAL_IP:8000"
 fi
 print_info ""
-print_info "Next steps:"
-print_info "  1. Edit .env: nano .env"
-print_info "  2. Configure Proxmox nodes in .env"
-print_info "  3. Restart if needed: docker-compose restart"
-print_info "  4. Register first user at http://localhost:3000"
+print_info "🔐 Generated Credentials:"
+print_info "   PostgreSQL User:     monitorix"
+print_info "   PostgreSQL Password:  ${POSTGRES_PASSWORD}"
+print_info "   Database Name:       monitorix"
 print_info ""
-print_warn "Remember to:"
-print_warn "  - Change default passwords in .env"
-print_warn "  - Configure firewall if needed"
-print_warn "  - Set up SSL via Nginx Proxy Manager (optional)"
+print_warn "⚠️  IMPORTANT: Save these credentials!"
+print_warn "   The PostgreSQL password is stored in: .env"
+print_warn "   Keep this file secure and back it up."
+print_info ""
+print_info "📋 Next Steps:"
+print_info "   1. Register first user: http://localhost:3000"
+print_info "   2. Configure Proxmox nodes in .env file:"
+print_info "      nano .env"
+print_info "      Add: PROXMOX_NODES=node1:https://ip:8006:user@pam:token"
+print_info "   3. Restart services: docker-compose restart"
+print_info ""
+print_info "📝 Configuration File:"
+print_info "   Location: $(pwd)/.env"
+print_info "   Edit with: nano .env"
+print_info ""
+print_warn "🔒 Security Reminders:"
+print_warn "   - Passwords are auto-generated and secure"
+print_warn "   - Configure firewall if exposing to network"
+print_warn "   - Set up SSL via Nginx Proxy Manager for production"
+print_info ""
+print_info "✨ Monitorix is ready to use!"
 print_info ""
 

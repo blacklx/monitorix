@@ -335,7 +335,55 @@ if ($EnvFile -and (Test-Path $EnvFile)) {
 
 # Set up .env if it doesn't exist
 Write-Info "Setting up .env file if needed..."
-& ssh @sshArgs $Hostname "cd $RemoteDir && if [ ! -f .env ]; then cp .env.example .env && echo 'Created .env from .env.example - please edit it!'; fi" | Out-Null
+$envSetupScript = @"
+cd $RemoteDir
+if [ ! -f .env ]; then
+    POSTGRES_PASSWORD=`$(openssl rand -base64 32 | tr -d '=+/' | cut -c1-25)
+    SECRET_KEY=`$(openssl rand -base64 48 | tr -d '=+/' | cut -c1-50)
+    cat > .env << 'ENVEOF'
+# Monitorix Environment Configuration
+# Auto-generated on `$(date)
+
+# Database Configuration
+POSTGRES_USER=monitorix
+POSTGRES_PASSWORD=`${POSTGRES_PASSWORD}
+POSTGRES_DB=monitorix
+DATABASE_URL=postgresql://monitorix:`${POSTGRES_PASSWORD}@postgres:5432/monitorix
+
+# Security
+SECRET_KEY=`${SECRET_KEY}
+
+# Proxmox Configuration
+PROXMOX_NODES=
+
+# Health Check Settings
+HEALTH_CHECK_INTERVAL=60
+HTTP_TIMEOUT=5
+PING_TIMEOUT=3
+
+# Email Alerts (Optional)
+ALERT_EMAIL_ENABLED=false
+ALERT_EMAIL_SMTP_HOST=
+ALERT_EMAIL_SMTP_PORT=587
+ALERT_EMAIL_SMTP_USER=
+ALERT_EMAIL_SMTP_PASSWORD=
+ALERT_EMAIL_FROM=
+ALERT_EMAIL_TO=
+
+# Metrics Retention
+METRICS_RETENTION_DAYS=30
+METRICS_CLEANUP_ENABLED=true
+
+# Frontend API URL
+REACT_APP_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8000
+ENVEOF
+    sed -i "s/`${POSTGRES_PASSWORD}/`$POSTGRES_PASSWORD/g" .env
+    sed -i "s/`${SECRET_KEY}/`$SECRET_KEY/g" .env
+    echo 'Created .env with auto-generated passwords'
+fi
+"@
+& ssh @sshArgs $Hostname $envSetupScript | Out-Null
 
 # Build and start services
 if (-not $SkipBuild) {
@@ -362,20 +410,52 @@ Write-Info "Checking service status..."
 # Get VM IP
 $vmIP = (& ssh @sshArgs $Hostname "hostname -I | awk '{print `$1}'").Trim()
 
+# Get generated passwords for summary
+Write-Info "Retrieving installation summary..."
+$postgresPassword = (& ssh @sshArgs $Hostname "cd $RemoteDir && grep '^POSTGRES_PASSWORD=' .env | cut -d'=' -f2" 2>&1).Trim()
+if (-not $postgresPassword -or $postgresPassword -match "error") {
+    $postgresPassword = "***"
+}
+
 Write-Info ""
 Write-Info "=========================================="
 Write-Info "Deployment completed successfully!"
 Write-Info "=========================================="
 Write-Info ""
-Write-Info "Access your dashboard:"
-Write-Info "  Frontend:  http://$vmIP:3000"
-Write-Info "  Backend:   http://$vmIP:8000"
-Write-Info "  API Docs:  http://$vmIP:8000/docs"
+Write-Info "╔══════════════════════════════════════════════════════════╗"
+Write-Info "║                    INSTALLATION SUMMARY                   ║"
+Write-Info "╚══════════════════════════════════════════════════════════╝"
 Write-Info ""
-Write-Info "Next steps:"
-Write-Info "  1. SSH into VM: ssh $Hostname"
-Write-Info "  2. Edit .env: cd $RemoteDir && nano .env"
-Write-Info "  3. Configure Proxmox nodes in .env"
-Write-Info "  4. Restart if needed: docker-compose restart"
-Write-Info "  5. Register first user at http://$vmIP:3000"
+Write-Info "📍 Access URLs:"
+Write-Info "   Frontend:  http://$vmIP:3000"
+Write-Info "   Backend:   http://$vmIP:8000"
+Write-Info "   API Docs:  http://$vmIP:8000/docs"
+Write-Info ""
+Write-Info "🔐 Generated Credentials:"
+Write-Info "   PostgreSQL User:     monitorix"
+Write-Info "   PostgreSQL Password: $postgresPassword"
+Write-Info "   Database Name:       monitorix"
+Write-Info ""
+Write-Warn "⚠️  IMPORTANT: Save these credentials!"
+Write-Warn "   The PostgreSQL password is stored in: $RemoteDir/.env"
+Write-Warn "   SSH into VM to view: ssh $Hostname 'cat $RemoteDir/.env | grep POSTGRES_PASSWORD'"
+Write-Info ""
+Write-Info "📋 Next Steps:"
+Write-Info "   1. SSH into VM: ssh $Hostname"
+Write-Info "   2. Register first user: http://$vmIP:3000"
+Write-Info "   3. Configure Proxmox nodes:"
+Write-Info "      cd $RemoteDir && nano .env"
+Write-Info "      Add: PROXMOX_NODES=node1:https://ip:8006:user@pam:token"
+Write-Info "   4. Restart services: docker-compose restart"
+Write-Info ""
+Write-Info "📝 Configuration File:"
+Write-Info "   Location: $RemoteDir/.env (on VM)"
+Write-Info "   View: ssh $Hostname 'cat $RemoteDir/.env'"
+Write-Info ""
+Write-Warn "🔒 Security Reminders:"
+Write-Warn "   - Passwords are auto-generated and secure"
+Write-Warn "   - Configure firewall if exposing to network"
+Write-Warn "   - Set up SSL via Nginx Proxy Manager for production"
+Write-Info ""
+Write-Info "✨ Monitorix is ready to use!"
 Write-Info ""

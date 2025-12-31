@@ -367,7 +367,52 @@ fi
 
 # Set up .env if it doesn't exist
 print_info "Setting up .env file if needed..."
-$SSH_CMD $HOST "cd $REMOTE_DIR && if [ ! -f .env ]; then cp .env.example .env && echo 'Created .env from .env.example - please edit it!'; fi"
+$SSH_CMD $HOST "cd $REMOTE_DIR && if [ ! -f .env ]; then
+    POSTGRES_PASSWORD=\$(openssl rand -base64 32 | tr -d '=+/' | cut -c1-25)
+    SECRET_KEY=\$(openssl rand -base64 48 | tr -d '=+/' | cut -c1-50)
+    cat > .env << 'ENVEOF'
+# Monitorix Environment Configuration
+# Auto-generated on \$(date)
+
+# Database Configuration
+POSTGRES_USER=monitorix
+POSTGRES_PASSWORD=\${POSTGRES_PASSWORD}
+POSTGRES_DB=monitorix
+DATABASE_URL=postgresql://monitorix:\${POSTGRES_PASSWORD}@postgres:5432/monitorix
+
+# Security
+SECRET_KEY=\${SECRET_KEY}
+
+# Proxmox Configuration
+PROXMOX_NODES=
+
+# Health Check Settings
+HEALTH_CHECK_INTERVAL=60
+HTTP_TIMEOUT=5
+PING_TIMEOUT=3
+
+# Email Alerts (Optional)
+ALERT_EMAIL_ENABLED=false
+ALERT_EMAIL_SMTP_HOST=
+ALERT_EMAIL_SMTP_PORT=587
+ALERT_EMAIL_SMTP_USER=
+ALERT_EMAIL_SMTP_PASSWORD=
+ALERT_EMAIL_FROM=
+ALERT_EMAIL_TO=
+
+# Metrics Retention
+METRICS_RETENTION_DAYS=30
+METRICS_CLEANUP_ENABLED=true
+
+# Frontend API URL
+REACT_APP_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8000
+ENVEOF
+    # Replace placeholders
+    sed -i \"s/\${POSTGRES_PASSWORD}/\$POSTGRES_PASSWORD/g\" .env
+    sed -i \"s/\${SECRET_KEY}/\$SECRET_KEY/g\" .env
+    echo 'Created .env with auto-generated passwords'
+fi"
 
 # Build and start services
 if [ "$SKIP_BUILD" = false ]; then
@@ -394,25 +439,50 @@ $SSH_CMD $HOST "cd $REMOTE_DIR && docker-compose ps"
 # Get VM IP
 VM_IP=$($SSH_CMD $HOST "hostname -I | awk '{print \$1}'" | tr -d '\r\n')
 
+# Get generated passwords for summary
+print_info "Retrieving installation summary..."
+POSTGRES_PASSWORD=$($SSH_CMD $HOST "cd $REMOTE_DIR && grep '^POSTGRES_PASSWORD=' .env | cut -d'=' -f2" 2>/dev/null || echo "***")
+SECRET_KEY=$($SSH_CMD $HOST "cd $REMOTE_DIR && grep '^SECRET_KEY=' .env | cut -d'=' -f2" 2>/dev/null || echo "***")
+
 print_info ""
 print_info "=========================================="
 print_info "Deployment completed successfully!"
 print_info "=========================================="
 print_info ""
-print_info "Access your dashboard:"
-print_info "  Frontend:  http://$VM_IP:3000"
-print_info "  Backend:   http://$VM_IP:8000"
-print_info "  API Docs:  http://$VM_IP:8000/docs"
+print_info "╔══════════════════════════════════════════════════════════╗"
+print_info "║                    INSTALLATION SUMMARY                   ║"
+print_info "╚══════════════════════════════════════════════════════════╝"
 print_info ""
-print_info "Next steps:"
-print_info "  1. SSH into VM: ssh $HOST"
-print_info "  2. Edit .env: cd $REMOTE_DIR && nano .env"
-print_info "  3. Configure Proxmox nodes in .env"
-print_info "  4. Restart if needed: docker-compose restart"
-print_info "  5. Register first user at http://$VM_IP:3000"
+print_info "📍 Access URLs:"
+print_info "   Frontend:  http://$VM_IP:3000"
+print_info "   Backend:   http://$VM_IP:8000"
+print_info "   API Docs:  http://$VM_IP:8000/docs"
 print_info ""
-print_warn "Remember to:"
-print_warn "  - Change default passwords in .env"
-print_warn "  - Configure firewall if needed"
-print_warn "  - Set up SSL via Nginx Proxy Manager (optional)"
+print_info "🔐 Generated Credentials:"
+print_info "   PostgreSQL User:     monitorix"
+print_info "   PostgreSQL Password: ${POSTGRES_PASSWORD}"
+print_info "   Database Name:       monitorix"
+print_info ""
+print_warn "⚠️  IMPORTANT: Save these credentials!"
+print_warn "   The PostgreSQL password is stored in: $REMOTE_DIR/.env"
+print_warn "   SSH into VM to view: ssh $HOST 'cat $REMOTE_DIR/.env | grep POSTGRES_PASSWORD'"
+print_info ""
+print_info "📋 Next Steps:"
+print_info "   1. SSH into VM: ssh $HOST"
+print_info "   2. Register first user: http://$VM_IP:3000"
+print_info "   3. Configure Proxmox nodes:"
+print_info "      cd $REMOTE_DIR && nano .env"
+print_info "      Add: PROXMOX_NODES=node1:https://ip:8006:user@pam:token"
+print_info "   4. Restart services: docker-compose restart"
+print_info ""
+print_info "📝 Configuration File:"
+print_info "   Location: $REMOTE_DIR/.env (on VM)"
+print_info "   View: ssh $HOST 'cat $REMOTE_DIR/.env'"
+print_info ""
+print_warn "🔒 Security Reminders:"
+print_warn "   - Passwords are auto-generated and secure"
+print_warn "   - Configure firewall if exposing to network"
+print_warn "   - Set up SSL via Nginx Proxy Manager for production"
+print_info ""
+print_info "✨ Monitorix is ready to use!"
 print_info ""
