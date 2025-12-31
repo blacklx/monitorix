@@ -461,7 +461,10 @@ VM_IP=$($SSH_CMD $HOST "hostname -I | awk '{print \$1}'" | tr -d '\r\n')
 print_info "Retrieving installation summary..."
 POSTGRES_PASSWORD=$($SSH_CMD $HOST "cd $REMOTE_DIR && grep '^POSTGRES_PASSWORD=' .env | cut -d'=' -f2" 2>/dev/null || echo "***")
 SECRET_KEY=$($SSH_CMD $HOST "cd $REMOTE_DIR && grep '^SECRET_KEY=' .env | cut -d'=' -f2" 2>/dev/null || echo "***")
-ADMIN_PASSWORD=$($SSH_CMD $HOST "cd $REMOTE_DIR && grep '^ADMIN_PASSWORD=' .env | cut -d'=' -f2" 2>/dev/null || echo "")
+# Admin password is retrieved from backend logs, not from .env
+print_info "Retrieving admin password from backend logs..."
+sleep 5
+ADMIN_PASSWORD=$($SSH_CMD $HOST "cd $REMOTE_DIR && docker-compose logs backend 2>/dev/null | grep -i 'Password:' | tail -1 | sed 's/.*Password: //' | tr -d '\r\n'" 2>/dev/null || echo "")
 
 print_info ""
 print_info "=========================================="
