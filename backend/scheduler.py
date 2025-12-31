@@ -125,7 +125,32 @@ async def check_node(node: Node) -> Dict:
             )
             db.add(metric_disk)
             
-            db.commit()
+            # Evaluate alert rules for node metrics
+            if node_status.get("cpu_usage") is not None:
+                await evaluate_alert_rules(
+                    db=db,
+                    metric_type="cpu",
+                    metric_value=node_status.get("cpu_usage", 0),
+                    node_id=node.id
+                )
+            
+            if node_status.get("memory_usage") is not None:
+                await evaluate_alert_rules(
+                    db=db,
+                    metric_type="memory",
+                    metric_value=node_status.get("memory_usage", 0),
+                    node_id=node.id
+                )
+            
+            if node_status.get("disk_usage") is not None:
+                await evaluate_alert_rules(
+                    db=db,
+                    metric_type="disk",
+                    metric_value=node_status.get("disk_usage", 0),
+                    node_id=node.id
+                )
+        
+        db.commit()
             
             # Evaluate alert rules for node metrics
             if node_status.get("cpu_usage") is not None:
