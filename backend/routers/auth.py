@@ -152,6 +152,81 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
 
+@router.put("/change-password")
+@limiter.limit("10/hour")
+async def change_password(
+    request: Request,
+    password_data: dict,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Change current user's password"""
+    from auth import verify_password, get_password_hash
+    
+    old_password = password_data.get("old_password")
+    new_password = password_data.get("new_password")
+    
+    if not old_password or not new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Old password and new password are required"
+        )
+    
+    # Verify old password
+    if not verify_password(old_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect old password"
+        )
+    
+    # Validate new password length
+    if len(new_password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 8 characters long"
+        )
+    
+    # Update password
+    current_user.hashed_password = get_password_hash(new_password)
+    db.commit()
+    
+    return {"message": "Password changed successfully"}
+
+
+@router.put("/me")
+@limiter.limit("20/minute")
+async def update_me(
+    request: Request,
+    user_data: dict,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update current user's information (email, username)"""
+    # Check if username is being changed and if it already exists
+    if "username" in user_data and user_data["username"] != current_user.username:
+        existing_user = db.query(User).filter(User.username == user_data["username"]).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already exists"
+            )
+        current_user.username = user_data["username"]
+    
+    # Check if email is being changed and if it already exists
+    if "email" in user_data and user_data["email"] != current_user.email:
+        existing_email = db.query(User).filter(User.email == user_data["email"]).first()
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already exists"
+            )
+        current_user.email = user_data["email"]
+    
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
 @router.post("/forgot-password")
 @limiter.limit("5/hour")
 async def forgot_password(request: Request, email: str, db: Session = Depends(get_db)):
