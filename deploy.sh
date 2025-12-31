@@ -425,7 +425,9 @@ FRONTEND_URL=http://localhost:3000
 REACT_APP_API_URL=http://localhost:8000
 VITE_API_URL=http://localhost:8000
 EOF
+    chmod 600 .env
     echo 'Created .env with auto-generated passwords'
+    echo 'File permissions set to 600 (owner read/write only)'
 fi"
 
 # Build and start services

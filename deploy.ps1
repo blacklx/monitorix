@@ -398,7 +398,9 @@ ENVEOF
     sed -i "s/`${POSTGRES_PASSWORD}/`$POSTGRES_PASSWORD/g" .env
     sed -i "s/`${SECRET_KEY}/`$SECRET_KEY/g" .env
     sed -i "s/`${ADMIN_PASSWORD}/`$ADMIN_PASSWORD/g" .env
+    chmod 600 .env
     echo 'Created .env with auto-generated passwords'
+    echo 'File permissions set to 600 (owner read/write only)'
 fi
 "@
 & ssh @sshArgs $Hostname $envSetupScript | Out-Null

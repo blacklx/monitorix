@@ -226,25 +226,34 @@ See [INSTALL.md](INSTALL.md) for more troubleshooting.
 
 ## 🔒 Security
 
+### Environment Variables (.env file)
+
+The `.env` file contains sensitive credentials (database passwords, secret keys, etc.). 
+
+**Security measures:**
+- ✅ `.env` file is automatically excluded from Git (in `.gitignore`)
+- ✅ File permissions are automatically set to `600` (owner read/write only)
+- ✅ Passwords are auto-generated with cryptographically secure random values
+- ✅ `.env` file is never exposed via web server or API
+
+**⚠️ Important for production:**
+- Never commit `.env` to version control
+- Ensure `.env` file permissions are `600` (check with `ls -l .env`)
+- Restrict access to the directory containing `.env`
+- Consider using Docker secrets or system environment variables for highly sensitive deployments
+- Use a reverse proxy (Nginx, Traefik) with SSL/TLS for production
+
 ### User Registration
 
-By default, anyone can register a new account. For production deployments, you should disable public registration:
-
-```env
-# Disable public registration
-ALLOW_REGISTRATION=false
-
-# Optional: Require registration token
-REGISTRATION_TOKEN=your-secret-token-here
-```
+Public registration is **disabled by default**. An admin user is automatically created during installation with a generated password shown in the installation summary.
 
 **Security Features:**
-- First user automatically becomes admin
-- Configurable registration (enable/disable)
-- Optional registration token requirement
-- JWT-based authentication
-- API rate limiting
-- Password hashing with bcrypt
+- ✅ No public registration (admin user created automatically)
+- ✅ Password reset via email (if email is configured)
+- ✅ JWT-based authentication
+- ✅ API rate limiting
+- ✅ Password hashing with bcrypt
+- ✅ Admin role system
 
 ### Production Checklist
 

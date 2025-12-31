@@ -359,7 +359,10 @@ REACT_APP_API_URL=http://localhost:8000
 VITE_API_URL=http://localhost:8000
 EOF
     
+    # Set secure file permissions (read/write for owner only)
+    chmod 600 .env
     print_info ".env file created with auto-generated passwords"
+    print_info "File permissions set to 600 (owner read/write only)"
     ADMIN_PASSWORD_SET=true
 else
     print_info ".env file already exists, using existing configuration"
