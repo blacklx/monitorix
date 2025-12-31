@@ -72,7 +72,6 @@ async def refresh_token(
     """Refresh access token using refresh token"""
     from datetime import datetime
     from auth import verify_refresh_token, create_refresh_token
-    from schemas import RefreshTokenRequest
     
     refresh_token = token_data.refresh_token
     
