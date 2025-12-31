@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
+import { formatDate } from '../utils/dateFormat'
 import { useAuth } from '../contexts/AuthContext'
 import './Users.css'
 
@@ -174,7 +175,7 @@ const Users = () => {
                     <span className="admin-badge">{t('users.admin')}</span>
                   )}
                 </td>
-                <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                <td>{formatDate(user.created_at)}</td>
                 <td>
                   <div className="action-buttons">
                     <button

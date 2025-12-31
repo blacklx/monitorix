@@ -37,6 +37,7 @@ class Node(Base):
     maintenance_mode = Column(Boolean, default=False)
     last_check = Column(DateTime, nullable=True)
     status = Column(String, default="unknown")  # online, offline, error
+    tags = Column(JSON, nullable=True)  # Array of tag strings
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -58,6 +59,7 @@ class VM(Base):
     disk_usage = Column(Float, default=0.0)
     disk_total = Column(Integer, default=0)
     uptime = Column(Integer, default=0)
+    tags = Column(JSON, nullable=True)  # Array of tag strings
     last_check = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -183,3 +185,23 @@ class AlertRule(Base):
     last_triggered = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    username = Column(String, nullable=True)  # Store username for historical reference
+    action = Column(String, nullable=False)  # create, update, delete, login, logout, etc.
+    resource_type = Column(String, nullable=False)  # user, node, vm, service, alert, backup, etc.
+    resource_id = Column(Integer, nullable=True)  # ID of the affected resource
+    resource_name = Column(String, nullable=True)  # Name of the affected resource
+    changes = Column(JSON, nullable=True)  # JSON object with before/after values
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(String, nullable=True)
+    success = Column(Boolean, default=True)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    user = relationship("User")

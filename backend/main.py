@@ -1,3 +1,18 @@
+"""
+Copyright 2024 Monitorix Contributors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -14,6 +29,10 @@ from rate_limiter import limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from exceptions import global_exception_handler, validation_exception_handler, MonitorixException
 from middleware.security_headers import SecurityHeadersMiddleware
+
+# Initialize Sentry early (before logging setup to catch all errors)
+from sentry_config import init_sentry
+init_sentry()
 
 # Setup structured logging
 from logging_config import setup_logging
@@ -284,10 +303,10 @@ app.add_middleware(SecurityHeadersMiddleware, enable_hsts=enable_hsts)
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend URL
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors_origins,
+    allow_credentials=settings.cors_allow_credentials,
+    allow_methods=settings.cors_allow_methods,
+    allow_headers=settings.cors_allow_headers,
 )
 
 # Include routers

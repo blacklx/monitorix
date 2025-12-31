@@ -15,12 +15,19 @@ router = APIRouter(prefix="/api/services", tags=["services"])
 
 @router.get("", response_model=List[ServiceResponse])
 async def get_services(
-    vm_id: Optional[int] = None,
+    vm_id: Optional[int] = Query(None, description="Filter services by VM ID"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)
 ):
-    """Get all services, optionally filtered by VM"""
-    query = db.query(Service)
+    """
+    Get all service health checks.
+    
+    Returns a list of all configured services with their current health status.
+    Optionally filter by VM ID to get only services associated with a specific VM.
+    
+    **Example**: `/api/services?vm_id=1` returns only services for VM 1
+    """
+    query = db.query(Service).options(joinedload(Service.vm))
     if vm_id:
         query = query.filter(Service.vm_id == vm_id)
     services = query.all()
@@ -103,7 +110,7 @@ async def get_service(
     current_user = Depends(get_current_active_user)
 ):
     """Get a specific service"""
-    service = db.query(Service).filter(Service.id == service_id).first()
+    service = db.query(Service).options(joinedload(Service.vm)).filter(Service.id == service_id).first()
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
     return service

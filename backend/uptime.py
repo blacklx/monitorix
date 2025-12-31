@@ -35,41 +35,64 @@ def calculate_node_uptime(db: Session, node_id: int, hours: int = 24) -> Dict:
             "period_hours": hours
         }
     
-    # Get metrics data to track status over time
-    # We use CPU metrics as a proxy for node availability
-    # If CPU metrics exist, the node was online
-    metrics = db.query(func.count()).filter(
+    # Get actual metrics with timestamps to calculate real uptime
+    # Use time intervals between metrics to determine actual uptime
+    actual_metrics = db.query(Metric).filter(
         and_(
             Metric.node_id == node_id,
             Metric.metric_type == "cpu",
             Metric.recorded_at >= since
         )
-    ).scalar() or 0
+    ).order_by(Metric.recorded_at).all()
     
-    # Get node checks from last_check timestamps
-    # Count checks in the period (assuming checks every 60 seconds)
-    expected_checks = hours * 60  # One check per minute
-    total_checks = min(metrics, expected_checks)
-    
-    # If we have metrics, node was online for those periods
-    # If node is currently online and we have recent data, count as online
-    online_checks = 0
-    if node.status == "online" and node.last_check and node.last_check >= since:
-        # Node is currently online
-        if metrics > 0:
-            # We have metrics data, use that
-            online_checks = metrics
+    if not actual_metrics:
+        # No metrics data - use status and last_check
+        if node.status == "online" and node.last_check and node.last_check >= since:
+            # Node is online and was checked recently
+            # Estimate based on check interval (60 seconds)
+            time_since_check = (datetime.utcnow() - node.last_check).total_seconds() / 60
+            if time_since_check < 5:  # Checked within last 5 minutes
+                online_checks = max(1, int((hours * 60) - time_since_check))
+                total_checks = hours * 60
+            else:
+                # Last check was too long ago, can't determine
+                online_checks = 0
+                total_checks = hours * 60
         else:
-            # No metrics but node is online, assume 100% if recent check
-            online_checks = 1
-            total_checks = 1
-    elif metrics > 0:
-        # We have historical metrics but node might be offline now
-        online_checks = metrics
+            # Node is offline or no recent check
+            online_checks = 0
+            total_checks = hours * 60
     else:
-        # No data at all
-        online_checks = 0
-        total_checks = 1
+        # We have metrics data - calculate based on actual time coverage
+        first_metric_time = actual_metrics[0].recorded_at
+        last_metric_time = actual_metrics[-1].recorded_at
+        
+        # Calculate time span covered by metrics
+        period_start = max(since, first_metric_time)
+        period_end = min(datetime.utcnow(), last_metric_time)
+        
+        # Count unique time periods (group by minute to avoid double counting)
+        unique_periods = set()
+        for metric in actual_metrics:
+            # Round to minute to group metrics in same minute
+            period_key = metric.recorded_at.replace(second=0, microsecond=0)
+            unique_periods.add(period_key)
+        
+        online_checks = len(unique_periods)
+        
+        # Calculate total expected periods in the time range
+        total_period_seconds = (period_end - period_start).total_seconds()
+        total_expected_periods = max(1, int(total_period_seconds / 60))  # One per minute
+        
+        # If node is currently online, extend the period to now
+        if node.status == "online" and node.last_check and node.last_check >= since:
+            time_since_last_metric = (datetime.utcnow() - last_metric_time).total_seconds() / 60
+            if time_since_last_metric < 5:  # Recent metric
+                # Add periods from last metric to now
+                additional_periods = min(int(time_since_last_metric), int((datetime.utcnow() - period_start).total_seconds() / 60) - online_checks)
+                online_checks += max(0, additional_periods)
+        
+        total_checks = max(online_checks, total_expected_periods)
     
     # Calculate uptime percentage
     if total_checks > 0:

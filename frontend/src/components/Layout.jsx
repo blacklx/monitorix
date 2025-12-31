@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { useWebSocket } from '../hooks/useWebSocket'
+import VersionInfo from './VersionInfo'
 import './Layout.css'
 
 const Layout = () => {
@@ -10,7 +11,7 @@ const Layout = () => {
   const { t, i18n } = useTranslation()
   const { theme, toggleTheme } = useTheme()
   const location = useLocation()
-  const { isConnected } = useWebSocket(() => {})
+  const { isConnected, isReconnecting, reconnectAttempt, connectionError } = useWebSocket(() => {})
 
   const isActive = (path) => location.pathname === path
 
@@ -45,9 +46,17 @@ const Layout = () => {
             {t('nav.metrics')}
           </Link>
           {user?.is_admin && (
-            <Link to="/users" className={isActive('/users') ? 'active' : ''}>
-              {t('nav.users')}
-            </Link>
+            <>
+              <Link to="/users" className={isActive('/users') ? 'active' : ''}>
+                {t('nav.users')}
+              </Link>
+              <Link to="/backup" className={isActive('/backup') ? 'active' : ''}>
+                {t('nav.backup')}
+              </Link>
+              <Link to="/audit-logs" className={isActive('/audit-logs') ? 'active' : ''}>
+                {t('nav.auditLogs')}
+              </Link>
+            </>
           )}
           <Link to="/notification-channels" className={isActive('/notification-channels') ? 'active' : ''}>
             {t('nav.notificationChannels')}
@@ -60,9 +69,24 @@ const Layout = () => {
           <Link to="/profile" className={isActive('/profile') ? 'active' : ''}>
             {t('nav.profile')}
           </Link>
-          <div className="websocket-status" title={isConnected ? t('common.websocketConnected') : t('common.websocketDisconnected')}>
-            <span className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}></span>
-            <span className="status-text">{isConnected ? t('common.connected') : t('common.disconnected')}</span>
+          <div 
+            className={`websocket-status ${isReconnecting ? 'reconnecting' : ''}`}
+            title={
+              isConnected 
+                ? t('common.websocketConnected') 
+                : isReconnecting 
+                  ? t('common.websocketReconnecting', { attempt: reconnectAttempt })
+                  : connectionError || t('common.websocketDisconnected')
+            }
+          >
+            <span className={`status-indicator ${isConnected ? 'connected' : isReconnecting ? 'reconnecting' : 'disconnected'}`}></span>
+            <span className="status-text">
+              {isConnected 
+                ? t('common.connected') 
+                : isReconnecting 
+                  ? t('common.reconnecting', { attempt: reconnectAttempt })
+                  : t('common.disconnected')}
+            </span>
           </div>
           <select
             value={i18n.language}
@@ -84,6 +108,9 @@ const Layout = () => {
       <main className="main-content">
         <Outlet />
       </main>
+      <footer className="app-footer">
+        <VersionInfo />
+      </footer>
     </div>
   )
 }

@@ -1,6 +1,10 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional, List, Dict
+from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import Optional, List, Dict, Any
 from datetime import datetime
+from input_validation import (
+    validate_username, validate_url, sanitize_string,
+    validate_no_sql_injection, validate_no_xss
+)
 
 
 # User schemas
@@ -17,19 +21,69 @@ class UserResponse(BaseModel):
 
 
 class UserCreate(BaseModel):
-    username: str
-    email: str
-    password: str
+    username: str = Field(..., min_length=3, max_length=50)
+    email: EmailStr
+    password: str = Field(..., min_length=8)
     is_active: bool = True
     is_admin: bool = False
+    
+    @field_validator('username')
+    @classmethod
+    def validate_username_format(cls, v: str) -> str:
+        is_valid, error = validate_username(v)
+        if not is_valid:
+            raise ValueError(error)
+        return sanitize_string(v, max_length=50)
+    
+    @field_validator('email')
+    @classmethod
+    def validate_email_format(cls, v: str) -> str:
+        # EmailStr already validates format, but we sanitize
+        return sanitize_string(v, max_length=254)
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password_safety(cls, v: str) -> str:
+        # Check for SQL injection patterns
+        is_valid, error = validate_no_sql_injection(v)
+        if not is_valid:
+            raise ValueError(error)
+        return v
 
 
 class UserUpdate(BaseModel):
-    username: Optional[str] = None
-    email: Optional[str] = None
-    password: Optional[str] = None
+    username: Optional[str] = Field(None, min_length=3, max_length=50)
+    email: Optional[EmailStr] = None
+    password: Optional[str] = Field(None, min_length=8)
     is_active: Optional[bool] = None
     is_admin: Optional[bool] = None
+    
+    @field_validator('username')
+    @classmethod
+    def validate_username_format(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        is_valid, error = validate_username(v)
+        if not is_valid:
+            raise ValueError(error)
+        return sanitize_string(v, max_length=50)
+    
+    @field_validator('email')
+    @classmethod
+    def validate_email_format(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        return sanitize_string(v, max_length=254)
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password_safety(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        is_valid, error = validate_no_sql_injection(v)
+        if not is_valid:
+            raise ValueError(error)
+        return v
 
 
 class PasswordChange(BaseModel):
@@ -53,11 +107,47 @@ class RefreshTokenRequest(BaseModel):
 
 # Node schemas
 class NodeCreate(BaseModel):
-    name: str
-    url: str
-    username: str
-    token: str
+    name: str = Field(..., min_length=1, max_length=100)
+    url: str = Field(..., min_length=1, max_length=500)
+    username: str = Field(..., min_length=1, max_length=100)
+    token: str = Field(..., min_length=1, max_length=500)
     is_local: bool = True
+    tags: Optional[List[str]] = None
+    
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        sanitized = sanitize_string(v, max_length=100)
+        is_valid, error = validate_no_xss(sanitized)
+        if not is_valid:
+            raise ValueError(error)
+        return sanitized
+    
+    @field_validator('url')
+    @classmethod
+    def validate_url_format(cls, v: str) -> str:
+        is_valid, error = validate_url(v, require_https=False)
+        if not is_valid:
+            raise ValueError(error)
+        return sanitize_string(v, max_length=500)
+    
+    @field_validator('username')
+    @classmethod
+    def validate_username_safe(cls, v: str) -> str:
+        sanitized = sanitize_string(v, max_length=100)
+        is_valid, error = validate_no_sql_injection(sanitized)
+        if not is_valid:
+            raise ValueError(error)
+        return sanitized
+    
+    @field_validator('token')
+    @classmethod
+    def validate_token_safe(cls, v: str) -> str:
+        # Don't sanitize token (might contain special chars), but check for SQL injection
+        is_valid, error = validate_no_sql_injection(v)
+        if not is_valid:
+            raise ValueError(error)
+        return v
 
 
 class NodeUpdate(BaseModel):
@@ -67,6 +157,8 @@ class NodeUpdate(BaseModel):
     token: Optional[str] = None
     is_active: Optional[bool] = None
     is_local: Optional[bool] = None
+    maintenance_mode: Optional[bool] = None
+    tags: Optional[List[str]] = None
 
 
 class NodeResponse(BaseModel):
@@ -77,6 +169,7 @@ class NodeResponse(BaseModel):
     is_active: bool
     maintenance_mode: bool
     status: str
+    tags: Optional[List[str]] = None
     last_check: Optional[datetime]
     created_at: datetime
 
@@ -106,6 +199,7 @@ class VMResponse(BaseModel):
     disk_usage: float
     disk_total: int
     uptime: int
+    tags: Optional[List[str]] = None
     last_check: Optional[datetime]
     created_at: datetime
 
@@ -116,15 +210,53 @@ class VMResponse(BaseModel):
 # Service schemas
 class ServiceCreate(BaseModel):
     vm_id: Optional[int] = None
-    name: str
-    type: str  # http, https, ping, port, custom
-    target: str
-    port: Optional[int] = None
-    check_interval: int = 60
-    timeout: int = 5
-    expected_status: int = 200
-    custom_command: Optional[str] = None  # For custom health checks
-    custom_script: Optional[str] = None  # For custom health check scripts
+    name: str = Field(..., min_length=1, max_length=100)
+    type: str = Field(..., min_length=1, max_length=20)  # http, https, ping, port, custom
+    target: str = Field(..., min_length=1, max_length=500)
+    port: Optional[int] = Field(None, ge=1, le=65535)
+    check_interval: int = Field(default=60, ge=10, le=3600)  # 10 seconds to 1 hour
+    timeout: int = Field(default=5, ge=1, le=60)  # 1 to 60 seconds
+    expected_status: int = Field(default=200, ge=100, le=599)
+    custom_command: Optional[str] = Field(None, max_length=1000)  # For custom health checks
+    custom_script: Optional[str] = Field(None, max_length=5000)  # For custom health check scripts
+    
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        sanitized = sanitize_string(v, max_length=100)
+        is_valid, error = validate_no_xss(sanitized)
+        if not is_valid:
+            raise ValueError(error)
+        return sanitized
+    
+    @field_validator('target')
+    @classmethod
+    def validate_target(cls, v: str) -> str:
+        # Target can be URL, IP, or hostname - basic sanitization
+        sanitized = sanitize_string(v, max_length=500)
+        is_valid, error = validate_no_sql_injection(sanitized)
+        if not is_valid:
+            raise ValueError(error)
+        return sanitized
+    
+    @field_validator('type')
+    @classmethod
+    def validate_type(cls, v: str) -> str:
+        valid_types = ["http", "https", "ping", "port", "custom"]
+        if v.lower() not in valid_types:
+            raise ValueError(f"Type must be one of: {', '.join(valid_types)}")
+        return v.lower()
+    
+    @field_validator('custom_command', 'custom_script')
+    @classmethod
+    def validate_custom_safe(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        sanitized = sanitize_string(v, max_length=5000)
+        is_valid, error = validate_no_sql_injection(sanitized)
+        if not is_valid:
+            raise ValueError(error)
+        return sanitized
 
 
 class ServiceUpdate(BaseModel):

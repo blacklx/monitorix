@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
+import { formatShortDateTime } from '../utils/dateFormat'
 import './AlertRules.css'
 
 const API_URL = import.meta.env.REACT_APP_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -210,7 +211,7 @@ const AlertRules = () => {
               {rule.last_triggered && (
                 <p>
                   <strong>{t('alertRules.lastTriggered')}:</strong>{' '}
-                  {new Date(rule.last_triggered).toLocaleString()}
+                  {formatShortDateTime(rule.last_triggered)}
                 </p>
               )}
             </div>

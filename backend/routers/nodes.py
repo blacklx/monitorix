@@ -16,11 +16,26 @@ router = APIRouter(prefix="/api/nodes", tags=["nodes"])
 
 @router.get("", response_model=List[NodeResponse])
 async def get_nodes(
+    tag: Optional[str] = Query(None, description="Filter nodes by tag name"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)
 ):
-    """Get all nodes"""
-    nodes = db.query(Node).all()
+    """
+    Get all Proxmox nodes.
+    
+    Returns a list of all configured Proxmox nodes with their current status.
+    Optionally filter by tag to get only nodes with a specific tag.
+    
+    **Example**: `/api/nodes?tag=production` returns only nodes tagged with "production"
+    """
+    query = db.query(Node)
+    if tag:
+        # Filter nodes that have this tag in their tags array
+        # PostgreSQL JSONB @> operator checks if array contains the value
+        from sqlalchemy import cast
+        from sqlalchemy.dialects.postgresql import JSONB
+        query = query.filter(cast(Node.tags, JSONB).contains([tag]))
+    nodes = query.all()
     return nodes
 
 
@@ -54,7 +69,8 @@ async def create_node(
         url=node_data.url,
         username=node_data.username,
         token=node_data.token,
-        is_local=node_data.is_local
+        is_local=node_data.is_local,
+        tags=node_data.tags
     )
     db.add(node)
     db.commit()
@@ -106,7 +122,8 @@ async def bulk_create_nodes(
                 url=node_data.url,
                 username=node_data.username,
                 token=node_data.token,
-                is_local=node_data.is_local
+                is_local=node_data.is_local,
+                tags=node_data.tags
             )
             db.add(node)
             db.commit()
@@ -170,6 +187,10 @@ async def update_node(
         node.is_active = node_data.is_active
     if node_data.is_local is not None:
         node.is_local = node_data.is_local
+    if node_data.maintenance_mode is not None:
+        node.maintenance_mode = node_data.maintenance_mode
+    if node_data.tags is not None:
+        node.tags = node_data.tags
     
     db.commit()
     db.refresh(node)

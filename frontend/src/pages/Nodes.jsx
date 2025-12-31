@@ -18,8 +18,10 @@ const Nodes = () => {
     username: '',
     token: '',
     is_local: true,
-    maintenance_mode: false
+    maintenance_mode: false,
+    tags: []
   })
+  const [tagInput, setTagInput] = useState('')
   const [testingConnection, setTestingConnection] = useState(false)
   const [connectionResult, setConnectionResult] = useState(null)
   const [error, setError] = useState(null)
@@ -29,16 +31,12 @@ const Nodes = () => {
   const [bulkInput, setBulkInput] = useState('')
   const [bulkError, setBulkError] = useState(null)
   const [bulkResult, setBulkResult] = useState(null)
-
-  useEffect(() => {
-    fetchNodes()
-    const interval = setInterval(fetchNodes, 30000)
-    return () => clearInterval(interval)
-  }, [])
+  const [tagFilter, setTagFilter] = useState(null)
 
   const fetchNodes = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/nodes`)
+      const params = tagFilter ? `?tag=${encodeURIComponent(tagFilter)}` : ''
+      const response = await axios.get(`${API_URL}/api/nodes${params}`)
       setNodes(response.data)
     } catch (error) {
       console.error('Failed to fetch nodes:', error)
@@ -46,6 +44,15 @@ const Nodes = () => {
       setLoading(false)
     }
   }
+
+  // Get all unique tags from nodes
+  const allTags = Array.from(new Set(nodes.flatMap(node => node.tags || []))).sort()
+
+  useEffect(() => {
+    fetchNodes()
+    const interval = setInterval(fetchNodes, 30000)
+    return () => clearInterval(interval)
+  }, [tagFilter])
 
   const handleSync = async (nodeId) => {
     try {
@@ -75,8 +82,11 @@ const Nodes = () => {
       url: '',
       username: '',
       token: '',
-      is_local: true
+      is_local: true,
+      maintenance_mode: false,
+      tags: []
     })
+    setTagInput('')
     setConnectionResult(null)
     setError(null)
     setShowModal(true)
@@ -89,8 +99,11 @@ const Nodes = () => {
       url: node.url,
       username: node.username || '',
       token: '', // Don't show existing token for security
-      is_local: node.is_local
+      is_local: node.is_local,
+      maintenance_mode: node.maintenance_mode || false,
+      tags: node.tags || []
     })
+    setTagInput('')
     setConnectionResult(null)
     setError(null)
     setShowModal(true)
@@ -126,6 +139,44 @@ const Nodes = () => {
       })
     } finally {
       setTestingConnection(false)
+    }
+  }
+
+  const handleExportCSV = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/export/nodes/csv`, {
+        responseType: 'blob'
+      })
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `nodes_${formatDateForFilename()}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (error) {
+      console.error('Failed to export CSV:', error)
+      setError(error.response?.data?.detail || t('common.error'))
+    }
+  }
+
+  const handleExportJSON = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/export/nodes/json`, {
+        responseType: 'blob'
+      })
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `nodes_${formatDateForFilename()}.json`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (error) {
+      console.error('Failed to export JSON:', error)
+      setError(error.response?.data?.detail || t('common.error'))
     }
   }
 
@@ -223,7 +274,7 @@ const Nodes = () => {
         fetchNodes()
         return
       } catch (error) {
-        setError(error.response?.data?.detail || t('common.error'))
+        handleApiError(error, setError, 'Nodes.updateNode')
         return
       }
     }
@@ -234,7 +285,7 @@ const Nodes = () => {
       setShowModal(false)
       fetchNodes()
     } catch (error) {
-      setError(error.response?.data?.detail || t('common.error'))
+      handleApiError(error, setError, 'Nodes.createNode')
     }
   }
 
@@ -247,6 +298,12 @@ const Nodes = () => {
       <div className="page-header">
         <h1>{t('nodes.title')}</h1>
         <div>
+          <button className="export-button" onClick={handleExportCSV} style={{ marginRight: '10px' }}>
+            {t('common.exportCSV')}
+          </button>
+          <button className="export-button" onClick={handleExportJSON} style={{ marginRight: '10px' }}>
+            {t('common.exportJSON')}
+          </button>
           <button className="add-button" onClick={() => setShowBulkModal(true)} style={{ marginRight: '10px' }}>
             {t('nodes.bulkImport')}
           </button>
@@ -261,6 +318,21 @@ const Nodes = () => {
           {error}
         </div>
       )}
+
+      <div className="nodes-filters" style={{ marginBottom: '1rem' }}>
+        <div className="filter-group">
+          <label>{t('nodes.filterByTag')}</label>
+          <select
+            value={tagFilter || ''}
+            onChange={(e) => setTagFilter(e.target.value || null)}
+          >
+            <option value="">{t('common.all')}</option>
+            {allTags.map(tag => (
+              <option key={tag} value={tag}>{tag}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <div className="nodes-grid">
         {nodes.map((node) => (
@@ -278,10 +350,20 @@ const Nodes = () => {
               <p>
                 <strong>{t('common.type')}:</strong> {node.is_local ? t('nodes.local') : t('nodes.remote')}
               </p>
+              {node.tags && node.tags.length > 0 && (
+                <p>
+                  <strong>{t('nodes.tags')}:</strong>{' '}
+                  {node.tags.map((tag, idx) => (
+                    <span key={idx} className="tag-badge">
+                      {tag}
+                    </span>
+                  ))}
+                </p>
+              )}
               <p>
                 <strong>{t('common.lastCheck')}:</strong>{' '}
                 {node.last_check
-                  ? new Date(node.last_check).toLocaleString()
+                  ? formatShortDateTime(node.last_check)
                   : t('common.never')}
               </p>
             </div>
@@ -418,6 +500,68 @@ const Nodes = () => {
                   />
                   {formData.is_local ? t('nodes.isLocal') : t('nodes.isRemote')}
                 </label>
+              </div>
+
+              <div className="form-group">
+                <label>{t('nodes.tags')}</label>
+                <div className="tags-input">
+                  <div className="tags-list">
+                    {formData.tags.map((tag, index) => (
+                      <span key={index} className="tag">
+                        {tag}
+                        <button
+                          type="button"
+                          className="tag-remove"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              tags: formData.tags.filter((_, i) => i !== index)
+                            })
+                          }}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="tag-input-group">
+                    <input
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          const tag = tagInput.trim()
+                          if (tag && !formData.tags.includes(tag)) {
+                            setFormData({
+                              ...formData,
+                              tags: [...formData.tags, tag]
+                            })
+                            setTagInput('')
+                          }
+                        }
+                      }}
+                      placeholder={t('nodes.addTagPlaceholder')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const tag = tagInput.trim()
+                        if (tag && !formData.tags.includes(tag)) {
+                          setFormData({
+                            ...formData,
+                            tags: [...formData.tags, tag]
+                          })
+                          setTagInput('')
+                        }
+                      }}
+                    >
+                      {t('nodes.addTag')}
+                    </button>
+                  </div>
+                </div>
+                <small>{t('nodes.tagsDescription')}</small>
               </div>
 
               {connectionResult && (

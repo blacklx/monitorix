@@ -1,0 +1,165 @@
+.audit-logs {
+  padding: 2rem;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+.audit-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background-color: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stat-card.success {
+  border-left: 4px solid var(--success);
+}
+
+.stat-card.error {
+  border-left: 4px solid var(--danger);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.audit-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+  background-color: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.filter-group select {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.audit-logs-list {
+  background-color: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.no-logs {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary);
+}
+
+.audit-logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.audit-logs-table th,
+.audit-logs-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.audit-logs-table th {
+  background-color: var(--bg-primary);
+  font-weight: 600;
+  color: var(--text-primary);
+  position: sticky;
+  top: 0;
+}
+
+.audit-logs-table tr:hover {
+  background-color: var(--bg-primary);
+}
+
+.audit-logs-table tr.error-row {
+  background-color: var(--danger-light);
+}
+
+.action-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.action-create {
+  background-color: var(--success-light);
+  color: var(--success);
+}
+
+.action-update {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.action-delete {
+  background-color: var(--danger-light);
+  color: var(--danger);
+}
+
+.action-login,
+.action-logout {
+  background-color: var(--warning-light);
+  color: var(--warning);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-badge.success {
+  background-color: var(--success-light);
+  color: var(--success);
+}
+
+.status-badge.error {
+  background-color: var(--danger-light);
+  color: var(--danger);
+}
+

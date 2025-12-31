@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
+import { formatShortDateTime, formatDateForFilename } from '../utils/dateFormat'
 import {
   LineChart,
   Line,
@@ -57,7 +58,7 @@ const Metrics = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
-      link.setAttribute('download', `metrics_${new Date().toISOString().split('T')[0]}.csv`)
+      link.setAttribute('download', `metrics_${formatDateForFilename()}.csv`)
       document.body.appendChild(link)
       link.click()
       link.remove()
@@ -80,7 +81,7 @@ const Metrics = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
-      link.setAttribute('download', `metrics_${new Date().toISOString().split('T')[0]}.json`)
+      link.setAttribute('download', `metrics_${formatDateForFilename()}.json`)
       document.body.appendChild(link)
       link.click()
       link.remove()
@@ -169,7 +170,7 @@ const Metrics = () => {
         .sort((a, b) => a.time - b.time)
         .map(item => ({
           ...item,
-          time: new Date(item.time).toLocaleString()
+          time: formatShortDateTime(item.time)
         }))
 
       setMetrics(combined)

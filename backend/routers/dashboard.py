@@ -15,7 +15,18 @@ async def get_dashboard_stats(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)
 ):
-    """Get dashboard statistics"""
+    """
+    Get dashboard statistics.
+    
+    Returns an overview of system status including:
+    - Total and online nodes
+    - Total and running VMs
+    - Total and healthy services
+    - Active alerts count
+    
+    This endpoint is optimized for dashboard display and provides a quick
+    overview of the entire monitoring system.
+    """
     total_nodes = db.query(Node).count()
     online_nodes = db.query(Node).filter(Node.status == "online").count()
     

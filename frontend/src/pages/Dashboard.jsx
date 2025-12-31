@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { useWebSocket } from '../hooks/useWebSocket'
 import LoadingSpinner from '../components/LoadingSpinner'
+import { handleApiError, getErrorMessage } from '../utils/errorHandler'
 import './Dashboard.css'
 
 const API_URL = import.meta.env.REACT_APP_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -25,8 +26,7 @@ const Dashboard = () => {
       const response = await axios.get(`${API_URL}/api/dashboard/stats`)
       setStats(response.data)
     } catch (err) {
-      console.error('Failed to fetch stats:', err)
-      setError(err.response?.data?.detail || t('common.error'))
+      handleApiError(err, setError, 'Dashboard.fetchStats')
     } finally {
       setLoading(false)
     }

@@ -6,6 +6,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
+    "deleting": "Deleting...",
     "edit": "Edit",
     "add": "Add",
     "close": "Close",
@@ -24,8 +25,13 @@
     "darkMode": "Dark Mode",
     "connected": "Connected",
     "disconnected": "Disconnected",
+    "reconnecting": "Reconnecting... (attempt {{attempt}})",
     "websocketConnected": "WebSocket connected - Real-time updates active",
-    "websocketDisconnected": "WebSocket disconnected - Real-time updates unavailable"
+    "websocketDisconnected": "WebSocket disconnected - Real-time updates unavailable",
+    "websocketReconnecting": "WebSocket reconnecting - Attempt {{attempt}}",
+    "exportCSV": "Export CSV",
+    "exportJSON": "Export JSON",
+    "exportAll": "Export All Data"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -38,6 +44,8 @@
     "profile": "Profile",
     "notificationChannels": "Notifications",
     "alertRules": "Alert Rules",
+    "backup": "Backup",
+    "auditLogs": "Audit Logs",
     "logout": "Logout",
     "language": "Language"
   },
@@ -114,7 +122,12 @@
       "offline": "Offline",
       "error": "Error",
       "unknown": "Unknown"
-    }
+    },
+    "tags": "Tags",
+    "addTag": "Add Tag",
+    "addTagPlaceholder": "Enter tag name and press Enter",
+    "tagsDescription": "Add tags to organize and filter nodes",
+    "filterByTag": "Filter by Tag"
   },
   "vms": {
     "title": "Virtual Machines",
@@ -346,6 +359,60 @@
       "warning": "Warning",
       "critical": "Critical"
     }
+  },
+  "backup": {
+    "title": "Database Backup & Restore",
+    "description": "Create, download, and restore database backups. Backups are stored on the server.",
+    "warning": "⚠️ Warning: Restoring a backup will replace all current data. This action cannot be undone.",
+    "createBackup": "Create Backup",
+    "creating": "Creating...",
+    "availableBackups": "Available Backups",
+    "noBackups": "No backups available. Create your first backup to get started.",
+    "filename": "Filename",
+    "size": "Size",
+    "createdAt": "Created At",
+    "download": "Download",
+    "restore": "Restore",
+    "restoring": "Restoring...",
+    "createSuccess": "Backup created successfully: {{filename}}",
+    "createError": "Failed to create backup",
+    "restoreSuccess": "Database restored successfully from {{filename}}. Page will refresh shortly.",
+    "restoreError": "Failed to restore backup",
+    "restoreConfirm": "Are you sure you want to restore from {{filename}}? This will replace all current data!",
+    "deleteConfirm": "Are you sure you want to delete {{filename}}?",
+    "deleteSuccess": "Backup {{filename}} deleted successfully",
+    "deleteError": "Failed to delete backup",
+    "downloadError": "Failed to download backup",
+    "fetchError": "Failed to fetch backups"
+  },
+  "auditLogs": {
+    "title": "Audit Logs",
+    "totalLogs": "Total Logs",
+    "successful": "Successful",
+    "failed": "Failed",
+    "action": "Action",
+    "resourceType": "Resource Type",
+    "resource": "Resource",
+    "status": "Status",
+    "ipAddress": "IP Address",
+    "timestamp": "Timestamp",
+    "user": "User",
+    "system": "System",
+    "success": "Success",
+    "failure": "Failure",
+    "timeRange": "Time Range",
+    "day": "Day",
+    "days": "Days",
+    "noLogs": "No audit logs found for the selected filters."
+  },
+  "version": {
+    "currentVersion": "Current Version",
+    "updateAvailable": "Update available: v{{version}}",
+    "upToDate": "You are running the latest version",
+    "dismiss": "Dismiss",
+    "viewRelease": "View Release",
+    "checking": "Checking for updates...",
+    "checkFailed": "Failed to check for updates"
   }
 }
 

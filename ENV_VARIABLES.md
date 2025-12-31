@@ -36,12 +36,18 @@
    - `FRONTEND_URL` - Frontend URL for password reset links
    - `REACT_APP_API_URL` / `VITE_API_URL` - API URL for frontend
 
-6. **Health Checks**
+6. **CORS Configuration**
+   - `CORS_ORIGINS` - Allowed origins (comma-separated, or `*` for all) - **Important**: In production, specify your frontend URL instead of `*`
+   - `CORS_ALLOW_CREDENTIALS` - Allow credentials (standard: `true`)
+   - `CORS_ALLOW_METHODS` - Allowed HTTP methods (comma-separated, or `*` for all, standard: `*`)
+   - `CORS_ALLOW_HEADERS` - Allowed headers (comma-separated, or `*` for all, standard: `*`)
+
+7. **Health Checks**
    - `HEALTH_CHECK_INTERVAL` - Sjekk intervall (standard: 60)
    - `HTTP_TIMEOUT` - HTTP timeout (standard: 5)
    - `PING_TIMEOUT` - Ping timeout (standard: 3)
 
-7. **Email (valgfritt)**
+8. **Email (valgfritt)**
    - `ALERT_EMAIL_ENABLED` - Aktiver email varsler
    - `ALERT_EMAIL_SMTP_HOST` - SMTP server
    - `ALERT_EMAIL_SMTP_PORT` - SMTP port
@@ -50,9 +56,26 @@
    - `ALERT_EMAIL_FROM` - Avsender email
    - `ALERT_EMAIL_TO` - Mottaker email
 
-8. **Metrics**
+9. **Metrics**
    - `METRICS_RETENTION_DAYS` - Hvor lenge metrics lagres (standard: 30)
    - `METRICS_CLEANUP_ENABLED` - Aktiver automatisk cleanup (standard: `true`)
+
+10. **Error Tracking - Sentry (valgfritt)**
+   - `SENTRY_ENABLED` - Aktiver Sentry error tracking (standard: `false`)
+   - `SENTRY_DSN` - Sentry DSN (Data Source Name) fra Sentry-prosjektet
+   - `SENTRY_ENVIRONMENT` - Miljø (standard: `ENVIRONMENT` eller `development`)
+   - `SENTRY_TRACES_SAMPLE_RATE` - Performance monitoring sample rate (standard: `0.1` = 10%)
+   - `SENTRY_PROFILES_SAMPLE_RATE` - Profiling sample rate (standard: `0.1` = 10%)
+
+11. **Rate Limiting**
+   - `RATE_LIMIT_PER_HOUR` - Requests per hour (standard: `1000`)
+   - `RATE_LIMIT_PER_MINUTE` - Requests per minute (standard: `100`)
+
+12. **CORS Configuration**
+   - `CORS_ORIGINS` - Allowed origins (comma-separated, or `*` for all) - **Important**: In production, specify your frontend URL instead of `*`
+   - `CORS_ALLOW_CREDENTIALS` - Allow credentials (standard: `true`)
+   - `CORS_ALLOW_METHODS` - Allowed HTTP methods (comma-separated, or `*` for all, standard: `*`)
+   - `CORS_ALLOW_HEADERS` - Allowed headers (comma-separated, or `*` for all, standard: `*`)
 
 ## Hva skal IKKE være i .env?
 

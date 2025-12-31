@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
+import { formatShortDateTime, formatDateForFilename } from '../utils/dateFormat'
 import { validateService } from '../utils/validation'
 import './Services.css'
 
@@ -139,6 +140,44 @@ const Services = () => {
       fetchServices()
     } catch (error) {
       console.error('Failed to toggle maintenance mode:', error)
+      setError(error.response?.data?.detail || t('common.error'))
+    }
+  }
+
+  const handleExportCSV = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/export/services/csv`, {
+        responseType: 'blob'
+      })
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `services_${formatDateForFilename()}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (error) {
+      console.error('Failed to export CSV:', error)
+      setError(error.response?.data?.detail || t('common.error'))
+    }
+  }
+
+  const handleExportJSON = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/export/services/json`, {
+        responseType: 'blob'
+      })
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `services_${formatDateForFilename()}.json`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (error) {
+      console.error('Failed to export JSON:', error)
       setError(error.response?.data?.detail || t('common.error'))
     }
   }
@@ -284,9 +323,20 @@ const Services = () => {
     <div className="services">
       <div className="page-header">
         <h1>{t('services.title')}</h1>
-        <button className="add-button" onClick={handleAdd}>
-          {t('services.addService')}
-        </button>
+        <div>
+          <button className="export-button" onClick={handleExportCSV} style={{ marginRight: '10px' }}>
+            {t('common.exportCSV')}
+          </button>
+          <button className="export-button" onClick={handleExportJSON} style={{ marginRight: '10px' }}>
+            {t('common.exportJSON')}
+          </button>
+          <button className="add-button" onClick={() => setShowBulkModal(true)} style={{ marginRight: '10px' }}>
+            {t('services.bulkImport')}
+          </button>
+          <button className="add-button" onClick={handleAdd}>
+            {t('services.addService')}
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -373,7 +423,7 @@ const Services = () => {
                     )}
                     <p>
                       <strong>{t('common.lastCheck')}:</strong>{' '}
-                      {new Date(check.checked_at).toLocaleString()}
+                      {formatShortDateTime(check.checked_at)}
                     </p>
                   </>
                 )}

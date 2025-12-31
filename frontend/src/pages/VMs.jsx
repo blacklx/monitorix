@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
+import { formatShortDateTime, formatDateForFilename } from '../utils/dateFormat'
 import {
   LineChart,
   Line,
@@ -82,6 +83,44 @@ const VMs = () => {
     setFilteredVms(filtered)
   }
 
+  const handleExportCSV = async () => {
+    try {
+      const params = selectedNode ? `?node_id=${selectedNode}` : ''
+      const response = await axios.get(`${API_URL}/api/export/vms/csv${params}`, {
+        responseType: 'blob'
+      })
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `vms_${formatDateForFilename()}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (error) {
+      console.error('Failed to export CSV:', error)
+    }
+  }
+
+  const handleExportJSON = async () => {
+    try {
+      const params = selectedNode ? `?node_id=${selectedNode}` : ''
+      const response = await axios.get(`${API_URL}/api/export/vms/json${params}`, {
+        responseType: 'blob'
+      })
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `vms_${formatDateForFilename()}.json`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (error) {
+      console.error('Failed to export JSON:', error)
+    }
+  }
+
   useEffect(() => {
     applyFilters()
   }, [searchQuery, statusFilter, vms])
@@ -117,7 +156,7 @@ const VMs = () => {
       cpuMetrics.forEach(m => {
         const time = new Date(m.recorded_at).getTime()
         if (!timeMap.has(time)) {
-          timeMap.set(time, { time: new Date(m.recorded_at).toLocaleString() })
+          timeMap.set(time, { time: formatShortDateTime(m.recorded_at) })
         }
         timeMap.get(time).cpu = m.value
       })
@@ -125,7 +164,7 @@ const VMs = () => {
       memoryMetrics.forEach(m => {
         const time = new Date(m.recorded_at).getTime()
         if (!timeMap.has(time)) {
-          timeMap.set(time, { time: new Date(m.recorded_at).toLocaleString() })
+          timeMap.set(time, { time: formatShortDateTime(m.recorded_at) })
         }
         timeMap.get(time).memory = m.value
       })
@@ -133,7 +172,7 @@ const VMs = () => {
       diskMetrics.forEach(m => {
         const time = new Date(m.recorded_at).getTime()
         if (!timeMap.has(time)) {
-          timeMap.set(time, { time: new Date(m.recorded_at).toLocaleString() })
+          timeMap.set(time, { time: formatShortDateTime(m.recorded_at) })
         }
         timeMap.get(time).disk = m.value
       })
@@ -173,6 +212,14 @@ const VMs = () => {
     <div className="vms">
       <div className="page-header">
         <h1>{t('vms.title')}</h1>
+        <div>
+          <button className="export-button" onClick={handleExportCSV} style={{ marginRight: '10px' }}>
+            {t('common.exportCSV')}
+          </button>
+          <button className="export-button" onClick={handleExportJSON}>
+            {t('common.exportJSON')}
+          </button>
+        </div>
       </div>
 
       <div className="filters">
@@ -325,7 +372,7 @@ const VMs = () => {
                         <div className="info-item">
                           <strong>{t('common.lastCheck')}:</strong>{' '}
                           {vmDetails.last_check
-                            ? new Date(vmDetails.last_check).toLocaleString()
+                            ? formatShortDateTime(vmDetails.last_check)
                             : t('common.never')}
                         </div>
                       </div>

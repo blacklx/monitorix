@@ -1,0 +1,61 @@
+.version-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.version-text {
+  font-weight: 500;
+}
+
+.update-notification {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--warning-light);
+  color: var(--warning);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.update-badge {
+  font-size: 1rem;
+}
+
+.update-text {
+  font-weight: 500;
+}
+
+.update-dismiss {
+  background: none;
+  border: none;
+  color: var(--warning);
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0;
+  margin-left: 0.25rem;
+}
+
+.update-dismiss:hover {
+  color: var(--danger);
+}
+
+.update-link {
+  color: var(--warning);
+  text-decoration: underline;
+  font-size: 0.8rem;
+}
+
+.update-link:hover {
+  color: var(--warning-dark);
+}
+
+.version-status {
+  color: var(--success);
+  font-size: 1rem;
+}
+

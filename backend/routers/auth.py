@@ -58,6 +58,17 @@ async def login(
     user.refresh_token_expires = refresh_token_expires
     db.commit()
     
+    # Log successful login
+    log_action(
+        db=db,
+        user_id=user.id,
+        action="login",
+        resource_type="auth",
+        ip_address=get_client_ip(request),
+        user_agent=get_user_agent(request),
+        success=True
+    )
+    
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -146,6 +157,18 @@ async def logout(
     current_user.refresh_token = None
     current_user.refresh_token_expires = None
     db.commit()
+    
+    # Log logout
+    log_action(
+        db=db,
+        user_id=current_user.id,
+        action="logout",
+        resource_type="auth",
+        ip_address=get_client_ip(request),
+        user_agent=get_user_agent(request),
+        success=True
+    )
+    
     return {"message": "Logged out successfully"}
 
 
@@ -153,6 +176,13 @@ async def logout(
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     """Get current user information"""
     return current_user
+
+
+@router.get("/password-requirements")
+async def get_password_requirements():
+    """Get password policy requirements"""
+    from password_policy import get_password_requirements
+    return {"requirements": get_password_requirements()}
 
 
 @router.put("/change-password")
@@ -182,11 +212,17 @@ async def change_password(
             detail="Incorrect old password"
         )
     
-    # Validate new password length
-    if len(new_password) < 8:
+    # Validate new password against policy
+    from password_policy import validate_password
+    is_valid, errors = validate_password(
+        new_password,
+        username=current_user.username,
+        email=current_user.email
+    )
+    if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="New password must be at least 8 characters long"
+            detail="; ".join(errors)
         )
     
     # Update password
@@ -297,6 +333,19 @@ async def reset_password(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Reset token has expired"
+        )
+    
+    # Validate new password against policy
+    from password_policy import validate_password
+    is_valid, errors = validate_password(
+        new_password,
+        username=user.username,
+        email=user.email
+    )
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="; ".join(errors)
         )
     
     # Update password

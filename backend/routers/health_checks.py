@@ -21,7 +21,7 @@ async def get_health_checks(
     current_user = Depends(get_current_active_user)
 ):
     """Get health check results"""
-    query = db.query(HealthCheck)
+    query = db.query(HealthCheck).options(joinedload(HealthCheck.service))
     
     if service_id:
         query = query.filter(HealthCheck.service_id == service_id)

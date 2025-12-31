@@ -106,6 +106,15 @@
   animation: none;
 }
 
+.status-indicator.reconnecting {
+  background-color: #f39c12;
+  animation: pulse 1s infinite;
+}
+
+.websocket-status.reconnecting {
+  opacity: 0.8;
+}
+
 .status-text {
   font-size: 0.85rem;
   color: var(--text-secondary);
@@ -126,5 +135,14 @@
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+}
+
+.app-footer {
+  padding: 1rem 2rem;
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 

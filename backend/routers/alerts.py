@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from typing import List, Optional
 from database import get_db
@@ -18,15 +18,26 @@ class BulkResolveRequest(BaseModel):
 
 @router.get("", response_model=List[AlertResponse])
 async def get_alerts(
-    resolved: Optional[bool] = None,
-    severity: Optional[str] = None,
-    alert_type: Optional[str] = None,
-    limit: int = 100,
+    resolved: Optional[bool] = Query(None, description="Filter by resolved status (true/false)"),
+    severity: Optional[str] = Query(None, description="Filter by severity (info, warning, critical)"),
+    alert_type: Optional[str] = Query(None, description="Filter by alert type (node_down, vm_down, service_down, high_usage)"),
+    limit: int = Query(100, description="Maximum number of alerts to return", ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)
 ):
-    """Get all alerts, optionally filtered by resolved status, severity, or type"""
-    query = db.query(Alert)
+    """
+    Get all alerts.
+    
+    Returns a list of alerts with optional filtering by resolved status, severity, or type.
+    Results are ordered by creation date (most recent first).
+    
+    **Examples**:
+    - `/api/alerts?resolved=false` - Get only unresolved alerts
+    - `/api/alerts?severity=critical&limit=50` - Get top 50 critical alerts
+    """
+    query = db.query(Alert).options(
+        joinedload(Alert.user)
+    )
     if resolved is not None:
         query = query.filter(Alert.is_resolved == resolved)
     if severity:
@@ -69,7 +80,9 @@ async def get_alert(
     current_user = Depends(get_current_active_user)
 ):
     """Get a specific alert"""
-    alert = db.query(Alert).filter(Alert.id == alert_id).first()
+    alert = db.query(Alert).options(
+        joinedload(Alert.user)
+    ).filter(Alert.id == alert_id).first()
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
     return alert

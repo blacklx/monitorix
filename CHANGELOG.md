@@ -8,9 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Bulk operations for nodes/services
-- Custom health checks
-- Notification channels (Slack, Discord, etc.)
 - See [TODO.md](TODO.md) for full list
 
 ## [1.2.0] - 2024-12-31

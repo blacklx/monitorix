@@ -1,0 +1,132 @@
+.backup {
+  padding: 2rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+.backup-info {
+  background-color: var(--bg-secondary);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.backup-info p {
+  margin: 0.5rem 0;
+}
+
+.backup-warning {
+  color: var(--warning);
+  font-weight: 500;
+}
+
+.backups-list {
+  background-color: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.backups-list h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.no-backups {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.backups-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.backups-table th,
+.backups-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.backups-table th {
+  background-color: var(--bg-primary);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.backups-table tr:hover {
+  background-color: var(--bg-primary);
+}
+
+.backup-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.download-button {
+  background-color: var(--primary);
+  color: white;
+}
+
+.download-button:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+}
+
+.restore-button {
+  background-color: var(--warning);
+  color: white;
+}
+
+.restore-button:hover:not(:disabled) {
+  background-color: #d68910;
+}
+
+.delete-button {
+  background-color: var(--danger);
+  color: white;
+}
+
+.delete-button:hover:not(:disabled) {
+  background-color: #c0392b;
+}
+
+.error-message {
+  background-color: var(--danger-light);
+  color: var(--danger);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  background-color: var(--success-light);
+  color: var(--success);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+

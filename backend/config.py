@@ -1,3 +1,18 @@
+"""
+Copyright 2024 Monitorix Contributors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 import os
@@ -45,6 +60,32 @@ class Settings(BaseSettings):
     
     # Frontend URL (for password reset links)
     frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    
+    # Security headers
+    environment: str = os.getenv("ENVIRONMENT", "development")
+    enable_hsts: bool = os.getenv("ENABLE_HSTS", "false").lower() == "true"
+    
+    # Logging
+    log_level: str = os.getenv("LOG_LEVEL", "INFO")
+    log_file: Optional[str] = os.getenv("LOG_FILE", None)
+    use_json_logging: Optional[bool] = None  # Auto-detect from ENVIRONMENT if None
+    
+    # Sentry Error Tracking
+    sentry_enabled: bool = os.getenv("SENTRY_ENABLED", "false").lower() == "true"
+    sentry_dsn: Optional[str] = os.getenv("SENTRY_DSN", None)
+    sentry_environment: str = os.getenv("SENTRY_ENVIRONMENT", os.getenv("ENVIRONMENT", "development"))
+    sentry_traces_sample_rate: float = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1"))  # 10% of transactions
+    sentry_profiles_sample_rate: float = float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", "0.1"))  # 10% of profiles
+    
+    # CORS Configuration
+    cors_origins: List[str] = os.getenv("CORS_ORIGINS", "*").split(",") if os.getenv("CORS_ORIGINS", "*") != "*" else ["*"]
+    cors_allow_credentials: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
+    cors_allow_methods: List[str] = os.getenv("CORS_ALLOW_METHODS", "*").split(",") if os.getenv("CORS_ALLOW_METHODS", "*") != "*" else ["*"]
+    cors_allow_headers: List[str] = os.getenv("CORS_ALLOW_HEADERS", "*").split(",") if os.getenv("CORS_ALLOW_HEADERS", "*") != "*" else ["*"]
+    
+    # Rate Limiting
+    rate_limit_per_hour: int = int(os.getenv("RATE_LIMIT_PER_HOUR", "1000"))
+    rate_limit_per_minute: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "100"))
     
     class Config:
         env_file = ".env"

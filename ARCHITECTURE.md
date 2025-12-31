@@ -83,7 +83,11 @@ All components run in Docker containers and are orchestrated with Docker Compose
 - `hooks/` - Custom React hooks (useWebSocket)
 - `i18n/` - Internationalization configuration and translations
   - `config.js` - i18next configuration
-  - `locales/` - Translation files for 7 languages
+  - `locales/` - Translation files for 7 languages (English, Norwegian, Swedish, Danish, Finnish, French, German)
+- `utils/` - Utility functions
+  - `dateFormat.js` - Localized date/time formatting with date-fns
+  - `validation.js` - Form validation utilities
+  - `errorHandler.js` - Centralized error handling
 
 **Routing**:
 - `/login` - Login page

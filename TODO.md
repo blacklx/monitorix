@@ -15,7 +15,7 @@ This document tracks planned improvements, new features, and known issues.
 
 - [x] ✅ **Node management UI** - Add/edit/delete nodes via web interface
 - [x] ✅ **Service management UI** - Add/edit/delete services via web interface
-- [ ] 📝 **Bulk operations** - Add multiple nodes/services at once
+- [x] ✅ **Bulk operations** - Add multiple nodes/services at once
 - [x] ✅ **Email notifications** - Send email when alerts occur
 - [x] ✅ **Webhook support** - Send webhooks on alerts
 - [x] ✅ **Metrics retention policy** - Automatic cleanup of old metrics
@@ -43,28 +43,28 @@ This document tracks planned improvements, new features, and known issues.
 ### Features
 
 - [x] ✅ **Custom health checks** - Support for custom scripts/commands (backend implemented)
-- [ ] 📝 **Notification channels** - Multiple channels (email, Slack, Discord, etc.)
-- [ ] 📝 **Alert rules** - Configurable alert rules
-- [x] ✅ **Maintenance mode** - Set nodes/services in maintenance mode (backend implemented, needs UI)
-- [ ] 📝 **Tags and grouping** - Organize nodes/VMs with tags
-- [ ] 📝 **Export data** - Export metrics to CSV/JSON
-- [ ] 📝 **Backup/restore** - UI for database backup
-- [ ] 📝 **Multi-user support** - Multiple users with roles
-- [ ] 📝 **Audit log** - Log all changes
+- [x] ✅ **Notification channels** - Multiple channels (email, Slack, Discord, etc.) - Backend and frontend implemented
+- [x] ✅ **Alert rules** - Configurable alert rules - Backend and frontend implemented
+- [x] ✅ **Maintenance mode** - Set nodes/services in maintenance mode (Backend and frontend UI fully implemented)
+- [x] ✅ **Tags and grouping** - Organize nodes/VMs with tags (Backend and frontend implemented for nodes. VMs can be extended similarly)
+- [x] ✅ **Export data** - Export metrics, nodes, VMs, services, and alerts to CSV/JSON
+- [x] ✅ **Backup/restore** - UI for database backup (create, list, download, restore, delete)
+- [x] ✅ **Multi-user support** - Multiple users with roles (Admin/user roles, user management UI, profile management implemented)
+- [x] ✅ **Audit log** - Log all changes (backend and frontend UI implemented, basic logging in auth. Can be extended to other endpoints)
 
 ### Improvements
 
-- [ ] 📝 **WebSocket reconnection** - Improve WebSocket reconnection logic in frontend
-- [ ] 📝 **WebSocket error handling** - Better error handling and logging in WebSocket broadcasts
-- [ ] 📝 **Database query optimization** - Add indexes for frequently queried fields (status, checked_at, recorded_at)
-- [ ] 📝 **Metrics aggregation** - Aggregate metrics for better performance (reduce data volume)
-- [ ] 📝 **Performance optimization** - Optimize database queries (use select_related, prefetch_related)
+- [x] ✅ **WebSocket reconnection** - Improve WebSocket reconnection logic in frontend (exponential backoff, heartbeat, better status)
+- [x] ✅ **WebSocket error handling** - Better error handling and logging in WebSocket broadcasts
+- [x] ✅ **Database query optimization** - Add indexes for frequently queried fields (status, checked_at, recorded_at) - Comprehensive indexes implemented in migration 002
+- [x] ✅ **Metrics aggregation** - Aggregate metrics for better performance - Automatic hourly/daily aggregation for long time periods, detailed metrics for recent data
+- [x] ✅ **Performance optimization** - Optimize database queries (use joinedload for eager loading) - Implemented eager loading in VMs, Services, Health Checks, Alerts, Metrics, and Audit Logs endpoints
 - [ ] 📝 **Caching** - Add Redis for caching frequently accessed data
 - [ ] 📝 **Background jobs** - Use Celery or similar for heavy tasks
-- [ ] 📝 **Database indexing** - Optimize database indexes (add composite indexes)
-- [ ] 📝 **API versioning** - Support API versioning
-- [ ] 📝 **OpenAPI specification** - Complete API documentation
-- [ ] 📝 **Uptime calculation** - Improve uptime calculation accuracy (currently simplified)
+- [x] ✅ **Database indexing** - Optimize database indexes (add composite indexes) - Comprehensive indexes implemented in migration 002
+- [x] ✅ **API versioning** - API versioning support implemented with header-based versioning (X-API-Version, Accept header), version utilities, and version info endpoint
+- [x] ✅ **OpenAPI specification** - Complete API documentation - Enhanced with detailed descriptions, examples, tags metadata, and improved endpoint documentation
+- [x] ✅ **Uptime calculation** - Improve uptime calculation accuracy - Fixed syntax error and improved calculation using actual metric timestamps and time intervals
 
 ## 💡 Low Priority / Ideas
 
@@ -101,8 +101,8 @@ This document tracks planned improvements, new features, and known issues.
 - [ ] 📝 **Docker optimizations** - Multi-stage builds, smaller images
 - [ ] 📝 **Health checks** - Container health checks
 - [ ] 📝 **Monitoring** - Monitor the system itself
-- [ ] 📝 **Logging** - Structured logging (JSON)
-- [ ] 📝 **Error tracking** - Sentry or similar
+- [x] ✅ **Logging** - Structured JSON logging implemented with auto-detection (JSON in production, text in development), configurable log levels, and optional file logging
+- [x] ✅ **Error tracking** - Sentry error tracking implemented with FastAPI integration, automatic exception capture, user context, and performance monitoring
 
 ## 🐛 Known Issues
 
@@ -114,22 +114,22 @@ This document tracks planned improvements, new features, and known issues.
 - [x] ✅ **WebSocket broadcasts** - Added WebSocket broadcasts in scheduler for real-time updates
 - [x] ✅ **Database session handling** - Improved database session management in scheduler
 - [x] ✅ **Proxmox SSL verification** - Configurable SSL verification implemented (enabled by default)
-- [ ] 🐛 **Error handling** - Some errors are not handled optimally
-- [ ] 🐛 **Token refresh** - JWT tokens have no refresh mechanism
-- [ ] 🐛 **WebSocket error handling** - ConnectionManager.broadcast silently fails on errors (should log)
+- [x] ✅ **Error handling** - Improved error handling with global exception handlers, structured error responses, and better user feedback
+- [x] ✅ **Token refresh** - JWT refresh tokens implemented with automatic refresh in frontend
+- [x] ✅ **WebSocket error handling** - ConnectionManager.broadcast now logs errors and removes dead connections
 
 ### Frontend
 
-- [ ] 🐛 **WebSocket reconnection** - Automatic reconnection works but could be improved (exponential backoff implemented)
+- [x] ✅ **WebSocket reconnection** - Improved with exponential backoff, heartbeat/ping-pong, better error handling, and reconnection status
 - [x] ✅ **Error boundaries** - React error boundaries implemented
 - [x] ✅ **Loading states** - Loading indicators implemented
-- [ ] 🐛 **Form validation** - Missing validation on some forms
-- [ ] 📝 **Maintenance mode UI** - Add UI controls for setting nodes/services in maintenance mode
-- [ ] 📝 **WebSocket status indicator** - Show connection status in UI
+- [x] ✅ **Form validation** - Form validation implemented for Nodes, Services, Login, and other forms
+- [x] ✅ **Maintenance mode UI** - UI controls for setting nodes/services in maintenance mode fully implemented
+- [x] ✅ **WebSocket status indicator** - Show connection status in UI with reconnection info
 
 ### Deployment
 
-- [ ] 🐛 **Environment variables** - Some variables are hardcoded
+- [x] ✅ **Environment variables** - CORS configuration and rate limiting now use environment variables instead of hardcoded values
 - [x] ✅ **Database migrations** - Automatic migrations on startup implemented
 - [x] ✅ **Health checks** - Container health checks implemented in docker-compose.yml
 
@@ -147,12 +147,12 @@ This document tracks planned improvements, new features, and known issues.
 
 - [ ] 📝 **SSL/TLS** - Enable SSL verification for Proxmox
 - [x] ✅ **Rate limiting** - Rate limiting implemented
-- [ ] 📝 **Input validation** - Validate all user input
-- [ ] 📝 **SQL injection protection** - Verify SQLAlchemy protects
-- [ ] 📝 **XSS protection** - Ensure XSS protection
+- [x] ✅ **Input validation** - Enhanced input validation with sanitization, XSS protection, URL/email validation, and comprehensive field validators in Pydantic schemas
+- [x] ✅ **SQL injection protection** - SQLAlchemy uses parameterized queries by default, plus additional validation layer in input_validation.py
+- [x] ✅ **XSS protection** - HTML escaping in sanitize_string, XSS pattern detection, CSP headers, and input sanitization in schemas
 - [ ] 📝 **CSRF protection** - Add CSRF tokens
-- [ ] 📝 **Security headers** - Add security headers
-- [ ] 📝 **Password policy** - Implement password policy
+- [x] ✅ **Security headers** - Security headers middleware implemented (CSP, X-Frame-Options, HSTS, etc.)
+- [x] ✅ **Password policy** - Comprehensive password policy implemented with configurable requirements (length, complexity, common password checks)
 - [ ] 📝 **2FA support** - Two-factor authentication
 
 ## 📊 Metrics and Analytics
@@ -166,7 +166,7 @@ This document tracks planned improvements, new features, and known issues.
 
 - [x] ✅ **Multi-language support** - Support for multiple languages
 - [x] ✅ **i18n** - Implemented internationalization
-- [ ] 📝 **Locale settings** - Support different date/time formats
+- [x] ✅ **Locale settings** - Support different date/time formats - Implemented with date-fns locale support for all 7 languages
 
 ## 📝 Notes
 

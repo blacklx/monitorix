@@ -75,6 +75,19 @@ async def create_user(
             detail="Email already exists"
         )
     
+    # Validate password against policy
+    from password_policy import validate_password
+    is_valid, errors = validate_password(
+        user_data.password,
+        username=user_data.username,
+        email=user_data.email
+    )
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="; ".join(errors)
+        )
+    
     # Create new user
     hashed_password = get_password_hash(user_data.password)
     user = User(
