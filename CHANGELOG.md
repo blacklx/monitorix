@@ -193,4 +193,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-**Note**: Dates are examples and should be updated with actual dates on release.
+**Note**: All dates reflect actual release dates.
