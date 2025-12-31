@@ -396,15 +396,10 @@ sleep 15
 print_info "Checking service status..."
 docker-compose ps
 
-# Get admin password from backend logs if it was auto-generated
-if [ "$ADMIN_PASSWORD_SET" = false ] || [ -z "$ADMIN_PASSWORD" ]; then
-    print_info "Checking for auto-generated admin password..."
-    sleep 5
-    ADMIN_PASSWORD_FROM_LOG=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | tail -1 | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
-    if [ -n "$ADMIN_PASSWORD_FROM_LOG" ]; then
-        ADMIN_PASSWORD="$ADMIN_PASSWORD_FROM_LOG"
-    fi
-fi
+# Get admin password from backend logs (always retrieved from logs, never from .env)
+print_info "Retrieving admin password from backend logs..."
+sleep 5
+ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | tail -1 | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
 
 # Get local IP
 LOCAL_IP=$(hostname -I | awk '{print $1}')
