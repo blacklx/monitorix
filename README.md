@@ -155,9 +155,10 @@ See [INSTALL.md](INSTALL.md) for detailed installation guide or [QUICKSTART.md](
 
 - **[INSTALL.md](INSTALL.md)** - Detailed installation guide
 - **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide
-- **[DEPLOY.md](DEPLOY.md)** - Deployment guide
-- **[VM_SETUP.md](VM_SETUP.md)** - VM setup guide
+- **[UPGRADE.md](UPGRADE.md)** - Safe upgrade guide
+- **[VERSION.md](VERSION.md)** - Version history
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture
+- **[ENV_VARIABLES.md](ENV_VARIABLES.md)** - Environment variables reference
 - **[TODO.md](TODO.md)** - Planned improvements and features
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history
@@ -223,6 +224,37 @@ See [INSTALL.md](INSTALL.md) for detailed setup.
 - Open browser console for error messages
 
 See [INSTALL.md](INSTALL.md) for more troubleshooting.
+
+## 🔄 Upgrading
+
+Monitorix includes built-in version checking and safe upgrade procedures:
+
+- **Version Display**: Current version is shown in the web UI footer
+- **Update Notifications**: Automatic check for new versions on startup
+- **Safe Upgrade**: Upgrade script preserves all data and configuration
+- **Database Migrations**: Automatic schema updates during upgrade
+
+See [UPGRADE.md](UPGRADE.md) for detailed upgrade instructions.
+
+### Quick Upgrade
+
+```bash
+# Linux/Mac
+./upgrade.sh
+
+# Windows PowerShell
+.\upgrade.ps1
+```
+
+The upgrade script will:
+1. ✅ Create automatic backup
+2. ✅ Pull latest code
+3. ✅ Run database migrations
+4. ✅ Rebuild containers
+5. ✅ Restart services
+6. ✅ Verify upgrade success
+
+**Always backup before upgrading!**
 
 ## 🔒 Security
 
@@ -291,7 +323,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ## 📝 License
 
-This project is made for personal use. Use as you wish.
+This project is licensed under the **Apache License 2.0** - see the [LICENSE](LICENSE) file for details.
+
+**Apache License 2.0** - A permissive license that allows commercial use, modification, distribution, and private use. Includes explicit patent protection. You can use this software for any purpose, including commercial projects.
+
+For more information, see [LICENSE_INFO.md](LICENSE_INFO.md).
 
 ## 🙏 Acknowledgments
 
