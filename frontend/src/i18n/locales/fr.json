@@ -1,0 +1,178 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "actions": "Actions",
+    "status": "Statut",
+    "name": "Nom",
+    "type": "Type",
+    "lastCheck": "Dernière vérification",
+    "never": "Jamais",
+    "all": "Tous",
+    "noResults": "Aucun résultat trouvé"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "nodes": "Nœuds",
+    "vms": "VM",
+    "services": "Services",
+    "alerts": "Alertes",
+    "metrics": "Métriques",
+    "logout": "Déconnexion",
+    "language": "Langue"
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "email": "E-mail",
+    "loginButton": "Se connecter",
+    "registerButton": "S'inscrire",
+    "needAccount": "Besoin d'un compte? S'inscrire",
+    "haveAccount": "Vous avez déjà un compte? Se connecter",
+    "loginFailed": "Échec de la connexion",
+    "registerFailed": "Échec de l'inscription"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "nodes": "Nœuds",
+    "online": "En ligne",
+    "vms": "VM",
+    "running": "En cours",
+    "services": "Services",
+    "healthy": "Sains",
+    "alerts": "Alertes",
+    "active": "Actives"
+  },
+  "nodes": {
+    "title": "Nœuds Proxmox",
+    "addNode": "Ajouter un nœud",
+    "editNode": "Modifier le nœud",
+    "deleteNode": "Supprimer le nœud",
+    "syncNow": "Synchroniser maintenant",
+    "url": "URL",
+    "username": "Nom d'utilisateur",
+    "token": "Jeton",
+    "isLocal": "Nœud local",
+    "isRemote": "Nœud distant",
+    "local": "Local",
+    "remote": "Distant",
+    "testConnection": "Tester la connexion",
+    "connectionSuccess": "Connexion réussie!",
+    "connectionFailed": "Échec de la connexion",
+    "nodeAdded": "Nœud ajouté",
+    "nodeUpdated": "Nœud mis à jour",
+    "nodeDeleted": "Nœud supprimé",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce nœud? Cela le supprimera uniquement de la surveillance, pas le serveur lui-même.",
+    "deleteWarning": "Cela supprimera le nœud de la surveillance. Le serveur Proxmox réel et ses VM ne seront pas affectés.",
+    "status": {
+      "online": "En ligne",
+      "offline": "Hors ligne",
+      "error": "Erreur",
+      "unknown": "Inconnu"
+    }
+  },
+  "vms": {
+    "title": "Machines virtuelles",
+    "allNodes": "Tous les nœuds",
+    "vmid": "VMID",
+    "cpu": "CPU",
+    "memory": "Mémoire",
+    "disk": "Disque",
+    "uptime": "Temps de fonctionnement",
+    "status": {
+      "running": "En cours",
+      "stopped": "Arrêté",
+      "paused": "En pause",
+      "unknown": "Inconnu"
+    }
+  },
+  "services": {
+    "title": "Services",
+    "addService": "Ajouter un service",
+    "editService": "Modifier le service",
+    "deleteService": "Supprimer le service",
+    "checkNow": "Vérifier maintenant",
+    "testService": "Tester le service",
+    "target": "Cible",
+    "port": "Port",
+    "responseTime": "Temps de réponse",
+    "error": "Erreur",
+    "serviceType": "Type de service",
+    "checkInterval": "Intervalle de vérification (secondes)",
+    "timeout": "Délai d'attente (secondes)",
+    "expectedStatus": "Code de statut attendu",
+    "vm": "Machine virtuelle (optionnel)",
+    "noVm": "Aucune VM",
+    "isActive": "Actif",
+    "serviceAdded": "Service ajouté",
+    "serviceUpdated": "Service mis à jour",
+    "serviceDeleted": "Service supprimé",
+    "testSuccess": "Test de service réussi!",
+    "testFailed": "Test de service échoué",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce service?",
+    "deleteWarning": "Cela supprimera le service de la surveillance.",
+    "status": {
+      "up": "En ligne",
+      "down": "Hors ligne",
+      "warning": "Avertissement"
+    },
+    "types": {
+      "http": "HTTP",
+      "https": "HTTPS",
+      "ping": "Ping",
+      "port": "Vérification de port"
+    }
+  },
+  "alerts": {
+    "title": "Alertes",
+    "showResolved": "Afficher résolues",
+    "resolve": "Résoudre",
+    "noAlerts": "Aucune alerte trouvée",
+    "severity": {
+      "critical": "Critique",
+      "warning": "Avertissement",
+      "info": "Info"
+    },
+    "type": {
+      "nodeDown": "Nœud hors ligne",
+      "vmDown": "VM hors ligne",
+      "serviceDown": "Service hors ligne",
+      "highUsage": "Utilisation élevée"
+    }
+  },
+  "metrics": {
+    "title": "Métriques",
+    "selectNode": "Sélectionner un nœud",
+    "selectVM": "Sélectionner une VM",
+    "allNodes": "Tous les nœuds",
+    "allVMs": "Toutes les VM",
+    "timeRange": "Période",
+    "hours": "heures",
+    "cpu": "Utilisation CPU (%)",
+    "memory": "Utilisation mémoire (%)",
+    "disk": "Utilisation disque (%)",
+    "noData": "Aucune donnée de métrique disponible",
+    "loading": "Chargement des métriques..."
+  },
+  "languages": {
+    "en": "Anglais",
+    "no": "Norvégien",
+    "sv": "Suédois",
+    "da": "Danois",
+    "fi": "Finnois",
+    "fr": "Français",
+    "de": "Allemand"
+  }
+}
+

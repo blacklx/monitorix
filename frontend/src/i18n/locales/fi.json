@@ -1,0 +1,178 @@
+{
+  "common": {
+    "loading": "Ladataan...",
+    "error": "Virhe",
+    "success": "Onnistui",
+    "save": "Tallenna",
+    "cancel": "Peruuta",
+    "delete": "Poista",
+    "edit": "Muokkaa",
+    "add": "Lisää",
+    "close": "Sulje",
+    "search": "Hae",
+    "filter": "Suodata",
+    "actions": "Toiminnot",
+    "status": "Tila",
+    "name": "Nimi",
+    "type": "Tyyppi",
+    "lastCheck": "Viimeisin tarkistus",
+    "never": "Ei koskaan",
+    "all": "Kaikki",
+    "noResults": "Tuloksia ei löytynyt"
+  },
+  "nav": {
+    "dashboard": "Kojelauta",
+    "nodes": "Solmut",
+    "vms": "VM:t",
+    "services": "Palvelut",
+    "alerts": "Hälytykset",
+    "metrics": "Mittarit",
+    "logout": "Kirjaudu ulos",
+    "language": "Kieli"
+  },
+  "auth": {
+    "login": "Kirjaudu sisään",
+    "register": "Rekisteröidy",
+    "username": "Käyttäjänimi",
+    "password": "Salasana",
+    "email": "Sähköposti",
+    "loginButton": "Kirjaudu sisään",
+    "registerButton": "Rekisteröidy",
+    "needAccount": "Tarvitsetko tilin? Rekisteröidy",
+    "haveAccount": "Onko sinulla jo tili? Kirjaudu sisään",
+    "loginFailed": "Kirjautuminen epäonnistui",
+    "registerFailed": "Rekisteröinti epäonnistui"
+  },
+  "dashboard": {
+    "title": "Kojelauta",
+    "nodes": "Solmut",
+    "online": "Verkossa",
+    "vms": "VM:t",
+    "running": "Käynnissä",
+    "services": "Palvelut",
+    "healthy": "Kunnossa",
+    "alerts": "Hälytykset",
+    "active": "Aktiiviset"
+  },
+  "nodes": {
+    "title": "Proxmox Solmut",
+    "addNode": "Lisää solmu",
+    "editNode": "Muokkaa solmua",
+    "deleteNode": "Poista solmu",
+    "syncNow": "Synkronoi nyt",
+    "url": "URL",
+    "username": "Käyttäjänimi",
+    "token": "Token",
+    "isLocal": "Paikallinen solmu",
+    "isRemote": "Etäsolmu",
+    "local": "Paikallinen",
+    "remote": "Etä",
+    "testConnection": "Testaa yhteys",
+    "connectionSuccess": "Yhteys onnistui!",
+    "connectionFailed": "Yhteys epäonnistui",
+    "nodeAdded": "Solmu lisätty",
+    "nodeUpdated": "Solmu päivitetty",
+    "nodeDeleted": "Solmu poistettu",
+    "confirmDelete": "Haluatko varmasti poistaa tämän solmun? Tämä poistaa sen vain seurannasta, ei itse palvelinta.",
+    "deleteWarning": "Tämä poistaa solmun seurannasta. Todellinen Proxmox-palvelin ja sen VM:t eivät vaikuta.",
+    "status": {
+      "online": "Verkossa",
+      "offline": "Poissa verkosta",
+      "error": "Virhe",
+      "unknown": "Tuntematon"
+    }
+  },
+  "vms": {
+    "title": "Virtuaalikoneet",
+    "allNodes": "Kaikki solmut",
+    "vmid": "VMID",
+    "cpu": "CPU",
+    "memory": "Muisti",
+    "disk": "Levy",
+    "uptime": "Käyntiaika",
+    "status": {
+      "running": "Käynnissä",
+      "stopped": "Pysäytetty",
+      "paused": "Keskeytetty",
+      "unknown": "Tuntematon"
+    }
+  },
+  "services": {
+    "title": "Palvelut",
+    "addService": "Lisää palvelu",
+    "editService": "Muokkaa palvelua",
+    "deleteService": "Poista palvelu",
+    "checkNow": "Tarkista nyt",
+    "testService": "Testaa palvelu",
+    "target": "Kohde",
+    "port": "Portti",
+    "responseTime": "Vastausaika",
+    "error": "Virhe",
+    "serviceType": "Palvelutyyppi",
+    "checkInterval": "Tarkistusväli (sekuntia)",
+    "timeout": "Aikakatkaisu (sekuntia)",
+    "expectedStatus": "Odotettu tilakoodi",
+    "vm": "Virtuaalikone (valinnainen)",
+    "noVm": "Ei VM",
+    "isActive": "Aktiivinen",
+    "serviceAdded": "Palvelu lisätty",
+    "serviceUpdated": "Palvelu päivitetty",
+    "serviceDeleted": "Palvelu poistettu",
+    "testSuccess": "Palvelutesti onnistui!",
+    "testFailed": "Palvelutesti epäonnistui",
+    "confirmDelete": "Haluatko varmasti poistaa tämän palvelun?",
+    "deleteWarning": "Tämä poistaa palvelun seurannasta.",
+    "status": {
+      "up": "Ylhäällä",
+      "down": "Alhaalla",
+      "warning": "Varoitus"
+    },
+    "types": {
+      "http": "HTTP",
+      "https": "HTTPS",
+      "ping": "Ping",
+      "port": "Porttitarkistus"
+    }
+  },
+  "alerts": {
+    "title": "Hälytykset",
+    "showResolved": "Näytä ratkaistut",
+    "resolve": "Ratkaise",
+    "noAlerts": "Hälytyksiä ei löytynyt",
+    "severity": {
+      "critical": "Kriittinen",
+      "warning": "Varoitus",
+      "info": "Info"
+    },
+    "type": {
+      "nodeDown": "Solmu alhaalla",
+      "vmDown": "VM alhaalla",
+      "serviceDown": "Palvelu alhaalla",
+      "highUsage": "Korkea käyttö"
+    }
+  },
+  "metrics": {
+    "title": "Mittarit",
+    "selectNode": "Valitse solmu",
+    "selectVM": "Valitse VM",
+    "allNodes": "Kaikki solmut",
+    "allVMs": "Kaikki VM:t",
+    "timeRange": "Aikaväli",
+    "hours": "tuntia",
+    "cpu": "CPU-käyttö (%)",
+    "memory": "Muistinkäyttö (%)",
+    "disk": "Levykäyttö (%)",
+    "noData": "Ei mittaridataa saatavilla",
+    "loading": "Ladataan mittareita..."
+  },
+  "languages": {
+    "en": "Englanti",
+    "no": "Norja",
+    "sv": "Ruotsi",
+    "da": "Tanska",
+    "fi": "Suomi",
+    "fr": "Ranska",
+    "de": "Saksa"
+  }
+}
+

@@ -1,0 +1,472 @@
+# Installation Guide - Monitorix
+
+This guide walks you through the complete installation process for Monitorix.
+
+## 📋 Table of Contents
+
+- [Requirements](#requirements)
+- [Quick Setup (Automated)](#quick-setup-automated)
+- [Step-by-step Installation](#step-by-step-installation)
+- [Configuration](#configuration)
+- [Verification](#verification)
+- [Maintenance](#maintenance)
+- [Troubleshooting](#troubleshooting)
+
+## 🔧 Requirements
+
+### Minimum Requirements
+- **Docker** version 20.10 or newer
+- **Docker Compose** version 2.0 or newer
+- **2GB RAM** available
+- **10GB disk space**
+
+### Recommended
+- **4GB RAM** or more
+- **20GB disk space** for metrics history
+- **Nginx Proxy Manager** for public access
+- **SSL certificate** (Let's Encrypt)
+
+### Proxmox Requirements
+- Proxmox VE 6.0 or newer
+- API access (user with sufficient privileges)
+- API token or username/password
+
+## 🚀 Quick Setup (Automated)
+
+### Local Setup (Recommended)
+
+If you're setting up directly on the VM:
+
+```bash
+# 1. Copy project files to VM (via git, scp, etc.)
+cd ~/monitorix
+
+# 2. Run setup script
+chmod +x setup.sh
+./setup.sh
+```
+
+The script will:
+- Check for prerequisites
+- Install missing packages (with your permission)
+- Set up .env file
+- Build and start services
+
+### Remote Deployment
+
+If deploying from another machine:
+
+```bash
+# From your local machine
+./deploy.sh user@your-vm-ip
+```
+
+## 📦 Step-by-step Installation
+
+### Step 1: Download the Project
+
+**On the VM:**
+
+```bash
+# If using git
+git clone https://github.com/blacklx/monitorix.git
+cd monitorix
+
+# Or download and extract ZIP file
+# Or copy files via scp/rsync from your local machine
+```
+
+### Step 2: Configure Environment Variables
+
+Copy the example file:
+
+```bash
+cp .env.example .env
+```
+
+Edit the `.env` file with your favorite editor:
+
+```bash
+nano .env
+# or
+vim .env
+```
+
+### Step 3: Configure Database
+
+Set database settings in `.env`:
+
+```env
+POSTGRES_USER=monitorix
+POSTGRES_PASSWORD=your-secure-password-here
+POSTGRES_DB=monitorix
+DATABASE_URL=postgresql://monitorix:your-secure-password-here@postgres:5432/monitorix
+```
+
+**⚠️ Important**: Use a strong password in production!
+
+### Step 4: Configure Backend
+
+Set backend settings:
+
+```env
+SECRET_KEY=your-very-secure-secret-key-here
+```
+
+**⚠️ Important**: Generate a random secret key. You can use:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+### Step 5: Create Proxmox API Token
+
+For each Proxmox node you want to monitor:
+
+1. **Log in to Proxmox web interface**
+2. **Go to**: Datacenter → Permissions → API Tokens
+3. **Click**: "Add"
+4. **Fill in**:
+   - Token ID: `monitorix` (or your preference)
+   - User: Select user (e.g., `user@pam`)
+   - Privilege Separation: Enable if desired
+5. **Click**: "Generate"
+6. **Copy token secret** (shown only once!)
+
+**Token format**: `token_id=token_secret`
+
+Example: If token ID is `monitorix` and secret is `abc123-def456-...`, then the full token is:
+```
+monitorix=abc123-def456-...
+```
+
+### Step 6: Configure Proxmox Nodes
+
+In the `.env` file, add your Proxmox nodes:
+
+```env
+PROXMOX_NODES=node1:https://192.168.1.10:8006:user@pam:monitorix=abc123-def456-...,node2:https://192.168.1.11:8006:user@pam:monitorix=xyz789-...
+```
+
+**Format**: `name:url:username:token` (comma-separated for multiple nodes)
+
+**Example**:
+- `name`: `node1`, `pve1`, `home-lab`, etc.
+- `url`: `https://192.168.1.10:8006` or `https://pve.example.com:8006`
+- `username`: `user@pam` or `user@pve`
+- `token`: `token_id=token_secret`
+
+### Step 7: Configure Frontend
+
+Set API URL (if using custom domain):
+
+```env
+REACT_APP_API_URL=http://localhost:8000
+# or if behind proxy:
+# REACT_APP_API_URL=https://api.yourdomain.com
+```
+
+### Step 8: Start the System
+
+Build and start all containers:
+
+```bash
+docker-compose up -d
+```
+
+This will:
+1. Build backend and frontend images
+2. Start PostgreSQL database
+3. Start backend API
+4. Start frontend web server
+
+### Step 9: Wait for System to Start
+
+Check status:
+
+```bash
+docker-compose ps
+```
+
+All containers should show "Up" status.
+
+View logs if something fails:
+
+```bash
+docker-compose logs -f
+```
+
+### Step 10: Create First User
+
+1. **Open browser**: `http://localhost:3000`
+2. **Click**: "Need an account? Register"
+3. **Fill in**:
+   - Username: Your username
+   - Email: Your email
+   - Password: Your password
+4. **Click**: "Register"
+
+You will be automatically logged in.
+
+### Step 11: Add Proxmox Nodes (if not configured in .env)
+
+If you didn't configure nodes in `.env`, you can add them via API:
+
+```bash
+# First, get access token
+curl -X POST "http://localhost:8000/api/auth/login" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=your-username&password=your-password"
+
+# Use token to add node
+curl -X POST "http://localhost:8000/api/nodes" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "node1",
+    "url": "https://192.168.1.10:8006",
+    "username": "user@pam",
+    "token": "monitorix=abc123-def456-...",
+    "is_local": true
+  }'
+```
+
+Or use the web interface (if "Add Node" function is implemented).
+
+## ✅ Verification
+
+### Check That Everything Works
+
+1. **Backend API**: `http://localhost:8000/health` should return `{"status": "healthy"}`
+
+2. **API Documentation**: `http://localhost:8000/docs` should show Swagger UI
+
+3. **Frontend**: `http://localhost:3000` should show login page
+
+4. **Database**: Check that PostgreSQL is running:
+   ```bash
+   docker-compose exec postgres psql -U monitorix -d monitorix -c "SELECT COUNT(*) FROM nodes;"
+   ```
+
+### Test Proxmox Connection
+
+After nodes are added, check that they sync:
+
+1. Go to "Nodes" in the dashboard
+2. Click "Sync Now" on a node
+3. Check that status becomes "online"
+4. Go to "VMs" and verify that VMs are displayed
+
+## 🔄 Maintenance
+
+### View Logs
+
+```bash
+# All logs
+docker-compose logs -f
+
+# Backend only
+docker-compose logs -f backend
+
+# Frontend only
+docker-compose logs -f frontend
+
+# Database only
+docker-compose logs -f postgres
+```
+
+### Restart Services
+
+```bash
+# Restart everything
+docker-compose restart
+
+# Restart specific service
+docker-compose restart backend
+docker-compose restart frontend
+```
+
+### Update System
+
+```bash
+# Get latest code
+git pull
+
+# Rebuild images
+docker-compose build
+
+# Restart with new images
+docker-compose up -d
+```
+
+### Backup Database
+
+```bash
+# Create backup
+docker-compose exec postgres pg_dump -U monitorix monitorix > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# Or with compression
+docker-compose exec postgres pg_dump -U monitorix monitorix | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
+```
+
+### Restore Database
+
+```bash
+# From backup
+docker-compose exec -T postgres psql -U monitorix monitorix < backup.sql
+
+# From compressed backup
+gunzip < backup.sql.gz | docker-compose exec -T postgres psql -U monitorix monitorix
+```
+
+### Clean Up Old Metrics
+
+Metrics can grow over time. To clean up:
+
+```bash
+# Delete metrics older than 30 days
+docker-compose exec postgres psql -U monitorix monitorix -c "DELETE FROM metrics WHERE recorded_at < NOW() - INTERVAL '30 days';"
+```
+
+## 🌐 Integration with Nginx Proxy Manager
+
+### Backend API
+
+1. **Create Proxy Host**:
+   - Domain Names: `api.yourdomain.com`
+   - Scheme: `http`
+   - Forward Hostname/IP: `monitorix_backend` (container name)
+   - Forward Port: `8000`
+   - Cache Assets: Off
+   - Block Common Exploits: On
+   - Websockets Support: **ON** (important!)
+
+2. **SSL**:
+   - SSL Certificate: Request a new SSL Certificate
+   - Force SSL: On
+   - HTTP/2 Support: On
+
+3. **Advanced** (if needed):
+   ```nginx
+   proxy_http_version 1.1;
+   proxy_set_header Upgrade $http_upgrade;
+   proxy_set_header Connection "upgrade";
+   ```
+
+### Frontend
+
+1. **Create Proxy Host**:
+   - Domain Names: `status.yourdomain.com`
+   - Scheme: `http`
+   - Forward Hostname/IP: `monitorix_frontend`
+   - Forward Port: `80`
+   - Cache Assets: On
+   - Block Common Exploits: On
+
+2. **SSL**: Same as backend
+
+3. **Update .env**:
+   ```env
+   REACT_APP_API_URL=https://api.yourdomain.com
+   ```
+
+4. **Rebuild frontend**:
+   ```bash
+   docker-compose build frontend
+   docker-compose up -d frontend
+   ```
+
+## 🐛 Troubleshooting
+
+### Backend Won't Start
+
+**Symptom**: Backend container stops or won't start
+
+**Solution**:
+1. Check logs: `docker-compose logs backend`
+2. Verify DATABASE_URL in .env
+3. Check that PostgreSQL container is running: `docker-compose ps postgres`
+4. Test database connection:
+   ```bash
+   docker-compose exec postgres psql -U monitorix -d monitorix -c "SELECT 1;"
+   ```
+
+### Can't Connect to Proxmox
+
+**Symptom**: Nodes show "offline" or "error" status
+
+**Solution**:
+1. Verify URL, username, and token in .env
+2. Test Proxmox API manually:
+   ```bash
+   curl -k -H "Authorization: PVETokenID=token_id=token_secret" https://192.168.1.10:8006/api2/json/version
+   ```
+3. Check that Proxmox API is accessible from container:
+   ```bash
+   docker-compose exec backend curl -k https://192.168.1.10:8006/api2/json/version
+   ```
+4. Check firewall rules
+5. Verify that token has sufficient privileges
+
+### Frontend Shows No Data
+
+**Symptom**: Dashboard is empty or shows error messages
+
+**Solution**:
+1. Open browser console (F12)
+2. Check for error messages
+3. Verify that backend is running: `http://localhost:8000/health`
+4. Check REACT_APP_API_URL in .env
+5. Check CORS settings in backend
+6. Test API directly:
+   ```bash
+   curl http://localhost:8000/api/dashboard/stats
+   ```
+
+### Database Connection Errors
+
+**Symptom**: "Connection refused" or "database does not exist"
+
+**Solution**:
+1. Check that PostgreSQL container is running
+2. Verify POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB in .env
+3. Check DATABASE_URL format
+4. Try restarting database:
+   ```bash
+   docker-compose restart postgres
+   ```
+
+### WebSocket Not Working
+
+**Symptom**: Real-time updates don't work
+
+**Solution**:
+1. Check that WebSocket support is enabled in Nginx Proxy Manager
+2. Verify proxy headers (Upgrade, Connection)
+3. Test WebSocket directly:
+   ```bash
+   wscat -c ws://localhost:8000/ws
+   ```
+
+### High Memory Usage
+
+**Symptom**: System uses a lot of RAM
+
+**Solution**:
+1. Reduce HEALTH_CHECK_INTERVAL in .env
+2. Clean up old metrics (see Maintenance)
+3. Limit number of nodes/VMs being monitored
+4. Consider increasing container memory limits
+
+## 📞 Support
+
+If you still have problems:
+
+1. Check [TODO.md](TODO.md) for known issues
+2. View logs for detailed error messages
+3. Verify that all requirements are met
+4. Check that all ports are accessible
+
+---
+
+**Good luck with the installation! 🚀**

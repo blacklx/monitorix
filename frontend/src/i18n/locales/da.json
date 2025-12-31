@@ -1,0 +1,178 @@
+{
+  "common": {
+    "loading": "Indlæser...",
+    "error": "Fejl",
+    "success": "Succes",
+    "save": "Gem",
+    "cancel": "Annuller",
+    "delete": "Slet",
+    "edit": "Rediger",
+    "add": "Tilføj",
+    "close": "Luk",
+    "search": "Søg",
+    "filter": "Filter",
+    "actions": "Handlinger",
+    "status": "Status",
+    "name": "Navn",
+    "type": "Type",
+    "lastCheck": "Sidste tjek",
+    "never": "Aldrig",
+    "all": "Alle",
+    "noResults": "Ingen resultater fundet"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "nodes": "Noder",
+    "vms": "VM'er",
+    "services": "Tjenester",
+    "alerts": "Advarsler",
+    "metrics": "Målinger",
+    "logout": "Log ud",
+    "language": "Sprog"
+  },
+  "auth": {
+    "login": "Log ind",
+    "register": "Registrer",
+    "username": "Brugernavn",
+    "password": "Adgangskode",
+    "email": "E-mail",
+    "loginButton": "Log ind",
+    "registerButton": "Registrer",
+    "needAccount": "Har du brug for en konto? Registrer",
+    "haveAccount": "Har du allerede en konto? Log ind",
+    "loginFailed": "Login fejlede",
+    "registerFailed": "Registrering fejlede"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "nodes": "Noder",
+    "online": "Online",
+    "vms": "VM'er",
+    "running": "Kører",
+    "services": "Tjenester",
+    "healthy": "Sunde",
+    "alerts": "Advarsler",
+    "active": "Aktive"
+  },
+  "nodes": {
+    "title": "Proxmox Noder",
+    "addNode": "Tilføj node",
+    "editNode": "Rediger node",
+    "deleteNode": "Slet node",
+    "syncNow": "Synkroniser nu",
+    "url": "URL",
+    "username": "Brugernavn",
+    "token": "Token",
+    "isLocal": "Lokal node",
+    "isRemote": "Fjern node",
+    "local": "Lokal",
+    "remote": "Fjern",
+    "testConnection": "Test forbindelse",
+    "connectionSuccess": "Forbindelse lykkedes!",
+    "connectionFailed": "Forbindelse fejlede",
+    "nodeAdded": "Node tilføjet",
+    "nodeUpdated": "Node opdateret",
+    "nodeDeleted": "Node slettet",
+    "confirmDelete": "Er du sikker på, at du vil slette denne node? Dette fjerner den kun fra overvågning, ikke selve serveren.",
+    "deleteWarning": "Dette vil fjerne noden fra overvågning. Den faktiske Proxmox-server og dens VM'er vil ikke blive påvirket.",
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "error": "Fejl",
+      "unknown": "Ukendt"
+    }
+  },
+  "vms": {
+    "title": "Virtuelle maskiner",
+    "allNodes": "Alle noder",
+    "vmid": "VMID",
+    "cpu": "CPU",
+    "memory": "Hukommelse",
+    "disk": "Disk",
+    "uptime": "Oppetid",
+    "status": {
+      "running": "Kører",
+      "stopped": "Stoppet",
+      "paused": "Pauset",
+      "unknown": "Ukendt"
+    }
+  },
+  "services": {
+    "title": "Tjenester",
+    "addService": "Tilføj tjeneste",
+    "editService": "Rediger tjeneste",
+    "deleteService": "Slet tjeneste",
+    "checkNow": "Tjek nu",
+    "testService": "Test tjeneste",
+    "target": "Mål",
+    "port": "Port",
+    "responseTime": "Svarstid",
+    "error": "Fejl",
+    "serviceType": "Tjenestetype",
+    "checkInterval": "Tjekinterval (sekunder)",
+    "timeout": "Timeout (sekunder)",
+    "expectedStatus": "Forventet statuskode",
+    "vm": "Virtuel maskine (valgfrit)",
+    "noVm": "Ingen VM",
+    "isActive": "Aktiv",
+    "serviceAdded": "Tjeneste tilføjet",
+    "serviceUpdated": "Tjeneste opdateret",
+    "serviceDeleted": "Tjeneste slettet",
+    "testSuccess": "Tjenestetest lykkedes!",
+    "testFailed": "Tjenestetest fejlede",
+    "confirmDelete": "Er du sikker på, at du vil slette denne tjeneste?",
+    "deleteWarning": "Dette vil fjerne tjenesten fra overvågning.",
+    "status": {
+      "up": "Oppe",
+      "down": "Nede",
+      "warning": "Advarsel"
+    },
+    "types": {
+      "http": "HTTP",
+      "https": "HTTPS",
+      "ping": "Ping",
+      "port": "Porttjek"
+    }
+  },
+  "alerts": {
+    "title": "Advarsler",
+    "showResolved": "Vis løste",
+    "resolve": "Løs",
+    "noAlerts": "Ingen advarsler fundet",
+    "severity": {
+      "critical": "Kritisk",
+      "warning": "Advarsel",
+      "info": "Info"
+    },
+    "type": {
+      "nodeDown": "Node nede",
+      "vmDown": "VM nede",
+      "serviceDown": "Tjeneste nede",
+      "highUsage": "Høj brug"
+    }
+  },
+  "metrics": {
+    "title": "Målinger",
+    "selectNode": "Vælg node",
+    "selectVM": "Vælg VM",
+    "allNodes": "Alle noder",
+    "allVMs": "Alle VM'er",
+    "timeRange": "Tidsperiode",
+    "hours": "timer",
+    "cpu": "CPU-forbrug (%)",
+    "memory": "Hukommelsesforbrug (%)",
+    "disk": "Diskforbrug (%)",
+    "noData": "Ingen måledata tilgængelige",
+    "loading": "Indlæser målinger..."
+  },
+  "languages": {
+    "en": "Engelsk",
+    "no": "Norsk",
+    "sv": "Svensk",
+    "da": "Dansk",
+    "fi": "Finsk",
+    "fr": "Fransk",
+    "de": "Tysk"
+  }
+}
+

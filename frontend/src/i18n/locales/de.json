@@ -1,0 +1,178 @@
+{
+  "common": {
+    "loading": "Lädt...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen",
+    "close": "Schließen",
+    "search": "Suchen",
+    "filter": "Filter",
+    "actions": "Aktionen",
+    "status": "Status",
+    "name": "Name",
+    "type": "Typ",
+    "lastCheck": "Letzte Prüfung",
+    "never": "Nie",
+    "all": "Alle",
+    "noResults": "Keine Ergebnisse gefunden"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "nodes": "Knoten",
+    "vms": "VMs",
+    "services": "Dienste",
+    "alerts": "Warnungen",
+    "metrics": "Metriken",
+    "logout": "Abmelden",
+    "language": "Sprache"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "username": "Benutzername",
+    "password": "Passwort",
+    "email": "E-Mail",
+    "loginButton": "Anmelden",
+    "registerButton": "Registrieren",
+    "needAccount": "Benötigen Sie ein Konto? Registrieren",
+    "haveAccount": "Haben Sie bereits ein Konto? Anmelden",
+    "loginFailed": "Anmeldung fehlgeschlagen",
+    "registerFailed": "Registrierung fehlgeschlagen"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "nodes": "Knoten",
+    "online": "Online",
+    "vms": "VMs",
+    "running": "Läuft",
+    "services": "Dienste",
+    "healthy": "Gesund",
+    "alerts": "Warnungen",
+    "active": "Aktiv"
+  },
+  "nodes": {
+    "title": "Proxmox Knoten",
+    "addNode": "Knoten hinzufügen",
+    "editNode": "Knoten bearbeiten",
+    "deleteNode": "Knoten löschen",
+    "syncNow": "Jetzt synchronisieren",
+    "url": "URL",
+    "username": "Benutzername",
+    "token": "Token",
+    "isLocal": "Lokaler Knoten",
+    "isRemote": "Entfernte Knoten",
+    "local": "Lokal",
+    "remote": "Remote",
+    "testConnection": "Verbindung testen",
+    "connectionSuccess": "Verbindung erfolgreich!",
+    "connectionFailed": "Verbindung fehlgeschlagen",
+    "nodeAdded": "Knoten hinzugefügt",
+    "nodeUpdated": "Knoten aktualisiert",
+    "nodeDeleted": "Knoten gelöscht",
+    "confirmDelete": "Sind Sie sicher, dass Sie diesen Knoten löschen möchten? Dies entfernt ihn nur aus der Überwachung, nicht den Server selbst.",
+    "deleteWarning": "Dies entfernt den Knoten aus der Überwachung. Der tatsächliche Proxmox-Server und seine VMs werden nicht beeinflusst.",
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "error": "Fehler",
+      "unknown": "Unbekannt"
+    }
+  },
+  "vms": {
+    "title": "Virtuelle Maschinen",
+    "allNodes": "Alle Knoten",
+    "vmid": "VMID",
+    "cpu": "CPU",
+    "memory": "Arbeitsspeicher",
+    "disk": "Festplatte",
+    "uptime": "Betriebszeit",
+    "status": {
+      "running": "Läuft",
+      "stopped": "Gestoppt",
+      "paused": "Pausiert",
+      "unknown": "Unbekannt"
+    }
+  },
+  "services": {
+    "title": "Dienste",
+    "addService": "Dienst hinzufügen",
+    "editService": "Dienst bearbeiten",
+    "deleteService": "Dienst löschen",
+    "checkNow": "Jetzt prüfen",
+    "testService": "Dienst testen",
+    "target": "Ziel",
+    "port": "Port",
+    "responseTime": "Antwortzeit",
+    "error": "Fehler",
+    "serviceType": "Diensttyp",
+    "checkInterval": "Prüfintervall (Sekunden)",
+    "timeout": "Timeout (Sekunden)",
+    "expectedStatus": "Erwarteter Statuscode",
+    "vm": "Virtuelle Maschine (optional)",
+    "noVm": "Keine VM",
+    "isActive": "Aktiv",
+    "serviceAdded": "Dienst hinzugefügt",
+    "serviceUpdated": "Dienst aktualisiert",
+    "serviceDeleted": "Dienst gelöscht",
+    "testSuccess": "Diensttest erfolgreich!",
+    "testFailed": "Diensttest fehlgeschlagen",
+    "confirmDelete": "Sind Sie sicher, dass Sie diesen Dienst löschen möchten?",
+    "deleteWarning": "Dies entfernt den Dienst aus der Überwachung.",
+    "status": {
+      "up": "Erreichbar",
+      "down": "Nicht erreichbar",
+      "warning": "Warnung"
+    },
+    "types": {
+      "http": "HTTP",
+      "https": "HTTPS",
+      "ping": "Ping",
+      "port": "Portprüfung"
+    }
+  },
+  "alerts": {
+    "title": "Warnungen",
+    "showResolved": "Gelöste anzeigen",
+    "resolve": "Lösen",
+    "noAlerts": "Keine Warnungen gefunden",
+    "severity": {
+      "critical": "Kritisch",
+      "warning": "Warnung",
+      "info": "Info"
+    },
+    "type": {
+      "nodeDown": "Knoten offline",
+      "vmDown": "VM offline",
+      "serviceDown": "Dienst offline",
+      "highUsage": "Hohe Auslastung"
+    }
+  },
+  "metrics": {
+    "title": "Metriken",
+    "selectNode": "Knoten auswählen",
+    "selectVM": "VM auswählen",
+    "allNodes": "Alle Knoten",
+    "allVMs": "Alle VMs",
+    "timeRange": "Zeitraum",
+    "hours": "Stunden",
+    "cpu": "CPU-Auslastung (%)",
+    "memory": "Speicherauslastung (%)",
+    "disk": "Festplattenauslastung (%)",
+    "noData": "Keine Metrikdaten verfügbar",
+    "loading": "Lade Metriken..."
+  },
+  "languages": {
+    "en": "Englisch",
+    "no": "Norwegisch",
+    "sv": "Schwedisch",
+    "da": "Dänisch",
+    "fi": "Finnisch",
+    "fr": "Französisch",
+    "de": "Deutsch"
+  }
+}
+

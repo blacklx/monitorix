@@ -1,0 +1,178 @@
+{
+  "common": {
+    "loading": "Laddar...",
+    "error": "Fel",
+    "success": "Lyckades",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "delete": "Radera",
+    "edit": "Redigera",
+    "add": "Lägg till",
+    "close": "Stäng",
+    "search": "Sök",
+    "filter": "Filter",
+    "actions": "Åtgärder",
+    "status": "Status",
+    "name": "Namn",
+    "type": "Typ",
+    "lastCheck": "Senaste kontroll",
+    "never": "Aldrig",
+    "all": "Alla",
+    "noResults": "Inga resultat hittades"
+  },
+  "nav": {
+    "dashboard": "Instrumentpanel",
+    "nodes": "Noder",
+    "vms": "VM:er",
+    "services": "Tjänster",
+    "alerts": "Varningar",
+    "metrics": "Mätvärden",
+    "logout": "Logga ut",
+    "language": "Språk"
+  },
+  "auth": {
+    "login": "Logga in",
+    "register": "Registrera",
+    "username": "Användarnamn",
+    "password": "Lösenord",
+    "email": "E-post",
+    "loginButton": "Logga in",
+    "registerButton": "Registrera",
+    "needAccount": "Behöver du ett konto? Registrera",
+    "haveAccount": "Har du redan ett konto? Logga in",
+    "loginFailed": "Inloggning misslyckades",
+    "registerFailed": "Registrering misslyckades"
+  },
+  "dashboard": {
+    "title": "Instrumentpanel",
+    "nodes": "Noder",
+    "online": "Online",
+    "vms": "VM:er",
+    "running": "Kör",
+    "services": "Tjänster",
+    "healthy": "Friska",
+    "alerts": "Varningar",
+    "active": "Aktiva"
+  },
+  "nodes": {
+    "title": "Proxmox Noder",
+    "addNode": "Lägg till nod",
+    "editNode": "Redigera nod",
+    "deleteNode": "Radera nod",
+    "syncNow": "Synkronisera nu",
+    "url": "URL",
+    "username": "Användarnamn",
+    "token": "Token",
+    "isLocal": "Lokal nod",
+    "isRemote": "Fjärrnod",
+    "local": "Lokal",
+    "remote": "Fjärr",
+    "testConnection": "Testa anslutning",
+    "connectionSuccess": "Anslutning lyckades!",
+    "connectionFailed": "Anslutning misslyckades",
+    "nodeAdded": "Nod tillagd",
+    "nodeUpdated": "Nod uppdaterad",
+    "nodeDeleted": "Nod raderad",
+    "confirmDelete": "Är du säker på att du vill radera denna nod? Detta tar bara bort den från övervakning, inte själva servern.",
+    "deleteWarning": "Detta kommer att ta bort noden från övervakning. Den faktiska Proxmox-servern och dess VM:er kommer inte att påverkas.",
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "error": "Fel",
+      "unknown": "Okänd"
+    }
+  },
+  "vms": {
+    "title": "Virtuella maskiner",
+    "allNodes": "Alla noder",
+    "vmid": "VMID",
+    "cpu": "CPU",
+    "memory": "Minne",
+    "disk": "Disk",
+    "uptime": "Upptid",
+    "status": {
+      "running": "Kör",
+      "stopped": "Stoppad",
+      "paused": "Pausad",
+      "unknown": "Okänd"
+    }
+  },
+  "services": {
+    "title": "Tjänster",
+    "addService": "Lägg till tjänst",
+    "editService": "Redigera tjänst",
+    "deleteService": "Radera tjänst",
+    "checkNow": "Kontrollera nu",
+    "testService": "Testa tjänst",
+    "target": "Mål",
+    "port": "Port",
+    "responseTime": "Svartid",
+    "error": "Fel",
+    "serviceType": "Tjänsttyp",
+    "checkInterval": "Kontrollintervall (sekunder)",
+    "timeout": "Timeout (sekunder)",
+    "expectedStatus": "Förväntad statuskod",
+    "vm": "Virtuell maskin (valfritt)",
+    "noVm": "Ingen VM",
+    "isActive": "Aktiv",
+    "serviceAdded": "Tjänst tillagd",
+    "serviceUpdated": "Tjänst uppdaterad",
+    "serviceDeleted": "Tjänst raderad",
+    "testSuccess": "Tjänsttest lyckades!",
+    "testFailed": "Tjänsttest misslyckades",
+    "confirmDelete": "Är du säker på att du vill radera denna tjänst?",
+    "deleteWarning": "Detta kommer att ta bort tjänsten från övervakning.",
+    "status": {
+      "up": "Uppe",
+      "down": "Nere",
+      "warning": "Varning"
+    },
+    "types": {
+      "http": "HTTP",
+      "https": "HTTPS",
+      "ping": "Ping",
+      "port": "Portkontroll"
+    }
+  },
+  "alerts": {
+    "title": "Varningar",
+    "showResolved": "Visa lösta",
+    "resolve": "Lös",
+    "noAlerts": "Inga varningar hittades",
+    "severity": {
+      "critical": "Kritisk",
+      "warning": "Varning",
+      "info": "Info"
+    },
+    "type": {
+      "nodeDown": "Nod nere",
+      "vmDown": "VM nere",
+      "serviceDown": "Tjänst nere",
+      "highUsage": "Hög användning"
+    }
+  },
+  "metrics": {
+    "title": "Mätvärden",
+    "selectNode": "Välj nod",
+    "selectVM": "Välj VM",
+    "allNodes": "Alla noder",
+    "allVMs": "Alla VM:er",
+    "timeRange": "Tidsperiod",
+    "hours": "timmar",
+    "cpu": "CPU-användning (%)",
+    "memory": "Minnesanvändning (%)",
+    "disk": "Diskanvändning (%)",
+    "noData": "Inga mätdata tillgängliga",
+    "loading": "Laddar mätvärden..."
+  },
+  "languages": {
+    "en": "Engelska",
+    "no": "Norska",
+    "sv": "Svenska",
+    "da": "Danska",
+    "fi": "Finska",
+    "fr": "Franska",
+    "de": "Tyska"
+  }
+}
+
