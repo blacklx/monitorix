@@ -260,6 +260,26 @@ async def sync_vms(node: Node):
                     unit="percent"
                 )
                 db.add(metric_memory)
+                
+                # Evaluate alert rules for VM CPU
+                if vm_data.get("cpu_usage") is not None:
+                    await evaluate_alert_rules(
+                        db=db,
+                        metric_type="cpu",
+                        metric_value=vm_data.get("cpu_usage", 0),
+                        node_id=node.id,
+                        vm_id=vm.id if vm.id else None
+                    )
+                
+                # Evaluate alert rules for VM Memory
+                if vm_data.get("memory_usage") is not None:
+                    await evaluate_alert_rules(
+                        db=db,
+                        metric_type="memory",
+                        metric_value=vm_data.get("memory_usage", 0),
+                        node_id=node.id,
+                        vm_id=vm.id if vm.id else None
+                    )
             
             db.commit()
             
