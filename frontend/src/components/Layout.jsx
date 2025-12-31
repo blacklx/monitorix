@@ -44,8 +44,16 @@ const Layout = () => {
           <Link to="/metrics" className={isActive('/metrics') ? 'active' : ''}>
             {t('nav.metrics')}
           </Link>
+          {user?.is_admin && (
+            <Link to="/users" className={isActive('/users') ? 'active' : ''}>
+              {t('nav.users')}
+            </Link>
+          )}
         </div>
         <div className="nav-user">
+          <Link to="/profile" className={isActive('/profile') ? 'active' : ''}>
+            {t('nav.profile')}
+          </Link>
           <div className="websocket-status" title={isConnected ? t('common.websocketConnected') : t('common.websocketDisconnected')}>
             <span className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}></span>
             <span className="status-text">{isConnected ? t('common.connected') : t('common.disconnected')}</span>

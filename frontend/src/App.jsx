@@ -8,6 +8,8 @@ import VMs from './pages/VMs'
 import Services from './pages/Services'
 import Alerts from './pages/Alerts'
 import Metrics from './pages/Metrics'
+import Users from './pages/Users'
+import Profile from './pages/Profile'
 import Layout from './components/Layout'
 import PrivateRoute from './components/PrivateRoute'
 
@@ -32,6 +34,8 @@ function App() {
             <Route path="services" element={<Services />} />
             <Route path="alerts" element={<Alerts />} />
             <Route path="metrics" element={<Metrics />} />
+            <Route path="users" element={<Users />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>
       </AuthProvider>
