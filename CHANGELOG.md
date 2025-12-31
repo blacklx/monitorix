@@ -38,8 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Uptime calculation now uses metrics data for accuracy
 - Alerts page UI improved with filters and bulk actions
 - VM page enhanced with detail modal
+- Project renamed from "System Status Dashboard" to "Monitorix"
+- Database default names changed to "monitorix"
 
-## [1.2.0] - 2024-12-31
+## [1.1.0] - 2024-11-28
 
 ### Added
 - **Database migrations (Alembic)** - Full Alembic integration for schema management
