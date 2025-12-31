@@ -189,6 +189,26 @@ PROXMOX_NODES=node1:https://192.168.1.10:8006:user@pam:monitorix=abc123-def456-.
 - `username`: `user@pam` or `user@pve`
 - `token`: `token_id=token_secret`
 
+### Step 7.5: Configure Proxmox SSL Verification (Security)
+
+**⚠️ Important**: SSL verification is enabled by default for security. Only disable if you have self-signed certificates.
+
+```env
+# Enable SSL verification (recommended for production)
+PROXMOX_VERIFY_SSL=true
+
+# Disable SSL verification (only for self-signed certificates or testing)
+# PROXMOX_VERIFY_SSL=false
+
+# Optional: Use custom CA bundle for SSL verification
+# PROXMOX_CA_BUNDLE=/path/to/ca-bundle.crt
+```
+
+**Security Note**: 
+- **Production**: Always use `PROXMOX_VERIFY_SSL=true` with valid SSL certificates
+- **Self-signed certificates**: Set `PROXMOX_VERIFY_SSL=false` only if necessary, or provide CA bundle via `PROXMOX_CA_BUNDLE`
+- **Testing**: Can disable SSL verification temporarily, but re-enable before production use
+
 ### Step 8: Configure Frontend
 
 Set API URL (if using custom domain):

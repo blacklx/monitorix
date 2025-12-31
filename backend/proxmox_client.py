@@ -2,12 +2,13 @@ from proxmoxer import ProxmoxAPI
 from typing import Dict, List, Optional
 import logging
 from datetime import datetime
+from config import settings
 
 logger = logging.getLogger(__name__)
 
 
 class ProxmoxClient:
-    def __init__(self, url: str, username: str, token: str):
+    def __init__(self, url: str, username: str, token: str, verify_ssl: Optional[bool] = None, ca_bundle: Optional[str] = None):
         """
         Initialize Proxmox client
         
@@ -15,10 +16,14 @@ class ProxmoxClient:
             url: Proxmox API URL (e.g., https://192.168.1.10:8006)
             username: Proxmox username (e.g., user@pam or user@pve)
             token: Proxmox API token (format: token_id=secret)
+            verify_ssl: Whether to verify SSL certificates (defaults to PROXMOX_VERIFY_SSL from config)
+            ca_bundle: Path to CA bundle file for SSL verification (optional)
         """
         self.url = url
         self.username = username
         self.token = token
+        self.verify_ssl = verify_ssl if verify_ssl is not None else settings.proxmox_verify_ssl
+        self.ca_bundle = ca_bundle or settings.proxmox_ca_bundle
         self._api = None
 
     def _get_api(self):
@@ -33,13 +38,23 @@ class ProxmoxClient:
                     token_id = self.username.split("@")[0]
                     token_secret = self.token
 
+                # Determine SSL verification setting
+                verify_ssl = self.verify_ssl
+                if self.ca_bundle:
+                    # If CA bundle is provided, use it for verification
+                    verify_ssl = self.ca_bundle
+
                 self._api = ProxmoxAPI(
                     self.url,
                     user=self.username,
                     token_name=token_id,
                     token_value=token_secret,
-                    verify_ssl=False  # You may want to enable SSL verification in production
+                    verify_ssl=verify_ssl
                 )
+                
+                if not self.verify_ssl:
+                    logger.warning(f"SSL verification is DISABLED for Proxmox connection to {self.url}. "
+                                 "This is a security risk! Enable SSL verification in production.")
             except Exception as e:
                 logger.error(f"Failed to connect to Proxmox: {e}")
                 raise

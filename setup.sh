@@ -327,6 +327,14 @@ ADMIN_PASSWORD=${ADMIN_PASSWORD}
 # Example: node1:https://192.168.1.10:8006:user@pam:monitorix=abc123-def456-...
 PROXMOX_NODES=
 
+# Proxmox SSL Verification (Security)
+# Set to 'true' to verify SSL certificates (recommended for production)
+# Set to 'false' to disable SSL verification (only for self-signed certificates or testing)
+PROXMOX_VERIFY_SSL=true
+
+# Optional: Path to custom CA bundle file for SSL verification
+# PROXMOX_CA_BUNDLE=/path/to/ca-bundle.crt
+
 # Health Check Settings
 HEALTH_CHECK_INTERVAL=60
 HTTP_TIMEOUT=5

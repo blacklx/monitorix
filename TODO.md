@@ -113,7 +113,7 @@ This document tracks planned improvements, new features, and known issues.
 - [x] ✅ **Service maintenance_mode** - Added missing maintenance_mode field to Service model
 - [x] ✅ **WebSocket broadcasts** - Added WebSocket broadcasts in scheduler for real-time updates
 - [x] ✅ **Database session handling** - Improved database session management in scheduler
-- [ ] 🐛 **Proxmox SSL verification** - SSL verification is disabled (security risk)
+- [x] ✅ **Proxmox SSL verification** - Configurable SSL verification implemented (enabled by default)
 - [ ] 🐛 **Error handling** - Some errors are not handled optimally
 - [ ] 🐛 **Token refresh** - JWT tokens have no refresh mechanism
 - [ ] 🐛 **WebSocket error handling** - ConnectionManager.broadcast silently fails on errors (should log)

@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     
     # Proxmox
     proxmox_nodes: str = os.getenv("PROXMOX_NODES", "")
+    proxmox_verify_ssl: bool = os.getenv("PROXMOX_VERIFY_SSL", "true").lower() == "true"
+    proxmox_ca_bundle: Optional[str] = os.getenv("PROXMOX_CA_BUNDLE", None)
     
     # Health Checks
     health_check_interval: int = int(os.getenv("HEALTH_CHECK_INTERVAL", "60"))
