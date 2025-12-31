@@ -49,6 +49,7 @@ A complete status dashboard system for monitoring Proxmox nodes, VMs, and servic
 - ✅ Loading states and error handling
 - ✅ **Multi-language support** (Norwegian, Swedish, Danish, Finnish, French, German, English)
 - ✅ Language selector with persistent preference
+- ✅ **Locale-aware date/time formatting** - Dates and times displayed in correct format based on selected language
 
 ### Deployment
 - ✅ Automated local setup script (`setup.sh`)
@@ -86,6 +87,7 @@ A complete status dashboard system for monitoring Proxmox nodes, VMs, and servic
 - **React 18** - UI library
 - **React Router** - Routing
 - **React i18next** - Internationalization
+- **date-fns** - Date formatting with locale support
 - **Recharts** - Chart library for metrics visualization
 - **Axios** - HTTP client
 - **Vite** - Build tool
