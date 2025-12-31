@@ -755,6 +755,99 @@ const Services = () => {
           </div>
         </div>
       )}
+
+      {showBulkModal && (
+        <div className="modal-overlay" onClick={() => setShowBulkModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{t('services.bulkImportTitle')}</h2>
+              <button className="close-button" onClick={() => setShowBulkModal(false)}>
+                {t('common.close')}
+              </button>
+            </div>
+            
+            <div style={{ padding: '20px' }}>
+              <p style={{ marginBottom: '15px', color: '#666' }}>
+                {t('services.bulkImportDescription')}
+              </p>
+              
+              <div className="form-group">
+                <label>{t('services.bulkImportExample')}</label>
+                <textarea
+                  value={bulkInput}
+                  onChange={(e) => {
+                    setBulkInput(e.target.value)
+                    setBulkError(null)
+                    setBulkResult(null)
+                  }}
+                  placeholder='[{"name":"Web Server","type":"http","target":"https://example.com","port":443,"check_interval":60,"timeout":5,"expected_status":200}]'
+                  rows={10}
+                  style={{ 
+                    width: '100%', 
+                    fontFamily: 'monospace',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px'
+                  }}
+                />
+              </div>
+
+              {bulkError && (
+                <div className="error-message" style={{ marginBottom: '15px' }}>
+                  {bulkError}
+                </div>
+              )}
+
+              {bulkResult && (
+                <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
+                  <h3>{t('services.bulkImportResults')}</h3>
+                  <p style={{ color: '#27ae60' }}>
+                    {t('services.bulkImportSuccess', { count: bulkResult.created })}
+                  </p>
+                  {bulkResult.failed > 0 && (
+                    <>
+                      <p style={{ color: '#e74c3c' }}>
+                        {t('services.bulkImportFailed', { count: bulkResult.failed })}
+                      </p>
+                      <details style={{ marginTop: '10px' }}>
+                        <summary style={{ cursor: 'pointer' }}>Failed services:</summary>
+                        <ul style={{ marginTop: '10px', paddingLeft: '20px' }}>
+                          {bulkResult.failedDetails.map((item, idx) => (
+                            <li key={idx} style={{ marginBottom: '5px' }}>
+                              <strong>{item.service.name || 'Unknown'}:</strong> {item.error}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                <button 
+                  className="add-button" 
+                  onClick={handleBulkImport}
+                  disabled={!bulkInput.trim()}
+                >
+                  {t('services.bulkImport')}
+                </button>
+                <button 
+                  className="link-button" 
+                  onClick={() => {
+                    setShowBulkModal(false)
+                    setBulkInput('')
+                    setBulkError(null)
+                    setBulkResult(null)
+                  }}
+                >
+                  {t('common.cancel')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
