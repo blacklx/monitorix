@@ -16,6 +16,27 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+    is_active: bool = True
+    is_admin: bool = False
+
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    password: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_admin: Optional[bool] = None
+
+
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str
+
+
 class Token(BaseModel):
     access_token: str
     refresh_token: str

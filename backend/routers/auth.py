@@ -14,6 +14,9 @@ from auth import (
 )
 from config import settings
 from rate_limiter import limiter
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
