@@ -21,6 +21,24 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 @limiter.limit("5/minute")
 async def register(request: Request, user_data: UserCreate, db: Session = Depends(get_db)):
     """Register a new user"""
+    # Check if registration is allowed
+    if not settings.allow_registration:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Registration is disabled. Please contact an administrator."
+        )
+    
+    # Check if registration token is required and valid
+    if settings.registration_token:
+        # Token should be passed in the request (could be in header or body)
+        # For simplicity, we'll check if it's in the request headers
+        provided_token = request.headers.get("X-Registration-Token")
+        if not provided_token or provided_token != settings.registration_token:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid or missing registration token"
+            )
+    
     # Check if user already exists
     existing_user = db.query(User).filter(
         (User.username == user_data.username) | (User.email == user_data.email)
@@ -31,12 +49,16 @@ async def register(request: Request, user_data: UserCreate, db: Session = Depend
             detail="Username or email already registered"
         )
     
+    # Check if this is the first user (make them admin)
+    is_first_user = db.query(User).count() == 0
+    
     # Create new user
     hashed_password = get_password_hash(user_data.password)
     user = User(
         username=user_data.username,
         email=user_data.email,
-        hashed_password=hashed_password
+        hashed_password=hashed_password,
+        is_admin=is_first_user  # First user becomes admin
     )
     db.add(user)
     db.commit()
@@ -70,4 +92,13 @@ async def login(
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     """Get current user information"""
     return current_user
+
+
+@router.get("/registration-status")
+async def get_registration_status():
+    """Check if registration is enabled"""
+    return {
+        "registration_enabled": settings.allow_registration,
+        "requires_token": settings.registration_token is not None
+    }
 

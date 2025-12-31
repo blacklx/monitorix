@@ -98,7 +98,27 @@ nano .env
 vim .env
 ```
 
-### Step 3: Configure Database (Optional)
+### Step 3: Configure Security (Recommended)
+
+**Important**: By default, anyone can register a new account. For production, you should disable public registration.
+
+In `.env`, add:
+
+```env
+# Disable public registration (recommended for production)
+ALLOW_REGISTRATION=false
+
+# Optional: Require a registration token for new users
+# If set, users must provide this token in the X-Registration-Token header
+REGISTRATION_TOKEN=your-secret-registration-token-here
+```
+
+**Security Options:**
+- `ALLOW_REGISTRATION=false` - Disables public registration completely
+- `REGISTRATION_TOKEN=...` - Requires a token for registration (can be used with or without disabling public registration)
+- First user automatically becomes admin
+
+### Step 4: Configure Database (Optional)
 
 **Good news**: PostgreSQL is automatically configured by Docker Compose! The database will be created and initialized automatically when you start the containers.
 
@@ -118,7 +138,7 @@ DATABASE_URL=postgresql://monitorix:your-secure-password-here@postgres:5432/moni
 - The database schema is automatically created via Alembic migrations when the backend starts
 - No manual database setup or SQL scripts needed
 
-### Step 4: Configure Backend
+### Step 5: Configure Backend
 
 Set backend settings:
 
@@ -132,7 +152,7 @@ SECRET_KEY=your-very-secure-secret-key-here
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-### Step 5: Create Proxmox API Token
+### Step 6: Create Proxmox API Token
 
 For each Proxmox node you want to monitor:
 
@@ -153,7 +173,7 @@ Example: If token ID is `monitorix` and secret is `abc123-def456-...`, then the 
 monitorix=abc123-def456-...
 ```
 
-### Step 6: Configure Proxmox Nodes
+### Step 7: Configure Proxmox Nodes
 
 In the `.env` file, add your Proxmox nodes:
 
@@ -169,7 +189,7 @@ PROXMOX_NODES=node1:https://192.168.1.10:8006:user@pam:monitorix=abc123-def456-.
 - `username`: `user@pam` or `user@pve`
 - `token`: `token_id=token_secret`
 
-### Step 7: Configure Frontend
+### Step 8: Configure Frontend
 
 Set API URL (if using custom domain):
 
@@ -179,7 +199,7 @@ REACT_APP_API_URL=http://localhost:8000
 # REACT_APP_API_URL=https://api.yourdomain.com
 ```
 
-### Step 8: Start the System
+### Step 9: Start the System
 
 Build and start all containers:
 
