@@ -26,6 +26,10 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
 # Node schemas
 class NodeCreate(BaseModel):
     name: str

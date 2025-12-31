@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from database import get_db
 from models import User
-from schemas import Token, UserResponse
+from schemas import Token, UserResponse, RefreshTokenRequest
 from auth import (
     authenticate_user,
     create_access_token,
@@ -66,12 +66,15 @@ async def login(
 @limiter.limit("20/minute")
 async def refresh_token(
     request: Request,
-    refresh_token: str,
+    token_data: RefreshTokenRequest,
     db: Session = Depends(get_db)
 ):
     """Refresh access token using refresh token"""
     from datetime import datetime
     from auth import verify_refresh_token, create_refresh_token
+    from schemas import RefreshTokenRequest
+    
+    refresh_token = token_data.refresh_token
     
     # Verify refresh token
     payload = verify_refresh_token(refresh_token)

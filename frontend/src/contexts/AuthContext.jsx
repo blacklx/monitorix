@@ -34,8 +34,8 @@ export const AuthProvider = ({ children }) => {
           // Try to refresh token
           if (refreshToken) {
             try {
-              const response = await axios.post(`${API_URL}/api/auth/refresh`, null, {
-                params: { refresh_token: refreshToken }
+              const response = await axios.post(`${API_URL}/api/auth/refresh`, {
+                refresh_token: refreshToken
               })
               const { access_token, refresh_token: newRefreshToken } = response.data
               
