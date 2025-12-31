@@ -115,6 +115,29 @@ if ($missingPackages.Count -gt 0 -or $needsDockerGroup) {
         { $_ -eq "1" -or $_ -eq "y" -or $_ -eq "Y" } {
             Write-Info "Installing missing packages..."
             
+            # Check if sudo is available on remote host
+            Write-Info "Checking sudo access on remote host..."
+            $sudoCheck = & ssh @sshArgs $Hostname "command -v sudo > /dev/null 2>&1 && echo 'found' || echo 'notfound'"
+            if ($sudoCheck -notmatch "found") {
+                Write-Error "sudo command not found on remote host. Cannot install packages automatically."
+                Write-Error "Please install prerequisites manually on the remote host."
+                exit 1
+            }
+            
+            # Test sudo access on remote host
+            $sudoTest = & ssh @sshArgs $Hostname "sudo -n true 2>/dev/null || sudo -v" 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                Write-Error "Cannot use sudo on remote host. You may need to:"
+                Write-Error "  1. Ensure SSH key has passwordless sudo access"
+                Write-Error "  2. Or configure sudoers to allow passwordless sudo"
+                Write-Error "  3. Or run deployment as root user"
+                Write-Error ""
+                Write-Error "Alternatively, choose option 2 to see manual installation instructions."
+                exit 1
+            }
+            
+            Write-Info "Sudo access confirmed on remote host"
+            
             # Detect OS
             $osType = (& ssh @sshArgs $Hostname "if [ -f /etc/os-release ]; then . /etc/os-release && echo `$ID; else echo 'unknown'; fi").Trim()
             
