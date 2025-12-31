@@ -7,15 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+- Bulk operations for nodes/services
+- Custom health checks
+- Notification channels (Slack, Discord, etc.)
+- See [TODO.md](TODO.md) for full list
+
+## [1.2.0] - 2024-12-31
+
 ### Added
 - **VM Details Modal** - Full detail view with metrics charts and uptime statistics
 - **Metrics Export** - CSV and JSON export functionality
 - **Database Performance Indexes** - Comprehensive indexes for better query performance
 - **Improved Uptime Calculation** - More accurate tracking using metrics data
 - **Enhanced Alerts Management** - Bulk resolve, delete, enhanced filtering
-- **Maintenance Mode UI** - Toggle buttons in Nodes page
+- **Maintenance Mode UI** - Toggle buttons in Nodes and Services pages
+- **WebSocket Status Indicator** - Real-time connection status in navigation
 - **Health Check Statistics** - Detailed statistics and latest check endpoints
 - **VM Sync Endpoint** - Manual VM synchronization
+- **Project Rebranding** - Renamed to Monitorix
 
 ### Fixed
 - Import errors in main.py and routers

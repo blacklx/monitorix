@@ -111,7 +111,7 @@ Access database:
 docker-compose exec postgres psql -U monitorix -d monitorix
 
 # Or from host
-psql -h localhost -p 5432 -U systemstatus -d systemstatus
+psql -h localhost -p 5432 -U monitorix -d monitorix
 ```
 
 ## 📝 Code Standards

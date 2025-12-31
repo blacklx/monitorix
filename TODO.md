@@ -308,6 +308,10 @@ Prioritization is based on:
 2. **Uptime Calculation** - ✅ Improved: Now uses metrics data for more accurate tracking
 3. **Database Indexes** - ✅ Fixed: Comprehensive indexes added via migration
 4. **VM Details Page** - ✅ Fixed: Full detail modal with metrics and uptime implemented
+5. **Maintenance Mode UI** - ✅ Fixed: Toggle buttons added to Nodes and Services pages
+6. **WebSocket Status Indicator** - ✅ Fixed: Real-time connection status shown in navigation
+7. **Project Rebranding** - ✅ Fixed: Renamed to Monitorix, all references updated
+8. **Repository Cleanup** - ✅ Fixed: Duplicate files removed, .gitignore improved
 
 ---
 

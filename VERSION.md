@@ -1,6 +1,6 @@
 # Version History
 
-## Current Version: 1.1.0
+## Current Version: 1.2.0
 
 ### What's New in 1.1.0
 

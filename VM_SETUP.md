@@ -109,7 +109,7 @@ Restart SSH:
 sudo systemctl restart sshd
 ```
 
-## System Status Dashboard Deployment
+## Monitorix Deployment
 
 Once your VM is set up, deploy the dashboard:
 

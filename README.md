@@ -33,8 +33,6 @@ A complete status dashboard system for monitoring Proxmox nodes, VMs, and servic
 - ✅ Configurable check intervals and timeouts
 - ✅ Response time tracking
 - ✅ Service uptime statistics
-- ✅ Response time tracking
-- ✅ Configurable check intervals
 
 ### Dashboard & UI
 - ✅ Modern, responsive web interface
@@ -139,7 +137,7 @@ http://localhost:3000
 **Run setup script directly on the VM:**
 
 ```bash
-cd ~/systemstatus
+cd ~/monitorix
 chmod +x setup.sh
 ./setup.sh
 ```
@@ -156,10 +154,14 @@ See [INSTALL.md](INSTALL.md) for detailed installation guide or [QUICKSTART.md](
 ## 📚 Documentation
 
 - **[INSTALL.md](INSTALL.md)** - Detailed installation guide
-- **[TODO.md](TODO.md)** - Planned improvements and features
+- **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide
+- **[DEPLOY.md](DEPLOY.md)** - Deployment guide
+- **[VM_SETUP.md](VM_SETUP.md)** - VM setup guide
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture
+- **[TODO.md](TODO.md)** - Planned improvements and features
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history
+- **[VERSION.md](VERSION.md)** - Version information
 - **[API Documentation](http://localhost:8000/docs)** - Swagger/OpenAPI documentation (after startup)
 
 ## 🎯 Use Cases
