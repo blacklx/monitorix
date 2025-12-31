@@ -340,6 +340,7 @@ cd $RemoteDir
 if [ ! -f .env ]; then
     POSTGRES_PASSWORD=`$(openssl rand -base64 32 | tr -d '=+/' | cut -c1-25)
     SECRET_KEY=`$(openssl rand -base64 48 | tr -d '=+/' | cut -c1-50)
+    ADMIN_PASSWORD=`$(openssl rand -base64 32 | tr -d '=+/' | cut -c1-20)
     cat > .env << 'ENVEOF'
 # Monitorix Environment Configuration
 # Auto-generated on `$(date)
@@ -353,8 +354,23 @@ DATABASE_URL=postgresql://monitorix:`${POSTGRES_PASSWORD}@postgres:5432/monitori
 # Security
 SECRET_KEY=`${SECRET_KEY}
 
+# Admin User (auto-created on first startup)
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@monitorix.local
+ADMIN_PASSWORD=`${ADMIN_PASSWORD}
+
 # Proxmox Configuration
+# Format: name:url:username:token (comma-separated for multiple nodes)
+# Example: node1:https://192.168.1.10:8006:user@pam:monitorix=abc123-def456-...
 PROXMOX_NODES=
+
+# Proxmox SSL Verification (Security)
+# Set to 'true' to verify SSL certificates (recommended for production)
+# Set to 'false' to disable SSL verification (only for self-signed certificates or testing)
+PROXMOX_VERIFY_SSL=true
+
+# Optional: Path to custom CA bundle file for SSL verification
+# PROXMOX_CA_BUNDLE=/path/to/ca-bundle.crt
 
 # Health Check Settings
 HEALTH_CHECK_INTERVAL=60
@@ -374,12 +390,14 @@ ALERT_EMAIL_TO=
 METRICS_RETENTION_DAYS=30
 METRICS_CLEANUP_ENABLED=true
 
-# Frontend API URL
+# Frontend Configuration
+FRONTEND_URL=http://localhost:3000
 REACT_APP_API_URL=http://localhost:8000
 VITE_API_URL=http://localhost:8000
 ENVEOF
     sed -i "s/`${POSTGRES_PASSWORD}/`$POSTGRES_PASSWORD/g" .env
     sed -i "s/`${SECRET_KEY}/`$SECRET_KEY/g" .env
+    sed -i "s/`${ADMIN_PASSWORD}/`$ADMIN_PASSWORD/g" .env
     echo 'Created .env with auto-generated passwords'
 fi
 "@
@@ -416,6 +434,14 @@ $postgresPassword = (& ssh @sshArgs $Hostname "cd $RemoteDir && grep '^POSTGRES_
 if (-not $postgresPassword -or $postgresPassword -match "error") {
     $postgresPassword = "***"
 }
+$secretKey = (& ssh @sshArgs $Hostname "cd $RemoteDir && grep '^SECRET_KEY=' .env | cut -d'=' -f2" 2>&1).Trim()
+if (-not $secretKey -or $secretKey -match "error") {
+    $secretKey = "***"
+}
+$adminPassword = (& ssh @sshArgs $Hostname "cd $RemoteDir && grep '^ADMIN_PASSWORD=' .env | cut -d'=' -f2" 2>&1).Trim()
+if (-not $adminPassword -or $adminPassword -match "error") {
+    $adminPassword = ""
+}
 
 Write-Info ""
 Write-Info "=========================================="
@@ -436,9 +462,16 @@ Write-Info "   PostgreSQL User:     monitorix"
 Write-Info "   PostgreSQL Password: $postgresPassword"
 Write-Info "   Database Name:       monitorix"
 Write-Info ""
+Write-Info "👤 Monitorix Admin User:"
+Write-Info "   Username:            admin"
+Write-Info "   Email:               admin@monitorix.local"
+if ($adminPassword -and $adminPassword -ne "***") {
+    Write-Info "   Password:            $adminPassword"
+}
+Write-Info ""
 Write-Warn "⚠️  IMPORTANT: Save these credentials!"
-Write-Warn "   The PostgreSQL password is stored in: $RemoteDir/.env"
-Write-Warn "   SSH into VM to view: ssh $Hostname 'cat $RemoteDir/.env | grep POSTGRES_PASSWORD'"
+Write-Warn "   All passwords are stored in: $RemoteDir/.env"
+Write-Warn "   SSH into VM to view: ssh $Hostname 'cat $RemoteDir/.env'"
 Write-Info ""
 Write-Info "📋 Next Steps:"
 Write-Info "   1. SSH into VM: ssh $Hostname"

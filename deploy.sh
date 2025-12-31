@@ -370,6 +370,7 @@ print_info "Setting up .env file if needed..."
 $SSH_CMD $HOST "cd $REMOTE_DIR && if [ ! -f .env ]; then
     POSTGRES_PASSWORD=\$(openssl rand -base64 32 | tr -d '=+/' | cut -c1-25)
     SECRET_KEY=\$(openssl rand -base64 48 | tr -d '=+/' | cut -c1-50)
+    ADMIN_PASSWORD=\$(openssl rand -base64 32 | tr -d '=+/' | cut -c1-20)
     cat > .env << EOF
 # Monitorix Environment Configuration
 # Auto-generated on \$(date)
@@ -383,8 +384,23 @@ DATABASE_URL=postgresql://monitorix:\${POSTGRES_PASSWORD}@postgres:5432/monitori
 # Security
 SECRET_KEY=\${SECRET_KEY}
 
+# Admin User (auto-created on first startup)
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@monitorix.local
+ADMIN_PASSWORD=\${ADMIN_PASSWORD}
+
 # Proxmox Configuration
+# Format: name:url:username:token (comma-separated for multiple nodes)
+# Example: node1:https://192.168.1.10:8006:user@pam:monitorix=abc123-def456-...
 PROXMOX_NODES=
+
+# Proxmox SSL Verification (Security)
+# Set to 'true' to verify SSL certificates (recommended for production)
+# Set to 'false' to disable SSL verification (only for self-signed certificates or testing)
+PROXMOX_VERIFY_SSL=true
+
+# Optional: Path to custom CA bundle file for SSL verification
+# PROXMOX_CA_BUNDLE=/path/to/ca-bundle.crt
 
 # Health Check Settings
 HEALTH_CHECK_INTERVAL=60
@@ -404,7 +420,8 @@ ALERT_EMAIL_TO=
 METRICS_RETENTION_DAYS=30
 METRICS_CLEANUP_ENABLED=true
 
-# Frontend API URL
+# Frontend Configuration
+FRONTEND_URL=http://localhost:3000
 REACT_APP_API_URL=http://localhost:8000
 VITE_API_URL=http://localhost:8000
 EOF
@@ -440,6 +457,7 @@ VM_IP=$($SSH_CMD $HOST "hostname -I | awk '{print \$1}'" | tr -d '\r\n')
 print_info "Retrieving installation summary..."
 POSTGRES_PASSWORD=$($SSH_CMD $HOST "cd $REMOTE_DIR && grep '^POSTGRES_PASSWORD=' .env | cut -d'=' -f2" 2>/dev/null || echo "***")
 SECRET_KEY=$($SSH_CMD $HOST "cd $REMOTE_DIR && grep '^SECRET_KEY=' .env | cut -d'=' -f2" 2>/dev/null || echo "***")
+ADMIN_PASSWORD=$($SSH_CMD $HOST "cd $REMOTE_DIR && grep '^ADMIN_PASSWORD=' .env | cut -d'=' -f2" 2>/dev/null || echo "")
 
 print_info ""
 print_info "=========================================="
