@@ -62,6 +62,13 @@ const Login = () => {
       setError(t('auth.emailRequired'))
       return
     }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(forgotEmail)) {
+      setError(t('auth.invalidEmail'))
+      return
+    }
 
     try {
       const response = await axios.post(`${API_URL}/api/auth/forgot-password`, null, {
