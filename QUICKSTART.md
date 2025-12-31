@@ -9,12 +9,13 @@ Get Monitorix up and running in minutes!
 git clone https://github.com/blacklx/monitorix.git
 cd monitorix
 
-# 2. Configure environment
-cp .env.example .env
-# Edit .env with your settings
+# 2. (Optional) Configure environment
+# For testing, you can skip this - defaults will work!
+# For production: create .env file with your settings
 
 # 3. Start everything
 docker-compose up -d
+# PostgreSQL will be automatically configured and initialized
 
 # 4. Open dashboard
 # http://localhost:3000

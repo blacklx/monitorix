@@ -78,11 +78,17 @@ cd monitorix
 
 ### Step 2: Configure Environment Variables
 
-Copy the example file:
+Create a `.env` file (optional - defaults will work for testing):
 
 ```bash
+# Option 1: Copy from example (recommended)
 cp .env.example .env
+
+# Option 2: Create manually
+touch .env
 ```
+
+**Note**: If you don't create a `.env` file, the system will use default values from `docker-compose.yml`. This is fine for testing, but you should configure it properly for production.
 
 Edit the `.env` file with your favorite editor:
 
@@ -92,9 +98,13 @@ nano .env
 vim .env
 ```
 
-### Step 3: Configure Database
+### Step 3: Configure Database (Optional)
 
-Set database settings in `.env`:
+**Good news**: PostgreSQL is automatically configured by Docker Compose! The database will be created and initialized automatically when you start the containers.
+
+**For testing/development**: You can skip this step - default values will work.
+
+**For production**: Set database settings in `.env`:
 
 ```env
 POSTGRES_USER=monitorix
@@ -103,7 +113,10 @@ POSTGRES_DB=monitorix
 DATABASE_URL=postgresql://monitorix:your-secure-password-here@postgres:5432/monitorix
 ```
 
-**⚠️ Important**: Use a strong password in production!
+**⚠️ Important**: 
+- Use a strong password in production!
+- The database schema is automatically created via Alembic migrations when the backend starts
+- No manual database setup or SQL scripts needed
 
 ### Step 4: Configure Backend
 
