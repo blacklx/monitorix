@@ -232,6 +232,46 @@
     "fi": "Finnish",
     "fr": "French",
     "de": "German"
+  },
+  "users": {
+    "title": "User Management",
+    "addUser": "Add User",
+    "editUser": "Edit User",
+    "deleteUser": "Delete User",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "newPassword": "New Password",
+    "passwordPlaceholder": "Leave empty to keep current password",
+    "status": "Status",
+    "role": "Role",
+    "createdAt": "Created At",
+    "active": "Active",
+    "inactive": "Inactive",
+    "admin": "Admin",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "confirmDelete": "Are you sure you want to delete this user?",
+    "accessDenied": "Access denied. Admin privileges required.",
+    "cannotRemoveOwnAdmin": "You cannot remove your own admin status"
+  },
+  "profile": {
+    "title": "Profile",
+    "profileInfo": "Profile Information",
+    "changePassword": "Change Password",
+    "username": "Username",
+    "email": "Email",
+    "role": "Role",
+    "admin": "Admin",
+    "user": "User",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "passwordMinLength": "Password must be at least 8 characters long",
+    "passwordTooShort": "Password must be at least 8 characters long",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "profileUpdated": "Profile updated successfully",
+    "passwordChanged": "Password changed successfully"
   }
 }
 
