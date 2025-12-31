@@ -37,6 +37,7 @@
     "users": "Users",
     "profile": "Profile",
     "notificationChannels": "Notifications",
+    "alertRules": "Alert Rules",
     "logout": "Logout",
     "language": "Language"
   },
