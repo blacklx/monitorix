@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { validateLogin } from '../utils/validation'
@@ -10,6 +10,7 @@ const API_URL = import.meta.env.REACT_APP_API_URL || import.meta.env.VITE_API_UR
 
 const Login = () => {
   const { t } = useTranslation()
+  const [searchParams] = useSearchParams()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -23,6 +24,15 @@ const Login = () => {
   const [confirmPassword, setConfirmPassword] = useState('')
   const { login } = useAuth()
   const navigate = useNavigate()
+
+  // Check if reset token is in URL
+  useEffect(() => {
+    const token = searchParams.get('token')
+    if (token) {
+      setResetToken(token)
+      setShowResetPassword(true)
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -58,12 +68,8 @@ const Login = () => {
         params: { email: forgotEmail }
       })
       setForgotMessage(response.data.message)
-      // In development, show the token (remove in production)
-      if (response.data.reset_token) {
-        setForgotMessage(`${response.data.message}\n\nReset token: ${response.data.reset_token}\n(For development only - use this to reset password)`)
-        setShowResetPassword(true)
-        setResetToken(response.data.reset_token)
-      }
+      // Email has been sent (or will be sent if email is configured)
+      // User should check their email for the reset link
     } catch (err) {
       setError(err.response?.data?.detail || t('auth.forgotPasswordFailed'))
     }
@@ -153,7 +159,13 @@ const Login = () => {
                 />
               </div>
               {error && <div className="error">{error}</div>}
-              {forgotMessage && <div className="success">{forgotMessage}</div>}
+              {forgotMessage && (
+                <div className="success">
+                  {forgotMessage.split('\n').map((line, i) => (
+                    <p key={i}>{line}</p>
+                  ))}
+                </div>
+              )}
               <button type="submit">{t('auth.sendResetLink')}</button>
               <button
                 type="button"

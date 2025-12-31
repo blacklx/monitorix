@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     metrics_retention_days: int = int(os.getenv("METRICS_RETENTION_DAYS", "30"))
     metrics_cleanup_enabled: bool = os.getenv("METRICS_CLEANUP_ENABLED", "true").lower() == "true"
     
+    # Frontend URL (for password reset links)
+    frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    
     class Config:
         env_file = ".env"
 

@@ -353,7 +353,8 @@ ALERT_EMAIL_TO=
 METRICS_RETENTION_DAYS=30
 METRICS_CLEANUP_ENABLED=true
 
-# Frontend API URL
+# Frontend Configuration
+FRONTEND_URL=http://localhost:3000
 REACT_APP_API_URL=http://localhost:8000
 VITE_API_URL=http://localhost:8000
 EOF

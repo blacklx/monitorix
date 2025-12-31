@@ -148,3 +148,84 @@ def send_alert_notification(
         html_body=html_body
     )
 
+
+def send_password_reset_email(
+    to_email: str,
+    reset_token: str,
+    username: str
+) -> bool:
+    """
+    Send password reset email with reset link
+    
+    Args:
+        to_email: User's email address
+        reset_token: Password reset token
+        username: User's username
+    
+    Returns:
+        True if email was sent successfully, False otherwise
+    """
+    # Build reset URL
+    reset_url = f"{settings.frontend_url}/reset-password?token={reset_token}"
+    
+    # Build email subject
+    subject = "Monitorix - Password Reset Request"
+    
+    # Build plain text body
+    body = f"""
+Hello {username},
+
+You have requested to reset your password for Monitorix.
+
+To reset your password, click on the following link (valid for 1 hour):
+{reset_url}
+
+If you did not request this password reset, please ignore this email.
+
+This link will expire in 1 hour for security reasons.
+
+Best regards,
+Monitorix Team
+"""
+    
+    # Build HTML body
+    html_body = f"""
+    <html>
+      <head></head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #2c3e50;">Password Reset Request</h2>
+          <p>Hello {username},</p>
+          <p>You have requested to reset your password for Monitorix.</p>
+          <p>To reset your password, click on the following button:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="{reset_url}" 
+               style="background-color: #3498db; color: white; padding: 12px 30px; 
+                      text-decoration: none; border-radius: 5px; display: inline-block;">
+              Reset Password
+            </a>
+          </div>
+          <p>Or copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #7f8c8d; font-size: 12px;">
+            {reset_url}
+          </p>
+          <p style="color: #e74c3c; font-size: 14px;">
+            <strong>⚠️ This link will expire in 1 hour for security reasons.</strong>
+          </p>
+          <p>If you did not request this password reset, please ignore this email.</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          <p style="color: #95a5a6; font-size: 12px;">
+            Best regards,<br>
+            Monitorix Team
+          </p>
+        </div>
+      </body>
+    </html>
+    """
+    
+    return send_email(
+        to_email=to_email,
+        subject=subject,
+        body=body,
+        html_body=html_body
+    )

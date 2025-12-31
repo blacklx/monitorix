@@ -54,6 +54,7 @@ async def forgot_password(request: Request, email: str, db: Session = Depends(ge
     """Request password reset"""
     from datetime import datetime, timedelta
     import secrets
+    from email_notifications import send_password_reset_email
     
     user = db.query(User).filter(User.email == email).first()
     if not user:
@@ -68,14 +69,25 @@ async def forgot_password(request: Request, email: str, db: Session = Depends(ge
     user.reset_token_expires = reset_token_expires
     db.commit()
     
-    # TODO: Send email with reset link
-    # For now, we'll return the token (in production, send via email)
-    logger.info(f"Password reset requested for {email}. Token: {reset_token}")
+    # Send email with reset link
+    email_sent = send_password_reset_email(
+        to_email=user.email,
+        reset_token=reset_token,
+        username=user.username
+    )
     
-    return {
-        "message": "If the email exists, a password reset link has been sent",
-        "reset_token": reset_token  # Remove this in production - send via email only
-    }
+    if email_sent:
+        logger.info(f"Password reset email sent to {email}")
+    else:
+        logger.warning(f"Failed to send password reset email to {email}. Token: {reset_token}")
+        # In development, if email is not configured, log the token
+        # In production, this should never happen
+        if not settings.alert_email_enabled:
+            logger.warning("Email is not configured. Password reset token (for development only):")
+            logger.warning(f"Token: {reset_token}")
+    
+    # Always return the same message for security (don't reveal if user exists)
+    return {"message": "If the email exists, a password reset link has been sent"}
 
 
 @router.post("/reset-password")

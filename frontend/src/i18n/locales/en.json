@@ -54,7 +54,9 @@
     "passwordsDoNotMatch": "Passwords do not match",
     "forgotPasswordFailed": "Failed to send reset link",
     "resetPasswordFailed": "Failed to reset password",
-    "passwordResetSuccess": "Password has been reset successfully. You can now login with your new password."
+    "passwordResetSuccess": "Password has been reset successfully. You can now login with your new password.",
+    "checkEmail": "Please check your email for the password reset link.",
+    "emailNotConfigured": "Email is not configured. Check backend logs for reset token (development only)."
   },
   "dashboard": {
     "title": "Dashboard",
