@@ -454,51 +454,55 @@ else
     
     # Get admin password from backend logs (always retrieved from logs, never from .env)
     print_info "Retrieving admin password from backend logs..."
-    # Wait a bit more for backend to fully initialize and log the password
-    sleep 5
     
-    # Try multiple times with different patterns
-    # Pattern 1: Direct grep for "Password:" (handles container prefix like "monitorix_backend | ")
-    ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | grep -v "ADMIN_PASSWORD" | tail -1 | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
-    
-    if [ -z "$ADMIN_PASSWORD" ]; then
-        # Pattern 2: Look for "ADMIN USER CREATED" block with context
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -A 5 "ADMIN USER CREATED" | grep -i "Password:" | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
-    fi
-    
-    if [ -z "$ADMIN_PASSWORD" ]; then
-        # Pattern 3: Look for lines with "Password:" that contain alphanumeric tokens (handles container prefix)
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -E "Password: [a-zA-Z0-9_-]{10,}" | tail -1 | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
-    fi
-    
-    if [ -z "$ADMIN_PASSWORD" ]; then
-        # Pattern 4: Wait longer and try again with fresh logs
-        print_info "Waiting a bit longer for backend to log password..."
-        sleep 10
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | grep -v "ADMIN_PASSWORD" | tail -1 | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
-    fi
-    
-    if [ -z "$ADMIN_PASSWORD" ]; then
-        # Pattern 5: Try to get it from stdout (print statements) - handles container prefix
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -E "Password: " | tail -1 | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
-    fi
-    
-    if [ -z "$ADMIN_PASSWORD" ]; then
-        # Pattern 6: Try with more flexible pattern (any line containing Password: followed by token)
-        ADMIN_PASSWORD=$(docker-compose logs backend --tail 200 2>/dev/null | grep -i "password:" | grep -E "[a-zA-Z0-9_-]{16,}" | tail -1 | sed 's/.*[Pp]assword: *//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
-    fi
-    
-    if [ -z "$ADMIN_PASSWORD" ]; then
-        # Pattern 7: Try to read from temporary file inside container
-        ADMIN_PASSWORD=$(docker-compose exec -T backend cat /tmp/admin_password.txt 2>/dev/null | tr -d '\r\n' || echo "")
-        # Clean up the temp file after reading
-        if [ -n "$ADMIN_PASSWORD" ]; then
-            docker-compose exec -T backend rm -f /tmp/admin_password.txt 2>/dev/null || true
+    # Try multiple times with increasing wait times
+    for attempt in 1 2 3; do
+        if [ $attempt -gt 1 ]; then
+            wait_time=$((attempt * 5))
+            print_info "Attempt $attempt: Waiting ${wait_time} seconds for backend to log password..."
+            sleep $wait_time
+        else
+            sleep 5
         fi
-    fi
+        
+        # Pattern 1: Try to read from temporary file first (most reliable)
+        ADMIN_PASSWORD=$(docker-compose exec -T backend cat /tmp/admin_password.txt 2>/dev/null | tr -d '\r\n' || echo "")
+        if [ -n "$ADMIN_PASSWORD" ]; then
+            # Clean up the temp file after reading
+            docker-compose exec -T backend rm -f /tmp/admin_password.txt 2>/dev/null || true
+            break
+        fi
+        
+        # Pattern 2: Direct grep for "Password:" (handles container prefix like "monitorix_backend | ")
+        # Remove container prefix and extract password
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | grep -v "ADMIN_PASSWORD" | tail -1 | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
+        if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ]; then
+            break
+        fi
+        
+        # Pattern 3: Look for "ADMIN USER CREATED" block with context
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -A 5 "ADMIN USER CREATED" | grep -i "Password:" | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
+        if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ]; then
+            break
+        fi
+        
+        # Pattern 4: Look for lines with "Password:" that contain alphanumeric tokens (handles container prefix)
+        # Extract token after "Password: " - handles both "Password: token" and "| Password: token" formats
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -E "Password: [a-zA-Z0-9_-]{16,}" | tail -1 | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
+        if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ]; then
+            break
+        fi
+        
+        # Pattern 5: Try with more flexible pattern (any line containing password: followed by token)
+        ADMIN_PASSWORD=$(docker-compose logs backend --tail 300 2>/dev/null | grep -i "password:" | grep -E "[a-zA-Z0-9_-]{16,}" | tail -1 | sed 's/.*[Pp]assword: *//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
+        if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ]; then
+            break
+        fi
+    done
     
     # If still no password, admin user might already exist
     if [ -z "$ADMIN_PASSWORD" ]; then
+        print_warn "Could not retrieve admin password from logs."
         print_warn "Admin user may already exist. To reset the password, run:"
         print_warn "  docker-compose exec backend python cli.py reset-admin-password"
     fi
