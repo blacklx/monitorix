@@ -99,15 +99,48 @@ class ProxmoxClient:
                 if not parsed.scheme or not parsed.netloc:
                     raise ValueError(f"Invalid URL format: {api_url}. Expected format: https://host:port")
                 
-                logger.debug(f"ProxmoxAPI parameters: url={api_url}, user={self.username}, token_name={token_id}, verify_ssl={verify_ssl}")
+                # Extract hostname and port separately to avoid proxmoxer parsing issues
+                hostname = parsed.hostname
+                port = parsed.port
                 
-                self._api = ProxmoxAPI(
-                    api_url,
-                    user=self.username,
-                    token_name=token_id,
-                    token_value=token_secret,
-                    verify_ssl=verify_ssl
-                )
+                # Reconstruct URL in the simplest possible format
+                # Proxmoxer can be sensitive to URL format, so we ensure it's exactly right
+                if port:
+                    # Ensure port is included
+                    clean_url = f"{parsed.scheme}://{hostname}:{port}"
+                else:
+                    clean_url = f"{parsed.scheme}://{hostname}"
+                
+                logger.info(f"ProxmoxAPI connection attempt: url={clean_url}, user={self.username}, token_name={token_id}, verify_ssl={verify_ssl}")
+                logger.debug(f"Original URL: {api_url}, Cleaned URL: {clean_url}, Hostname: {hostname}, Port: {port}")
+                
+                # Try with cleaned URL first
+                try:
+                    self._api = ProxmoxAPI(
+                        clean_url,
+                        user=self.username,
+                        token_name=token_id,
+                        token_value=token_secret,
+                        verify_ssl=verify_ssl
+                    )
+                except Exception as e:
+                    error_msg = str(e)
+                    # If we get IPv6 error, it might be a proxmoxer bug
+                    # Try with the original URL as fallback
+                    if "Invalid IPv6 URL" in error_msg or "IPv6" in error_msg:
+                        logger.warning(f"ProxmoxAPI failed with cleaned URL '{clean_url}' due to IPv6 error. This might be a proxmoxer library bug.")
+                        logger.warning(f"Trying with original normalized URL as fallback: {api_url}")
+                        # Try with original URL
+                        self._api = ProxmoxAPI(
+                            api_url,
+                            user=self.username,
+                            token_name=token_id,
+                            token_value=token_secret,
+                            verify_ssl=verify_ssl
+                        )
+                    else:
+                        # Re-raise if it's a different error
+                        raise
                 
                 if not self.verify_ssl:
                     logger.warning(f"SSL verification is DISABLED for Proxmox connection to {self.url}. "
