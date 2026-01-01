@@ -427,16 +427,45 @@ docker-compose up -d
 
 # Wait for services to start
 print_info "Waiting for services to start..."
-sleep 15
+sleep 20
 
 # Check service status
 print_info "Checking service status..."
 docker-compose ps
 
-# Get admin password from backend logs (always retrieved from logs, never from .env)
-print_info "Retrieving admin password from backend logs..."
-sleep 5
-ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | tail -1 | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
+# Check if backend is running
+BACKEND_RUNNING=$(docker-compose ps backend 2>/dev/null | grep -c "Up" || echo "0")
+if [ "$BACKEND_RUNNING" = "0" ]; then
+    print_error "Backend container is not running!"
+    print_info "Backend logs:"
+    docker-compose logs backend --tail=50 || true
+    print_warn "Please check the logs above for errors"
+    print_warn "Common issues:"
+    print_warn "  - Database connection problems"
+    print_warn "  - Missing environment variables"
+    print_warn "  - Import errors in Python code"
+    print_warn ""
+    print_warn "You can check logs manually with: docker-compose logs backend"
+    ADMIN_PASSWORD=""
+else
+    # Wait a bit more for backend to fully initialize
+    print_info "Waiting for backend to initialize..."
+    sleep 10
+    
+    # Get admin password from backend logs (always retrieved from logs, never from .env)
+    print_info "Retrieving admin password from backend logs..."
+    # Try multiple times with different patterns
+    ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | tail -1 | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
+    if [ -z "$ADMIN_PASSWORD" ]; then
+        # Try alternative pattern (from print statement)
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -A 1 "ADMIN USER CREATED" | grep "Password:" | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
+    fi
+    if [ -z "$ADMIN_PASSWORD" ]; then
+        # Try one more time after waiting
+        sleep 5
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | tail -1 | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
+    fi
+fi
 
 # Get local IP
 LOCAL_IP=$(hostname -I | awk '{print $1}')
