@@ -553,42 +553,42 @@ else
         fi
         
         # Pattern 1: Try to read from temporary file first (most reliable)
-        ADMIN_PASSWORD=$(docker-compose exec -T backend cat /tmp/admin_password.txt 2>/dev/null | tr -d '\r\n' || echo "")
+        ADMIN_PASSWORD=$(docker_compose_cmd exec -T backend cat /tmp/admin_password.txt 2>/dev/null | tr -d '\r\n' || echo "")
         if [ -n "$ADMIN_PASSWORD" ]; then
             # Clean up the temp file after reading
-            docker-compose exec -T backend rm -f /tmp/admin_password.txt 2>/dev/null || true
+            docker_compose_cmd exec -T backend rm -f /tmp/admin_password.txt 2>/dev/null || true
             break
         fi
         
         # Pattern 2: Direct grep for "Password:" (handles container prefix like "monitorix_backend | ")
         # Extract password after "Password: " - handle both log formats
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | grep -v "ADMIN_PASSWORD" | tail -1 | sed -E 's/.*[Pp]assword:[[:space:]]+//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
+        ADMIN_PASSWORD=$(docker_compose_cmd logs backend 2>/dev/null | grep -i "Password:" | grep -v "ADMIN_PASSWORD" | tail -1 | sed -E 's/.*[Pp]assword:[[:space:]]+//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
         # Validate: should be 16-30 chars (token_urlsafe generates ~22 chars)
         if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ] && [ ${#ADMIN_PASSWORD} -le 30 ]; then
             break
         fi
         
         # Pattern 2b: Try with "Generated admin password:" pattern (more specific)
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep "Generated admin password:" | tail -1 | sed -E 's/.*Generated admin password:[[:space:]]+//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
+        ADMIN_PASSWORD=$(docker_compose_cmd logs backend 2>/dev/null | grep "Generated admin password:" | tail -1 | sed -E 's/.*Generated admin password:[[:space:]]+//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
         if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ] && [ ${#ADMIN_PASSWORD} -le 30 ]; then
             break
         fi
         
         # Pattern 3: Look for "ADMIN USER CREATED" block with context
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -A 5 "ADMIN USER CREATED" | grep -i "Password:" | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
+        ADMIN_PASSWORD=$(docker_compose_cmd logs backend 2>/dev/null | grep -A 5 "ADMIN USER CREATED" | grep -i "Password:" | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
         if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ]; then
             break
         fi
         
         # Pattern 4: Look for lines with "Password:" that contain alphanumeric tokens (handles container prefix)
         # Extract token after "Password: " - handles both "Password: token" and "| Password: token" formats
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -E "Password: [a-zA-Z0-9_-]{16,}" | tail -1 | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
+        ADMIN_PASSWORD=$(docker_compose_cmd logs backend 2>/dev/null | grep -E "Password: [a-zA-Z0-9_-]{16,}" | tail -1 | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
         if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ]; then
             break
         fi
         
         # Pattern 5: Try with more flexible pattern (any line containing password: followed by token)
-        ADMIN_PASSWORD=$(docker-compose logs backend --tail 300 2>/dev/null | grep -i "password:" | grep -E "[a-zA-Z0-9_-]{16,}" | tail -1 | sed 's/.*[Pp]assword: *//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
+        ADMIN_PASSWORD=$(docker_compose_cmd logs backend --tail 300 2>/dev/null | grep -i "password:" | grep -E "[a-zA-Z0-9_-]{16,}" | tail -1 | sed 's/.*[Pp]assword: *//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
         if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ]; then
             break
         fi
