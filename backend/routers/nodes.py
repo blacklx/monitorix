@@ -328,14 +328,14 @@ async def sync_node(
     try:
         logger.info(f"Manual sync requested for node {node_id} ({node.name})")
         
-        # Refresh node from database to get latest data
-        db.refresh(node)
-        
-        # Run sync operations
+        # Run sync operations (they create their own sessions and commit internally)
         await check_node(node)
         await sync_vms(node)
         
-        # Refresh node again to get updated status
+        # Refresh node from database to get updated status after sync
+        # We need to expire the current node object and reload it since check_node/sync_vms
+        # use their own sessions
+        db.expire(node)
         db.refresh(node)
         
         logger.info(f"Sync completed for node {node_id} ({node.name}). Status: {node.status}")
