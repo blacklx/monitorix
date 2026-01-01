@@ -318,9 +318,26 @@ fi
 print_info "All prerequisites verified successfully"
 echo ""
 
+# Check if PostgreSQL volume exists
+POSTGRES_VOLUME_EXISTS=false
+if docker volume ls | grep -q "monitorix_postgres_data"; then
+    POSTGRES_VOLUME_EXISTS=true
+    print_info "Existing PostgreSQL volume detected"
+fi
+
 # Generate passwords and create .env file
 if [ ! -f .env ]; then
     print_info "Creating .env file with auto-generated passwords..."
+    
+    # If PostgreSQL volume exists but .env doesn't, we need to remove the volume
+    # to avoid password mismatch (PostgreSQL password is set only on first creation)
+    if [ "$POSTGRES_VOLUME_EXISTS" = true ]; then
+        print_warn "PostgreSQL volume exists but .env file is missing."
+        print_warn "Removing existing PostgreSQL volume to avoid password mismatch..."
+        docker-compose down -v 2>/dev/null || true
+        docker volume rm monitorix_postgres_data 2>/dev/null || true
+        POSTGRES_VOLUME_EXISTS=false
+    fi
     
     # Generate secure passwords
     POSTGRES_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
@@ -413,6 +430,30 @@ else
     SECRET_KEY=$(grep "^SECRET_KEY=" .env | cut -d'=' -f2 || echo "***")
     REDIS_PASSWORD=$(grep "^REDIS_PASSWORD=" .env | cut -d'=' -f2 || echo "***")
     ADMIN_PASSWORD_SET=false  # Will be retrieved from backend logs
+    
+    # Ensure DATABASE_URL matches POSTGRES_PASSWORD
+    EXISTING_DATABASE_URL=$(grep "^DATABASE_URL=" .env | cut -d'=' -f2- || echo "")
+    EXPECTED_DATABASE_URL="postgresql://monitorix:${POSTGRES_PASSWORD}@postgres:5432/monitorix"
+    
+    if [ -n "$EXISTING_DATABASE_URL" ] && [ "$EXISTING_DATABASE_URL" != "$EXPECTED_DATABASE_URL" ]; then
+        print_warn "DATABASE_URL in .env does not match POSTGRES_PASSWORD"
+        print_info "Updating DATABASE_URL to match POSTGRES_PASSWORD..."
+        
+        # Update DATABASE_URL in .env file
+        if grep -q "^DATABASE_URL=" .env; then
+            # Replace existing DATABASE_URL line
+            sed -i "s|^DATABASE_URL=.*|DATABASE_URL=${EXPECTED_DATABASE_URL}|" .env
+        else
+            # Add DATABASE_URL after POSTGRES_DB line
+            sed -i "/^POSTGRES_DB=/a DATABASE_URL=${EXPECTED_DATABASE_URL}" .env
+        fi
+        print_info "DATABASE_URL updated successfully"
+    elif [ -z "$EXISTING_DATABASE_URL" ]; then
+        # DATABASE_URL is missing, add it
+        print_info "Adding missing DATABASE_URL to .env..."
+        sed -i "/^POSTGRES_DB=/a DATABASE_URL=${EXPECTED_DATABASE_URL}" .env
+        print_info "DATABASE_URL added successfully"
+    fi
 fi
 
 # Build and start services
