@@ -55,7 +55,7 @@ if settings.celery_enabled:
         from celery_app import celery_app
         
         @celery_app.task(base=DatabaseTask, bind=True, name="tasks.bulk_create_nodes")
-def bulk_create_nodes_task(self, nodes_data: list):
+        def bulk_create_nodes_task(self, nodes_data: list):
     """
     Background task to create multiple nodes.
     
@@ -154,7 +154,7 @@ def bulk_create_nodes_task(self, nodes_data: list):
 
 
         @celery_app.task(base=DatabaseTask, bind=True, name="tasks.bulk_create_services")
-def bulk_create_services_task(self, services_data: list):
+        def bulk_create_services_task(self, services_data: list):
     """
     Background task to create multiple services.
     
@@ -233,7 +233,7 @@ def bulk_create_services_task(self, services_data: list):
 
 
         @celery_app.task(base=DatabaseTask, bind=True, name="tasks.sync_vms")
-def sync_vms_task(self, node_id: int):
+        def sync_vms_task(self, node_id: int):
     """
     Background task to synchronize VMs from a Proxmox node.
     
@@ -281,7 +281,7 @@ def sync_vms_task(self, node_id: int):
 
 
         @celery_app.task(base=DatabaseTask, bind=True, name="tasks.cleanup_metrics")
-def cleanup_metrics_task(self):
+        def cleanup_metrics_task(self):
     """
     Background task to clean up old metrics based on retention policy.
     
@@ -323,7 +323,7 @@ def cleanup_metrics_task(self):
 
 
         @celery_app.task(bind=True, name="tasks.create_backup")
-def create_backup_task(self):
+        def create_backup_task(self):
     """
     Background task to create a database backup.
     
@@ -388,7 +388,7 @@ def create_backup_task(self):
 
 
         @celery_app.task(base=DatabaseTask, bind=True, name="tasks.export_data")
-def export_data_task(self, export_type: str, format_type: str, filters: dict = None):
+        def export_data_task(self, export_type: str, format_type: str, filters: dict = None):
     """
     Background task to export data (nodes, VMs, services, alerts).
     
