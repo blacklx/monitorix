@@ -538,32 +538,63 @@ docker_compose_cmd down || true
 print_info "Starting services..."
 docker_compose_cmd up -d
 
-# Wait for services to start
-print_info "Waiting for services to start..."
-sleep 20
-
-# Check service status
-print_info "Checking service status..."
-docker_compose_cmd ps
-
-# Check if backend is running
-BACKEND_RUNNING=$(docker_compose_cmd ps backend 2>/dev/null | grep -c "Up" || echo "0")
-if [ "$BACKEND_RUNNING" = "0" ]; then
-    print_error "Backend container is not running!"
-    print_info "Backend logs:"
-    docker_compose_cmd logs backend --tail=50 || true
-    print_warn "Please check the logs above for errors"
-    print_warn "Common issues:"
-    print_warn "  - Database connection problems"
-    print_warn "  - Missing environment variables"
-    print_warn "  - Import errors in Python code"
-    print_warn ""
-    print_warn "You can check logs manually with: docker_compose_cmd logs backend"
+# Wait for PostgreSQL to be ready
+print_info "Waiting for PostgreSQL to be ready..."
+POSTGRES_READY=false
+for i in {1..30}; do
+    if docker_compose_cmd exec -T postgres pg_isready -U monitorix > /dev/null 2>&1; then
+        print_info "✓ PostgreSQL is ready"
+        POSTGRES_READY=true
+        break
+    fi
+    if [ $i -eq 1 ]; then
+        echo -n "   "
+    fi
+    echo -n "."
+    sleep 2
+done
+echo ""
+if [ "$POSTGRES_READY" = false ]; then
+    print_error "PostgreSQL failed to start within 60 seconds"
+    print_info "PostgreSQL logs:"
+    docker_compose_cmd logs postgres --tail=20 || true
     ADMIN_PASSWORD=""
 else
-    # Wait a bit more for backend to fully initialize
-    print_info "Waiting for backend to initialize..."
-    sleep 10
+    # Wait for backend to be healthy
+    print_info "Waiting for backend to be ready..."
+    BACKEND_READY=false
+    for i in {1..60}; do
+        # Check if container is running
+        if docker_compose_cmd ps backend 2>/dev/null | grep -q "Up"; then
+            # Check if health endpoint responds
+            if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+                print_info "✓ Backend is ready"
+                BACKEND_READY=true
+                break
+            fi
+        fi
+        if [ $i -eq 1 ]; then
+            echo -n "   "
+        fi
+        echo -n "."
+        sleep 2
+    done
+    echo ""
+    
+    if [ "$BACKEND_READY" = false ]; then
+        print_error "Backend failed to start within 120 seconds"
+        print_info "Backend logs:"
+        docker_compose_cmd logs backend --tail=50 || true
+        print_warn "Please check the logs above for errors"
+        print_warn "Common issues:"
+        print_warn "  - Database connection problems"
+        print_warn "  - Missing environment variables"
+        print_warn "  - Import errors in Python code"
+        print_warn ""
+        print_warn "You can check logs manually with: docker_compose_cmd logs backend"
+        ADMIN_PASSWORD=""
+    else
+        # Backend is ready, proceed with password retrieval
     
     # Get admin password from backend logs (always retrieved from logs, never from .env)
     print_info "Retrieving admin password from backend logs..."
