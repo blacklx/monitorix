@@ -205,12 +205,11 @@ class ProxmoxClient:
                         logger.warning(f"SSL certificate verification failed for {clean_url}")
                         logger.warning(f"This usually means Proxmox is using a self-signed certificate.")
                         logger.warning(f"Current verify_ssl setting: {verify_ssl}")
-                        if verify_ssl:
-                            logger.warning(f"To disable SSL verification, set PROXMOX_VERIFY_SSL=false in .env file")
+                        if verify_ssl = verify_ssl
                             raise ValueError(
                                 f"SSL certificate verification failed for {clean_url}. "
                                 f"This usually means Proxmox is using a self-signed certificate. "
-                                f"To disable SSL verification (for testing only), set PROXMOX_VERIFY_SSL=false in .env file. "
+                                f"To disable SSL verification (for testing only), uncheck 'Verify SSL Certificate' in the node settings in web UI. "
                                 f"Note: Disabling SSL verification is a security risk and should only be used in trusted networks."
                             ) from e
                         else:
