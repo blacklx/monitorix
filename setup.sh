@@ -487,6 +487,15 @@ else
         # Pattern 6: Try with more flexible pattern (any line containing Password: followed by token)
         ADMIN_PASSWORD=$(docker-compose logs backend --tail 200 2>/dev/null | grep -i "password:" | grep -E "[a-zA-Z0-9_-]{16,}" | tail -1 | sed 's/.*[Pp]assword: *//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
     fi
+    
+    if [ -z "$ADMIN_PASSWORD" ]; then
+        # Pattern 7: Try to read from temporary file inside container
+        ADMIN_PASSWORD=$(docker-compose exec -T backend cat /tmp/admin_password.txt 2>/dev/null | tr -d '\r\n' || echo "")
+        # Clean up the temp file after reading
+        if [ -n "$ADMIN_PASSWORD" ]; then
+            docker-compose exec -T backend rm -f /tmp/admin_password.txt 2>/dev/null || true
+        fi
+    fi
 fi
 
 # Get local IP

@@ -169,6 +169,17 @@ async def lifespan(app: FastAPI):
         print(f"Email: {settings.admin_email}")
         print(f"Password: {admin_password}")
         print(f"{'=' * 60}\n")
+        
+        # Write password to temporary file for setup script to read
+        # This file is only readable by the container and will be cleaned up
+        import os
+        temp_password_file = "/tmp/admin_password.txt"
+        try:
+            with open(temp_password_file, 'w') as f:
+                f.write(admin_password)
+            os.chmod(temp_password_file, 0o600)  # Read/write for owner only
+        except Exception as e:
+            logger.warning(f"Could not write password to temp file: {e}")
     
     logger.info("Starting scheduler...")
     # Set broadcast function for scheduler
