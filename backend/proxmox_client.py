@@ -137,15 +137,21 @@ class ProxmoxClient:
                 # 2. Just the secret (in which case we need to extract token_id from username)
                 if "=" in self.token:
                     token_id, token_secret = self.token.split("=", 1)
+                    # If token already has token_id, use username as-is (without token_id part)
+                    proxmox_user = self.username
                 else:
                     # Token is just the secret, extract token_id from username
                     # Username format: user@realm!token_id (e.g., "root@pam!monitorix")
-                    # If username contains "!", use the part after "!" as token_id
+                    # If username contains "!", split it:
+                    # - user@realm part goes to proxmox_user
+                    # - token_id part goes to token_name
                     if "!" in self.username:
                         # Username format: user@realm!token_id
-                        token_id = self.username.split("!")[-1]
+                        # Split into user@realm and token_id
+                        proxmox_user, token_id = self.username.rsplit("!", 1)
                     else:
-                        # Fallback: use the part before "@" as token_id
+                        # No token_id in username, use username as-is and extract token_id from username
+                        proxmox_user = self.username
                         token_id = self.username.split("@")[0]
                     token_secret = self.token
 
