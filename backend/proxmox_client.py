@@ -383,13 +383,24 @@ class ProxmoxClient:
     def get_vms(self) -> List[Dict]:
         """Get list of all VMs and containers"""
         try:
+            logger.info(f"Getting VMs from Proxmox cluster at {self.url}")
             api = self._get_api()
-            nodes = api.nodes.get()
+            
+            try:
+                nodes = api.nodes.get()
+                logger.info(f"Successfully retrieved {len(nodes)} nodes from Proxmox cluster")
+                if len(nodes) > 0:
+                    node_names = [node.get("node", "unknown") for node in nodes]
+                    logger.info(f"Node names: {', '.join(node_names)}")
+            except Exception as e:
+                logger.error(f"Failed to get nodes from Proxmox cluster: {e}")
+                raise
+            
             all_vms = []
             
-            logger.info(f"Found {len(nodes)} nodes in Proxmox cluster")
             if len(nodes) == 0:
                 logger.warning("No nodes found in Proxmox cluster. This might indicate a permission issue or empty cluster.")
+                return []
 
             for node in nodes:
                 node_name = node["node"]
