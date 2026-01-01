@@ -383,12 +383,24 @@ async def test_connection(
                 logger.warning(f"Connection test timeout for {node_data.url}")
                 return {"success": False, "message": "Connection test timed out after 10 seconds"}
     except ValueError as e:
-        # ValueError usually means URL format issue
-        logger.error(f"Invalid URL format for connection test: {e}")
-        return {"success": False, "message": f"Invalid URL format: {str(e)}"}
+        # ValueError usually means URL format issue or SSL certificate issue
+        error_msg = str(e)
+        logger.error(f"Connection test failed: {error_msg}")
+        # Check if it's an SSL certificate error
+        if "SSL certificate" in error_msg or "SSL verification" in error_msg:
+            return {"success": False, "message": error_msg}
+        return {"success": False, "message": f"Invalid URL format: {error_msg}"}
     except Exception as e:
         error_msg = str(e)
         logger.error(f"Error testing connection to {node_data.url}: {error_msg}", exc_info=True)
+        
+        # Check for SSL certificate errors
+        if "SSL" in error_msg or "certificate" in error_msg.lower() or "CERTIFICATE_VERIFY_FAILED" in error_msg:
+            return {
+                "success": False, 
+                "message": f"SSL certificate verification failed. Proxmox is likely using a self-signed certificate. To disable SSL verification (testing only), set PROXMOX_VERIFY_SSL=false in .env file and restart the backend."
+            }
+        
         # Provide more helpful error message for IPv6 URL errors
         if "Invalid IPv6 URL" in error_msg or "IPv6" in error_msg:
             return {"success": False, "message": f"Invalid URL format. Please use format: https://hostname:port or https://ip:port (e.g., https://192.168.1.10:8006)"}
