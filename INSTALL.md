@@ -174,19 +174,22 @@ Example: If token ID is `monitorix` and secret is `abc123-def456-...`, then the 
 monitorix=abc123-def456-...
 ```
 
-### Step 7: Configure Proxmox Nodes
+### Step 7: Add Proxmox Nodes
 
-In the `.env` file, add your Proxmox nodes:
+Add Proxmox nodes via the web UI:
 
-```env
-PROXMOX_NODES=node1:https://192.168.1.10:8006:user@pam:monitorix=abc123-def456-...,node2:https://192.168.1.11:8006:user@pam:monitorix=xyz789-...
-```
+1. Log in to Monitorix at `http://localhost:3000` (or your configured URL)
+2. Navigate to **"Proxmox Nodes"** in the sidebar
+3. Click **"Add Node"** button
+4. Enter node details:
+   - **Name**: A friendly name (e.g., `node1`, `pve1`, `home-lab`)
+   - **URL**: Proxmox API URL (e.g., `https://192.168.1.10:8006` or `https://pve.example.com:8006`)
+   - **Username**: Proxmox username (e.g., `user@pam`)
+   - **Token**: Proxmox API token (format: `token_id=token_secret`)
+5. Click **"Test Connection"** to verify the connection
+6. Click **"Save"** to add the node
 
-**Format**: `name:url:username:token` (comma-separated for multiple nodes)
-
-**Example**:
-- `name`: `node1`, `pve1`, `home-lab`, etc.
-- `url`: `https://192.168.1.10:8006` or `https://pve.example.com:8006`
+Nodes are stored in the database and can be managed through the web interface.
 - `username`: `user@pam` or `user@pve`
 - `token`: `token_id=token_secret`
 

@@ -198,13 +198,20 @@ See [INSTALL.md](INSTALL.md) for detailed installation guide or [QUICKSTART.md](
 
 ### Proxmox Nodes
 
-Configure Proxmox nodes in the `.env` file:
+Add Proxmox nodes via the web UI:
 
-```env
-PROXMOX_NODES=node1:https://192.168.1.10:8006:user@pam:token_id=token_secret,node2:https://192.168.1.11:8006:user@pam:token_id=token_secret
-```
+1. Log in to Monitorix
+2. Navigate to **"Proxmox Nodes"** in the sidebar
+3. Click **"Add Node"** button
+4. Enter node details:
+   - **Name**: A friendly name for the node
+   - **URL**: Proxmox API URL (e.g., `https://192.168.1.10:8006`)
+   - **Username**: Proxmox username (e.g., `user@pam`)
+   - **Token**: Proxmox API token (format: `token_id=token_secret`)
+5. Click **"Test Connection"** to verify
+6. Click **"Save"** to add the node
 
-Format: `name:url:username:token` (comma-separated for multiple nodes)
+Nodes are stored in the database and can be managed through the web interface.
 
 ### Health Checks
 

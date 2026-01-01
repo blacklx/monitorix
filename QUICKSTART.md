@@ -98,13 +98,14 @@ The script will:
 
 ### Proxmox Nodes
 
-In `.env`, add your Proxmox nodes:
+Add Proxmox nodes via the web UI:
 
-```env
-PROXMOX_NODES=node1:https://192.168.1.10:8006:user@pam:token_id=token_secret
-```
-
-Format: `name:url:username:token`
+1. Log in to Monitorix
+2. Navigate to **"Proxmox Nodes"** in the sidebar
+3. Click **"Add Node"** button
+4. Enter node details (name, URL, username, token)
+5. Click **"Test Connection"** to verify
+6. Click **"Save"** to add the node
 
 ### Create Proxmox API Token
 
