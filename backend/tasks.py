@@ -102,6 +102,7 @@ if settings.celery_enabled:
                             url=node_data["url"],
                             username=node_data["username"],
                             token=node_data["token"],
+                            verify_ssl=node_data.get("verify_ssl", True),
                             is_local=node_data.get("is_local", False),
                             tags=node_data.get("tags", [])
                         )

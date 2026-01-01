@@ -119,6 +119,8 @@
     "url": "URL",
     "username": "Brukernavn",
     "token": "Token",
+    "verifySsl": "Verifiser SSL-sertifikat",
+    "verifySslDescription": "Aktiver SSL-sertifikatverifisering. Deaktiver kun hvis du bruker selvsignerte sertifikater (sikkerhetsrisiko).",
     "isLocal": "Lokal node",
     "isRemote": "Ekstern node",
     "local": "Lokal",
