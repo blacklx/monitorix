@@ -130,7 +130,13 @@ const Nodes = () => {
     setError(null)
     
     try {
-      const response = await axios.post(`${API_URL}/api/nodes/test-connection`, formData)
+      // Ensure verify_ssl is explicitly included (defaults to true if undefined)
+      const testData = {
+        ...formData,
+        verify_ssl: formData.verify_ssl !== undefined ? formData.verify_ssl : true
+      }
+      console.log('[Nodes] Testing connection with data:', { ...testData, token: '***' })
+      const response = await axios.post(`${API_URL}/api/nodes/test-connection`, testData)
       if (response.data.success) {
         setConnectionResult({ success: true, message: t('nodes.connectionSuccess') })
       } else {
