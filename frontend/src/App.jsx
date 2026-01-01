@@ -15,6 +15,7 @@
  */
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { WebSocketProvider } from './contexts/WebSocketContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -36,7 +37,8 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <Routes>
+        <WebSocketProvider>
+          <Routes>
           <Route path="/login" element={<Login />} />
           <Route
             path="/"
@@ -61,6 +63,7 @@ function App() {
             <Route path="audit-logs" element={<AuditLogs />} />
           </Route>
         </Routes>
+        </WebSocketProvider>
       </AuthProvider>
     </ErrorBoundary>
   )

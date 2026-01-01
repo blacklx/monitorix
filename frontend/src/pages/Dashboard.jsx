@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
-import { useWebSocket } from '../hooks/useWebSocket'
+import { useWebSocket } from '../contexts/WebSocketContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { handleApiError, getErrorMessage } from '../utils/errorHandler'
 import './Dashboard.css'

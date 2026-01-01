@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { formatShortDateTime, formatDateForFilename } from '../utils/dateFormat'
 import { requestNotificationPermission, showAlertNotification, isNotificationSupported } from '../utils/notifications'
-import { useWebSocket } from '../hooks/useWebSocket'
+import { useWebSocket } from '../contexts/WebSocketContext'
 import './Alerts.css'
 
 const API_URL = import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL || ''

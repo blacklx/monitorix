@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
+
+const WebSocketContext = createContext(null)
 
 // Determine WebSocket URL
-// Use relative path when running in production (nginx proxy), or full URL for development
 const getWebSocketURL = () => {
   const envUrl = import.meta.env.REACT_APP_WS_URL || import.meta.env.VITE_WS_URL
   if (envUrl) {
@@ -9,7 +10,6 @@ const getWebSocketURL = () => {
   }
   
   // Use relative path - construct from current window location
-  // This works when frontend is served by nginx proxy
   if (typeof window !== 'undefined' && window.location) {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.host
@@ -30,7 +30,7 @@ const HEARTBEAT_TIMEOUT = 10000 // 10 seconds to wait for pong
 // WebSocket close codes that should trigger reconnection
 const RECONNECTABLE_CLOSE_CODES = [1000, 1001, 1006, 1011, 1012, 1013, 1015]
 
-export const useWebSocket = (onMessage) => {
+export const WebSocketProvider = ({ children }) => {
   const wsRef = useRef(null)
   const reconnectTimeoutRef = useRef(null)
   const reconnectAttemptsRef = useRef(0)
@@ -38,6 +38,7 @@ export const useWebSocket = (onMessage) => {
   const heartbeatIntervalRef = useRef(null)
   const heartbeatTimeoutRef = useRef(null)
   const lastPongRef = useRef(Date.now())
+  const messageHandlersRef = useRef(new Set())
   const [isConnected, setIsConnected] = useState(false)
   const [isReconnecting, setIsReconnecting] = useState(false)
   const [reconnectAttempt, setReconnectAttempt] = useState(0)
@@ -122,9 +123,14 @@ export const useWebSocket = (onMessage) => {
             return
           }
           
-          if (onMessage) {
-            onMessage(data)
-          }
+          // Call all registered message handlers
+          messageHandlersRef.current.forEach(handler => {
+            try {
+              handler(data)
+            } catch (error) {
+              console.error('Error in WebSocket message handler:', error)
+            }
+          })
         } catch (error) {
           console.error('Failed to parse WebSocket message:', error)
         }
@@ -145,7 +151,7 @@ export const useWebSocket = (onMessage) => {
         // Determine if we should reconnect
         const shouldReconnect = shouldReconnectRef.current && 
                                 reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS &&
-                                (RECONNECTABLE_CLOSE_CODES.includes(code) || code === 1006) // 1006 = abnormal closure
+                                (RECONNECTABLE_CLOSE_CODES.includes(code) || code === 1006)
 
         if (shouldReconnect) {
           const baseDelay = RECONNECT_INTERVAL * Math.pow(RECONNECT_BACKOFF_MULTIPLIER, reconnectAttemptsRef.current)
@@ -189,23 +195,15 @@ export const useWebSocket = (onMessage) => {
         }, delay)
       }
     }
-  }, [onMessage, startHeartbeat, clearHeartbeat])
+  }, [startHeartbeat, clearHeartbeat])
 
-  useEffect(() => {
-    shouldReconnectRef.current = true
-    connect()
-
+  // Register message handler
+  const addMessageHandler = useCallback((handler) => {
+    messageHandlersRef.current.add(handler)
     return () => {
-      shouldReconnectRef.current = false
-      clearHeartbeat()
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current)
-      }
-      if (wsRef.current) {
-        wsRef.current.close(1000, 'Component unmounting')
-      }
+      messageHandlersRef.current.delete(handler)
     }
-  }, [connect, clearHeartbeat])
+  }, [])
 
   const send = useCallback((message) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -233,13 +231,53 @@ export const useWebSocket = (onMessage) => {
     }
   }, [connect])
 
-  return { 
-    send, 
-    isConnected, 
+  // Initialize connection on mount
+  useEffect(() => {
+    shouldReconnectRef.current = true
+    connect()
+
+    return () => {
+      shouldReconnectRef.current = false
+      clearHeartbeat()
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+      }
+      if (wsRef.current) {
+        wsRef.current.close(1000, 'Provider unmounting')
+      }
+    }
+  }, [connect, clearHeartbeat])
+
+  const value = {
+    isConnected,
     isReconnecting,
     reconnectAttempt,
     connectionError,
-    reconnect 
+    send,
+    reconnect,
+    addMessageHandler
   }
+
+  return (
+    <WebSocketContext.Provider value={value}>
+      {children}
+    </WebSocketContext.Provider>
+  )
+}
+
+export const useWebSocket = (onMessage) => {
+  const context = useContext(WebSocketContext)
+  if (!context) {
+    throw new Error('useWebSocket must be used within WebSocketProvider')
+  }
+
+  // Register message handler if provided
+  useEffect(() => {
+    if (onMessage) {
+      return context.addMessageHandler(onMessage)
+    }
+  }, [onMessage, context])
+
+  return context
 }
 
