@@ -359,7 +359,25 @@ class ProxmoxClient:
                              max(node_info.get("rootfs", {}).get("total", 1), 1)) * 100,
             }
         except Exception as e:
+            error_msg = str(e)
             logger.error(f"Failed to get node status: {e}")
+            
+            # Check for permission errors
+            if "403" in error_msg or "Forbidden" in error_msg or "Permission" in error_msg:
+                if "Sys.Audit" in error_msg:
+                    logger.error("Proxmox token is missing Sys.Audit permission. This is required to read node status.")
+                    logger.error("To fix: In Proxmox web UI, go to Datacenter > Permissions > API Tokens, edit the token, and add 'Sys.Audit' permission.")
+                    return {
+                        "status": "error", 
+                        "message": "Proxmox token missing Sys.Audit permission. Please add this permission to the token in Proxmox web UI (Datacenter > Permissions > API Tokens)."
+                    }
+                else:
+                    logger.error("Proxmox token has insufficient permissions. Check token permissions in Proxmox web UI.")
+                    return {
+                        "status": "error", 
+                        "message": f"Proxmox token has insufficient permissions: {error_msg}. Please check token permissions in Proxmox web UI."
+                    }
+            
             return {"status": "error", "message": str(e)}
 
     def get_vms(self) -> List[Dict]:
@@ -415,6 +433,16 @@ class ProxmoxClient:
 
             return all_vms
         except Exception as e:
+            error_msg = str(e)
             logger.error(f"Failed to get VMs: {e}")
+            
+            # Check for permission errors
+            if "403" in error_msg or "Forbidden" in error_msg or "Permission" in error_msg:
+                if "Sys.Audit" in error_msg:
+                    logger.error("Proxmox token is missing Sys.Audit permission. This is required to list VMs.")
+                    logger.error("To fix: In Proxmox web UI, go to Datacenter > Permissions > API Tokens, edit the token, and add 'Sys.Audit' permission.")
+                else:
+                    logger.error("Proxmox token has insufficient permissions to list VMs. Check token permissions in Proxmox web UI.")
+            
             return []
 

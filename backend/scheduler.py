@@ -182,7 +182,21 @@ async def check_node(node: Node) -> Dict:
         
         return node_status
     except Exception as e:
+        error_msg = str(e)
         logger.error(f"Error checking node {node.name}: {e}")
+        
+        # Check for permission errors and provide helpful message
+        if "403" in error_msg or "Forbidden" in error_msg or "Permission" in error_msg:
+            if "Sys.Audit" in error_msg:
+                logger.error(f"Node {node.name}: Proxmox token is missing Sys.Audit permission. This is required to check node status.")
+                logger.error("To fix: In Proxmox web UI, go to Datacenter > Permissions > API Tokens, edit the token, and add 'Sys.Audit' permission.")
+                node.status = "error"
+                node.last_check = datetime.utcnow()
+                db.commit()
+                return {"status": "error", "message": "Proxmox token missing Sys.Audit permission. Please add this permission to the token in Proxmox web UI."}
+            else:
+                logger.error(f"Node {node.name}: Proxmox token has insufficient permissions. Check token permissions in Proxmox web UI.")
+        
         node.status = "error"
         node.last_check = datetime.utcnow()
         db.commit()
@@ -292,7 +306,16 @@ async def sync_vms(node: Node):
             db.close()
             
     except Exception as e:
+        error_msg = str(e)
         logger.error(f"Error syncing VMs for node {node.name}: {e}")
+        
+        # Check for permission errors and provide helpful message
+        if "403" in error_msg or "Forbidden" in error_msg or "Permission" in error_msg:
+            if "Sys.Audit" in error_msg:
+                logger.error(f"Node {node.name}: Proxmox token is missing Sys.Audit permission. This is required to list VMs.")
+                logger.error("To fix: In Proxmox web UI, go to Datacenter > Permissions > API Tokens, edit the token, and add 'Sys.Audit' permission.")
+            else:
+                logger.error(f"Node {node.name}: Proxmox token has insufficient permissions to list VMs. Check token permissions in Proxmox web UI.")
 
 
 async def check_service(service: Service):
