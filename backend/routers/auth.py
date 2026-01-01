@@ -59,7 +59,7 @@ async def login(
     or include totp_token in a separate request.
     """
     from datetime import datetime
-    from auth import create_refresh_token, get_password_hash
+    from auth import create_refresh_token
     
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
@@ -116,7 +116,7 @@ async def login_verify_2fa(
     This endpoint is used after initial login when 2FA is enabled.
     """
     from datetime import datetime
-    from auth import create_access_token, create_refresh_token, get_password_hash
+    from auth import create_access_token, create_refresh_token
     from two_factor import verify_totp
     
     user = authenticate_user(db, login_data.username, login_data.password)
