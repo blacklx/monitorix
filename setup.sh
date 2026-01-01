@@ -519,15 +519,16 @@ else
         fi
         
         # Pattern 2: Direct grep for "Password:" (handles container prefix like "monitorix_backend | ")
-        # Remove container prefix and extract password - try both with and without timestamp
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | grep -v "ADMIN_PASSWORD" | tail -1 | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
-        if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ]; then
+        # Extract password after "Password: " - handle both log formats
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | grep -v "ADMIN_PASSWORD" | tail -1 | sed -E 's/.*[Pp]assword:[[:space:]]+//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
+        # Validate: should be 16-30 chars (token_urlsafe generates ~22 chars)
+        if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ] && [ ${#ADMIN_PASSWORD} -le 30 ]; then
             break
         fi
         
-        # Pattern 2b: Try with explicit "Password: " pattern (handles log formatting)
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep "Password:" | tail -1 | sed -E 's/.*Password:[[:space:]]+//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
-        if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ]; then
+        # Pattern 2b: Try with "Generated admin password:" pattern (more specific)
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep "Generated admin password:" | tail -1 | sed -E 's/.*Generated admin password:[[:space:]]+//' | sed 's/[[:space:]]*$//' | awk '{print $1}' | tr -d '\r\n' || echo "")
+        if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ] && [ ${#ADMIN_PASSWORD} -le 30 ]; then
             break
         fi
         
