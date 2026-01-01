@@ -325,17 +325,33 @@ async def sync_node(
             detail="Node not found"
         )
     
-    await check_node(node)
-    await sync_vms(node)
-    db.commit()
-    db.refresh(node)
-    
-    # Invalidate cache
-    invalidate_cache("nodes")
-    invalidate_cache("dashboard")
-    invalidate_cache(f"node:{node_id}")
-    
-    return node
+    try:
+        logger.info(f"Manual sync requested for node {node_id} ({node.name})")
+        
+        # Refresh node from database to get latest data
+        db.refresh(node)
+        
+        # Run sync operations
+        await check_node(node)
+        await sync_vms(node)
+        
+        # Refresh node again to get updated status
+        db.refresh(node)
+        
+        logger.info(f"Sync completed for node {node_id} ({node.name}). Status: {node.status}")
+        
+        # Invalidate cache
+        invalidate_cache("nodes")
+        invalidate_cache("dashboard")
+        invalidate_cache(f"node:{node_id}")
+        
+        return node
+    except Exception as e:
+        logger.error(f"Error syncing node {node_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to sync node: {str(e)}"
+        )
 
 
 @router.get("/{node_id}/uptime")

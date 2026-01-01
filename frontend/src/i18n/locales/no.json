@@ -116,6 +116,8 @@
     "bulkImportResults": "Importresultater",
     "deleteNode": "Slett node",
     "syncNow": "Synkroniser nå",
+    "syncSuccess": "Node synkronisert",
+    "syncFailed": "Kunne ikke synkronisere node",
     "url": "URL",
     "username": "Brukernavn",
     "token": "Token",

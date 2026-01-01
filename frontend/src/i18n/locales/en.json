@@ -116,6 +116,8 @@
     "bulkImportResults": "Import Results",
     "deleteNode": "Delete Node",
     "syncNow": "Sync Now",
+    "syncSuccess": "Node synced successfully",
+    "syncFailed": "Failed to sync node",
     "url": "URL",
     "username": "Username",
     "token": "Token",

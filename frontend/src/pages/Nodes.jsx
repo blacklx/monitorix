@@ -59,10 +59,18 @@ const Nodes = () => {
 
   const handleSync = async (nodeId) => {
     try {
-      await axios.post(`${API_URL}/api/nodes/${nodeId}/sync`)
-      fetchNodes()
+      console.log(`[Nodes] Syncing node ${nodeId}...`)
+      const response = await axios.post(`${API_URL}/api/nodes/${nodeId}/sync`)
+      console.log(`[Nodes] Sync response:`, response.data)
+      // Refresh nodes list to show updated status
+      await fetchNodes()
+      // Show success message (optional)
+      setConnectionResult({ success: true, message: t('nodes.syncSuccess') || 'Node synced successfully' })
     } catch (error) {
       console.error('Failed to sync node:', error)
+      const errorMessage = error.response?.data?.detail || error.message || t('nodes.syncFailed') || 'Failed to sync node'
+      setError(errorMessage)
+      setConnectionResult({ success: false, message: errorMessage })
     }
   }
 
