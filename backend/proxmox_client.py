@@ -431,16 +431,47 @@ class ProxmoxClient:
                         # Use basic VM info if status can't be retrieved
                         vm_status = {"status": "unknown"}
                     
+                    # Calculate memory usage
+                    # Proxmox API reports:
+                    # - mem: memory used by VM (can be allocated memory, not actual usage inside VM)
+                    # - maxmem: maximum allocated memory
+                    # - balloon: memory that has been "ballooned" out (if available)
+                    #
+                    # The issue: For VMs with balloon driver, Proxmox may report mem as allocated
+                    # memory rather than actual usage. The actual usage inside VM is typically lower.
+                    # However, from Proxmox's perspective, mem is what's actually allocated/used.
+                    #
+                    # Note: This is a known limitation - Proxmox reports memory from hypervisor
+                    # perspective, which may differ from what the VM reports internally.
+                    mem_used = vm_status.get("mem", 0)
+                    mem_total = vm_status.get("maxmem", 0)
+                    balloon = vm_status.get("balloon", 0)
+                    
+                    # Log balloon info for debugging
+                    if balloon > 0:
+                        logger.debug(f"VM {vm.get('vmid', 'unknown')} ({vm.get('name', 'unknown')}) has balloon memory: "
+                                   f"{balloon / (1024**3):.2f} GB. mem={mem_used / (1024**3):.2f} GB, "
+                                   f"maxmem={mem_total / (1024**3):.2f} GB")
+                        # Note: mem - balloon would give actual memory available to VM,
+                        # but mem is already the actual used memory from Proxmox perspective
+                    
+                    # Calculate memory usage percentage
+                    # This shows memory usage from Proxmox's perspective (allocated/used memory)
+                    # which may be higher than actual usage inside the VM
+                    if mem_total > 0:
+                        memory_usage = (mem_used / mem_total) * 100
+                    else:
+                        memory_usage = 0
+                    
                     all_vms.append({
                         "vmid": vm["vmid"],
                         "name": vm.get("name", f"VM {vm['vmid']}"),
                         "node": node_name,
                         "status": vm_status.get("status", "unknown"),
                         "cpu_usage": vm_status.get("cpu", 0) * 100,
-                        "memory_used": vm_status.get("mem", 0),
-                        "memory_total": vm_status.get("maxmem", 0),
-                        "memory_usage": (vm_status.get("mem", 0) / 
-                                       max(vm_status.get("maxmem", 1), 1)) * 100,
+                        "memory_used": mem_used,
+                        "memory_total": mem_total,
+                        "memory_usage": memory_usage,
                         "disk_used": vm_status.get("disk", 0),
                         "disk_total": vm_status.get("maxdisk", 0),
                         "disk_usage": (vm_status.get("disk", 0) / 
