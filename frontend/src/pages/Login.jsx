@@ -6,7 +6,8 @@ import { validateLogin } from '../utils/validation'
 import axios from 'axios'
 import './Login.css'
 
-const API_URL = import.meta.env.REACT_APP_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// Use relative path when running in production (nginx proxy), or full URL for development
+const API_URL = import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL || ''
 
 const Login = () => {
   const { t } = useTranslation()

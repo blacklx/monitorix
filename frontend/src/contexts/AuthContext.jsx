@@ -3,7 +3,10 @@ import axios from 'axios'
 
 const AuthContext = createContext(null)
 
-const API_URL = import.meta.env.REACT_APP_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// Use relative path when running in production (nginx proxy), or full URL for development
+// In production, nginx proxies /api to backend:8000
+// In development, use full URL if VITE_API_URL is set, otherwise use relative path
+const API_URL = import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL || ''
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
