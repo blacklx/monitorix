@@ -93,8 +93,7 @@ async def login(
     # Create refresh token
     refresh_token_expires = timedelta(days=settings.refresh_token_expire_days)
     refresh_token = create_refresh_token(
-        data={"sub": user.username, "user_id": user.id, "is_admin": user.is_admin},
-        expires_delta=refresh_token_expires
+        data={"sub": user.username, "user_id": user.id, "is_admin": user.is_admin}
     )
     
     # Store refresh token and expiration in DB
@@ -163,8 +162,7 @@ async def login_verify_2fa(
     # Create refresh token
     refresh_token_expires = timedelta(days=settings.refresh_token_expire_days)
     refresh_token = create_refresh_token(
-        data={"sub": user.username, "user_id": user.id, "is_admin": user.is_admin},
-        expires_delta=refresh_token_expires
+        data={"sub": user.username, "user_id": user.id, "is_admin": user.is_admin}
     )
     
     # Store refresh token and expiration in DB
