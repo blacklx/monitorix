@@ -149,6 +149,55 @@ def create_user(args):
         db.close()
 
 
+def reset_admin_password(args):
+    """Reset admin user password"""
+    from config import settings
+    import secrets
+    
+    db = SessionLocal()
+    try:
+        admin_user = db.query(User).filter(
+            User.username == settings.admin_username
+        ).first()
+        
+        if not admin_user:
+            print(f"Error: Admin user '{settings.admin_username}' not found.")
+            return
+        
+        # Generate new password if not provided
+        if args.password:
+            new_password = args.password
+        else:
+            new_password = secrets.token_urlsafe(16)
+        
+        # Update password
+        admin_user.hashed_password = get_password_hash(new_password)
+        db.commit()
+        
+        print(f"\n{'=' * 60}")
+        print(f"ADMIN PASSWORD RESET")
+        print(f"Username: {admin_user.username}")
+        print(f"Email: {admin_user.email}")
+        print(f"New Password: {new_password}")
+        print(f"{'=' * 60}\n")
+        print("SAVE THIS PASSWORD - IT WILL NOT BE SHOWN AGAIN!")
+        
+        # Write password to temporary file for setup script to read
+        import os
+        temp_password_file = "/tmp/admin_password.txt"
+        try:
+            with open(temp_password_file, 'w') as f:
+                f.write(new_password)
+            os.chmod(temp_password_file, 0o600)  # Read/write for owner only
+        except Exception as e:
+            print(f"Warning: Could not write password to temp file: {e}")
+    except Exception as e:
+        db.rollback()
+        print(f"Error resetting admin password: {e}")
+    finally:
+        db.close()
+
+
 def test_node(args):
     """Test connection to a node"""
     db = SessionLocal()
@@ -261,6 +310,11 @@ def main():
     create_user_parser.add_argument("password", help="Password")
     create_user_parser.add_argument("--admin", action="store_true", help="Make user an admin")
     create_user_parser.set_defaults(func=create_user)
+    
+    # Reset admin password
+    reset_admin_parser = subparsers.add_parser("reset-admin-password", help="Reset admin user password")
+    reset_admin_parser.add_argument("--password", help="New password (auto-generated if not provided)")
+    reset_admin_parser.set_defaults(func=reset_admin_password)
     
     # Test node
     test_node_parser = subparsers.add_parser("test-node", help="Test connection to a node")

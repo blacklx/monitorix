@@ -496,6 +496,12 @@ else
             docker-compose exec -T backend rm -f /tmp/admin_password.txt 2>/dev/null || true
         fi
     fi
+    
+    # If still no password, admin user might already exist
+    if [ -z "$ADMIN_PASSWORD" ]; then
+        print_warn "Admin user may already exist. To reset the password, run:"
+        print_warn "  docker-compose exec backend python cli.py reset-admin-password"
+    fi
 fi
 
 # Get local IP
