@@ -452,21 +452,32 @@ class ProxmoxClient:
                     vm_name = vm.get("name", f"VM {vm.get('vmid', 'unknown')}")
                     if mem_total > 0:
                         mem_usage_pct = (mem_used / mem_total) * 100
+                        
+                        # Handle edge case where mem > maxmem (Proxmox sometimes reports this incorrectly)
+                        if mem_used > mem_total:
+                            logger.warning(f"VM {vm.get('vmid', 'unknown')} ({vm_name}) has mem ({mem_used / (1024**3):.2f} GB) > maxmem ({mem_total / (1024**3):.2f} GB). "
+                                         f"This is unusual - capping usage at 100%.")
+                            mem_usage_pct = 100.0
+                            # Use maxmem as the actual used value to avoid showing >100%
+                            mem_used = mem_total
+                        
                         # Log if usage is very high (>= 95%) to help debug
                         if mem_usage_pct >= 95:
                             logger.info(f"VM {vm.get('vmid', 'unknown')} ({vm_name}) shows high memory usage: "
                                       f"{mem_usage_pct:.1f}% ({mem_used / (1024**3):.2f} GB / {mem_total / (1024**3):.2f} GB)")
+                            logger.info(f"  - NOTE: This is allocated memory from Proxmox perspective, NOT actual usage inside VM")
+                            logger.info(f"  - Actual usage inside VM may be much lower (check VM's own monitoring)")
                             if balloon > 0:
                                 logger.info(f"  - Balloon memory: {balloon / (1024**3):.2f} GB")
-                                logger.info(f"  - Note: Actual memory available to VM may be: {mem_total - balloon / (1024**3):.2f} GB")
-                            logger.info(f"  - This may differ from memory usage reported inside the VM")
                             logger.debug(f"  - Full vm_status keys: {list(vm_status.keys())}")
+                            logger.debug(f"  - Full vm_status: {vm_status}")
                     
                     # Calculate memory usage percentage
                     # This shows memory usage from Proxmox's perspective (allocated/used memory)
-                    # which may be higher than actual usage inside the VM
+                    # which may be much higher than actual usage inside the VM
+                    # Cap at 100% if mem > maxmem (edge case)
                     if mem_total > 0:
-                        memory_usage = (mem_used / mem_total) * 100
+                        memory_usage = min((mem_used / mem_total) * 100, 100.0)
                     else:
                         memory_usage = 0
                     
