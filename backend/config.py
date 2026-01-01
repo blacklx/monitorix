@@ -78,7 +78,10 @@ class Settings(BaseSettings):
     sentry_profiles_sample_rate: float = float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", "0.1"))  # 10% of profiles
     
     # CORS Configuration
-    cors_origins: List[str] = os.getenv("CORS_ORIGINS", "*").split(",") if os.getenv("CORS_ORIGINS", "*") != "*" else ["*"]
+    # Default to localhost:3000 for development (frontend port)
+    # Note: When allow_credentials=True, you cannot use "*" for origins
+    _cors_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+    cors_origins: List[str] = _cors_origins_env.split(",") if _cors_origins_env != "*" else ["*"]
     cors_allow_credentials: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
     cors_allow_methods: List[str] = os.getenv("CORS_ALLOW_METHODS", "*").split(",") if os.getenv("CORS_ALLOW_METHODS", "*") != "*" else ["*"]
     cors_allow_headers: List[str] = os.getenv("CORS_ALLOW_HEADERS", "*").split(",") if os.getenv("CORS_ALLOW_HEADERS", "*") != "*" else ["*"]
