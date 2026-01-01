@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, JSON
+from sqlalchemy import Column, Integer, BigInteger, String, Float, Boolean, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -59,9 +59,9 @@ class VM(Base):
     status = Column(String, default="unknown")  # running, stopped, paused, etc.
     cpu_usage = Column(Float, default=0.0)
     memory_usage = Column(Float, default=0.0)
-    memory_total = Column(Integer, default=0)
+    memory_total = Column(BigInteger, default=0)  # Changed from Integer to BigInteger to support large memory values (e.g., 16GB+)
     disk_usage = Column(Float, default=0.0)
-    disk_total = Column(Integer, default=0)
+    disk_total = Column(BigInteger, default=0)  # Changed from Integer to BigInteger to support large disk values (e.g., 100GB+)
     uptime = Column(Integer, default=0)
     tags = Column(JSONB, nullable=True)  # Array of tag strings
     last_check = Column(DateTime, nullable=True)
