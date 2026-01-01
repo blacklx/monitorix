@@ -61,50 +61,95 @@ async def login(
     from datetime import datetime
     from auth import create_refresh_token
     
-    logger.info(f"Login attempt for username: {form_data.username}")
-    logger.debug(f"Request headers: {dict(request.headers)}")
-    logger.debug(f"Request method: {request.method}")
-    logger.debug(f"Request URL: {request.url}")
-    
-    user = authenticate_user(db, form_data.username, form_data.password)
-    if not user:
-        log_action(db, "login_failed", f"Attempted login for username: {form_data.username}", get_client_ip(request), get_user_agent(request), success=False)
+    try:
+        logger.info(f"Login attempt for username: {form_data.username}")
+        logger.debug(f"Request headers: {dict(request.headers)}")
+        logger.debug(f"Request method: {request.method}")
+        logger.debug(f"Request URL: {request.url}")
+        
+        user = authenticate_user(db, form_data.username, form_data.password)
+        if not user:
+            try:
+                log_action(db, "login_failed", f"Attempted login for username: {form_data.username}", get_client_ip(request), get_user_agent(request), success=False)
+            except Exception as e:
+                logger.error(f"Failed to log login failure: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Check if 2FA is enabled - if so, user must use /login/verify-2fa endpoint
+        if user.totp_enabled and user.totp_secret:
+            try:
+                log_action(db, "login_failed", f"User '{user.username}' attempted login but 2FA is required", get_client_ip(request), get_user_agent(request), user_id=user.id, success=False)
+            except Exception as e:
+                logger.error(f"Failed to log 2FA requirement: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="2FA token required. Please use /api/auth/login/verify-2fa endpoint.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Create access token
+        try:
+            access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+            access_token = create_access_token(
+                data={"sub": user.username, "user_id": user.id, "is_admin": user.is_admin}, expires_delta=access_token_expires
+            )
+            logger.debug("Access token created successfully")
+        except Exception as e:
+            logger.error(f"Failed to create access token: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create access token"
+            )
+        
+        # Create refresh token
+        try:
+            refresh_token_expires = timedelta(days=settings.refresh_token_expire_days)
+            refresh_token = create_refresh_token(
+                data={"sub": user.username, "user_id": user.id, "is_admin": user.is_admin}
+            )
+            logger.debug("Refresh token created successfully")
+        except Exception as e:
+            logger.error(f"Failed to create refresh token: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create refresh token"
+            )
+        
+        # Store refresh token and expiration in DB
+        try:
+            user.refresh_token = refresh_token
+            user.refresh_token_expires = datetime.utcnow() + refresh_token_expires
+            db.commit()
+            logger.debug("Refresh token stored in database")
+        except Exception as e:
+            logger.error(f"Failed to store refresh token: {e}", exc_info=True)
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to store refresh token"
+            )
+        
+        try:
+            log_action(db, "login_success", f"User '{user.username}' logged in", get_client_ip(request), get_user_agent(request), user_id=user.id)
+        except Exception as e:
+            logger.error(f"Failed to log login success: {e}")
+        
+        logger.info(f"User '{user.username}' logged in successfully.")
+        
+        return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
+    except HTTPException:
+        # Re-raise HTTP exceptions (they're expected)
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during login: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An internal server error occurred during login"
         )
-    
-    # Check if 2FA is enabled - if so, user must use /login/verify-2fa endpoint
-    if user.totp_enabled and user.totp_secret:
-        log_action(db, "login_failed", f"User '{user.username}' attempted login but 2FA is required", get_client_ip(request), get_user_agent(request), user_id=user.id, success=False)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="2FA token required. Please use /api/auth/login/verify-2fa endpoint.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    # Create access token
-    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-    access_token = create_access_token(
-        data={"sub": user.username, "user_id": user.id, "is_admin": user.is_admin}, expires_delta=access_token_expires
-    )
-    
-    # Create refresh token
-    refresh_token_expires = timedelta(days=settings.refresh_token_expire_days)
-    refresh_token = create_refresh_token(
-        data={"sub": user.username, "user_id": user.id, "is_admin": user.is_admin}
-    )
-    
-    # Store refresh token and expiration in DB
-    user.refresh_token = refresh_token
-    user.refresh_token_expires = datetime.utcnow() + refresh_token_expires
-    db.commit()
-    
-    log_action(db, "login_success", f"User '{user.username}' logged in", get_client_ip(request), get_user_agent(request), user_id=user.id)
-    logger.info(f"User '{user.username}' logged in successfully.")
-    
-    return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
 
 
 @router.post("/login/verify-2fa", response_model=Token)
