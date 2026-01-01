@@ -25,7 +25,6 @@ except Exception as e:
     
     class DirectBcryptContext:
         """Direct bcrypt wrapper when passlib fails"""
-        """Direct bcrypt wrapper when passlib fails"""
         @staticmethod
         def hash(password: str) -> str:
             # Ensure password is bytes and not too long (bcrypt limit: 72 bytes)
@@ -51,7 +50,47 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against a hash"""
-    return pwd_context.verify(plain_password, hashed_password)
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Try with current pwd_context first
+        result = pwd_context.verify(plain_password, hashed_password)
+        if result:
+            return True
+        
+        # If verification failed and we're using DirectBcryptContext,
+        # the hash might have been created with passlib. Try passlib directly.
+        if hasattr(pwd_context, '__class__') and 'DirectBcryptContext' in str(pwd_context.__class__):
+            try:
+                from passlib.context import CryptContext
+                passlib_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+                result = passlib_context.verify(plain_password, hashed_password)
+                if result:
+                    logger.info("Password verified using passlib (hash was created with passlib)")
+                    return True
+            except Exception as passlib_error:
+                logger.debug(f"Passlib verification also failed: {passlib_error}")
+        
+        return False
+    except Exception as e:
+        logger.error(f"Error in verify_password: {e}")
+        # Try alternative verification methods
+        try:
+            import bcrypt
+            # Try direct bcrypt verification
+            password_bytes = plain_password.encode('utf-8')
+            if len(password_bytes) > 72:
+                password_bytes = password_bytes[:72]
+            hashed_bytes = hashed_password.encode('utf-8')
+            result = bcrypt.checkpw(password_bytes, hashed_bytes)
+            if result:
+                logger.info("Password verified using direct bcrypt")
+                return True
+        except Exception as bcrypt_error:
+            logger.error(f"Direct bcrypt verification also failed: {bcrypt_error}")
+        
+        return False
 
 
 def get_password_hash(password: str) -> str:
