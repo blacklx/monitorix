@@ -92,8 +92,9 @@ async def login(
         expires_delta=refresh_token_expires
     )
     
-    # Store refresh token hash in DB
-    user.refresh_token_hash = get_password_hash(refresh_token)
+    # Store refresh token and expiration in DB
+    user.refresh_token = refresh_token
+    user.refresh_token_expires = datetime.utcnow() + refresh_token_expires
     db.commit()
     
     log_action(db, "login_success", f"User '{user.username}' logged in", get_client_ip(request), get_user_agent(request), user_id=user.id)
@@ -161,8 +162,9 @@ async def login_verify_2fa(
         expires_delta=refresh_token_expires
     )
     
-    # Store refresh token hash in DB
-    user.refresh_token_hash = get_password_hash(refresh_token)
+    # Store refresh token and expiration in DB
+    user.refresh_token = refresh_token
+    user.refresh_token_expires = datetime.utcnow() + refresh_token_expires
     db.commit()
     
     log_action(db, "login_success", f"User '{user.username}' logged in with 2FA", get_client_ip(request), get_user_agent(request), user_id=user.id)
