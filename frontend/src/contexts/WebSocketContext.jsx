@@ -59,33 +59,59 @@ export const WebSocketProvider = ({ children }) => {
     clearHeartbeat()
     
     heartbeatIntervalRef.current = setInterval(() => {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
+      const ws = wsRef.current
+      
+      // Check if WebSocket exists and is in a valid state
+      if (!ws || !(ws instanceof WebSocket)) {
+        clearHeartbeat()
+        return
+      }
+      
+      // Only send heartbeat if WebSocket is open
+      if (ws.readyState === WebSocket.OPEN) {
         const now = Date.now()
         // Check if we received a pong recently
         if (now - lastPongRef.current > HEARTBEAT_TIMEOUT) {
           console.warn('WebSocket heartbeat timeout - connection may be dead')
-          if (wsRef.current) {
-            wsRef.current.close(1006, 'Heartbeat timeout')
+          try {
+            ws.close(1006, 'Heartbeat timeout')
+          } catch (error) {
+            console.error('Error closing WebSocket:', error)
           }
+          clearHeartbeat()
           return
         }
         
         try {
-          wsRef.current.send(JSON.stringify({ type: 'ping', timestamp: now }))
-          
-          // Set timeout for pong response
-          heartbeatTimeoutRef.current = setTimeout(() => {
-            const timeSinceLastPong = Date.now() - lastPongRef.current
-            if (timeSinceLastPong > HEARTBEAT_TIMEOUT) {
-              console.warn('WebSocket pong timeout - closing connection')
-              if (wsRef.current) {
-                wsRef.current.close(1006, 'Pong timeout')
+          // Double-check that WebSocket is still open before sending
+          if (ws.readyState === WebSocket.OPEN && typeof ws.send === 'function') {
+            ws.send(JSON.stringify({ type: 'ping', timestamp: now }))
+            
+            // Set timeout for pong response
+            heartbeatTimeoutRef.current = setTimeout(() => {
+              const timeSinceLastPong = Date.now() - lastPongRef.current
+              if (timeSinceLastPong > HEARTBEAT_TIMEOUT) {
+                console.warn('WebSocket pong timeout - closing connection')
+                const currentWs = wsRef.current
+                if (currentWs && currentWs.readyState === WebSocket.OPEN) {
+                  try {
+                    currentWs.close(1006, 'Pong timeout')
+                  } catch (error) {
+                    console.error('Error closing WebSocket on pong timeout:', error)
+                  }
+                }
+                clearHeartbeat()
               }
-            }
-          }, HEARTBEAT_TIMEOUT)
+            }, HEARTBEAT_TIMEOUT)
+          }
         } catch (error) {
           console.error('Failed to send WebSocket heartbeat:', error)
+          // If send fails, clear heartbeat and let reconnection handle it
+          clearHeartbeat()
         }
+      } else if (ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+        // WebSocket is closed or closing, clear heartbeat
+        clearHeartbeat()
       }
     }, HEARTBEAT_INTERVAL)
   }, [clearHeartbeat])
