@@ -68,10 +68,17 @@ def validate_url(url: str, require_https: bool = False) -> tuple[bool, Optional[
         if not parsed.netloc:
             return False, "URL must include a valid domain"
         
-        # Check for valid domain format
+        # Extract hostname (remove port if present)
+        hostname = parsed.netloc.split(':')[0]
+        
+        # Check for valid domain format or IP address
+        # Allow IP addresses (IPv4)
+        ipv4_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+        # Allow hostnames
         domain_pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$'
-        if not re.match(domain_pattern, parsed.netloc.split(':')[0]):
-            return False, "Invalid domain format"
+        
+        if not (re.match(ipv4_pattern, hostname) or re.match(domain_pattern, hostname)):
+            return False, "Invalid domain or IP address format"
         
         return True, None
     
