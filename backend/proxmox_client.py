@@ -386,11 +386,17 @@ class ProxmoxClient:
             api = self._get_api()
             nodes = api.nodes.get()
             all_vms = []
+            
+            logger.debug(f"Found {len(nodes)} nodes in Proxmox cluster")
 
             for node in nodes:
                 node_name = node["node"]
+                logger.debug(f"Processing node: {node_name}")
+                
                 # Get QEMU VMs
                 qemu_vms = api.nodes(node_name).qemu.get()
+                logger.debug(f"Found {len(qemu_vms)} QEMU VMs on node {node_name}")
+                
                 for vm in qemu_vms:
                     vm_status = api.nodes(node_name).qemu(vm["vmid"]).status.current.get()
                     all_vms.append({
@@ -412,6 +418,8 @@ class ProxmoxClient:
                 
                 # Get LXC containers
                 lxc_containers = api.nodes(node_name).lxc.get()
+                logger.debug(f"Found {len(lxc_containers)} LXC containers on node {node_name}")
+                
                 for container in lxc_containers:
                     container_status = api.nodes(node_name).lxc(container["vmid"]).status.current.get()
                     all_vms.append({
@@ -431,6 +439,7 @@ class ProxmoxClient:
                         "uptime": container_status.get("uptime", 0),
                     })
 
+            logger.info(f"Total VMs and containers retrieved: {len(all_vms)}")
             return all_vms
         except Exception as e:
             error_msg = str(e)

@@ -208,13 +208,22 @@ async def check_node(node: Node) -> Dict:
 async def sync_vms(node: Node):
     """Sync VMs from Proxmox node"""
     try:
+        logger.info(f"Starting VM sync for node {node.id} ({node.name})")
         client = ProxmoxClient(node.url, node.username, node.token, verify_ssl=node.verify_ssl)
         vms_data = client.get_vms()
+        
+        logger.info(f"Retrieved {len(vms_data)} VMs from Proxmox for node {node.id} ({node.name})")
+        if len(vms_data) == 0:
+            logger.warning(f"No VMs found for node {node.id} ({node.name}). This might be normal if the node has no VMs.")
         
         db = SessionLocal()
         try:
             # Get existing VMs for this node
             existing_vms = {vm.vmid: vm for vm in db.query(VM).filter(VM.node_id == node.id).all()}
+            logger.debug(f"Found {len(existing_vms)} existing VMs in database for node {node.id}")
+            
+            created_count = 0
+            updated_count = 0
             
             for vm_data in vms_data:
                 vmid = vm_data["vmid"]
@@ -231,6 +240,7 @@ async def sync_vms(node: Node):
                     vm.disk_total = vm_data.get("disk_total", 0)
                     vm.uptime = vm_data.get("uptime", 0)
                     vm.last_check = datetime.utcnow()
+                    updated_count += 1
                 else:
                     # Create new VM
                     vm = VM(
@@ -247,6 +257,8 @@ async def sync_vms(node: Node):
                         last_check=datetime.utcnow()
                     )
                     db.add(vm)
+                    created_count += 1
+                    logger.debug(f"Created new VM: {vm_data.get('name', f'VM {vmid}')} (VMID: {vmid})")
                 
                 # Store VM metrics
                 metric_cpu = Metric(
@@ -288,6 +300,8 @@ async def sync_vms(node: Node):
                     )
             
             db.commit()
+            
+            logger.info(f"VM sync completed for node {node.id} ({node.name}): {created_count} created, {updated_count} updated, {len(vms_data)} total")
             
             # Invalidate cache
             invalidate_cache("vms")
