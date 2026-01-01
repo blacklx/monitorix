@@ -92,8 +92,12 @@ export const WebSocketProvider = ({ children }) => {
       // Only send heartbeat if WebSocket is open
       if (ws.readyState === WebSocket.OPEN) {
         const now = Date.now()
-        // Check if we received a pong recently
-        if (now - lastPongRef.current > HEARTBEAT_TIMEOUT) {
+        const timeSinceLastPong = now - lastPongRef.current
+        
+        // Only check timeout if we've sent at least one ping
+        // We check if it's been more than HEARTBEAT_INTERVAL + HEARTBEAT_TIMEOUT since last pong
+        // This gives us time to send ping and receive pong
+        if (timeSinceLastPong > (HEARTBEAT_INTERVAL + HEARTBEAT_TIMEOUT)) {
           console.warn('WebSocket heartbeat timeout - connection may be dead')
           safeCloseWebSocket(ws, 1006, 'Heartbeat timeout')
           clearHeartbeat()
@@ -143,7 +147,17 @@ export const WebSocketProvider = ({ children }) => {
         setConnectionError(null)
         reconnectAttemptsRef.current = 0
         setReconnectAttempt(0)
+        // Set lastPong to now so we don't timeout immediately
+        // This will be updated when we receive the first pong
         lastPongRef.current = Date.now()
+        // Send initial ping immediately to establish heartbeat
+        try {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }))
+          }
+        } catch (error) {
+          console.error('Failed to send initial ping:', error)
+        }
         startHeartbeat()
       }
 
