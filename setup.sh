@@ -302,12 +302,37 @@ if ! command -v docker-compose > /dev/null 2>&1; then
 fi
 
 # Check Docker permissions
+USE_SUDO_DOCKER=false
 if ! docker ps > /dev/null 2>&1; then
-    print_error "Cannot run Docker commands. You may need to:"
-    print_error "  1. Run: newgrp docker"
-    print_error "  2. Or log out and back in"
-    print_error "  3. Or run: sudo usermod -aG docker \$USER"
-    FINAL_CHECK_FAILED=true
+    # Check if user is in docker group
+    if groups | grep -q docker || id -nG | grep -q docker; then
+        print_warn "User is in docker group, but it's not active in this session."
+        print_info "To activate docker group, run one of these commands:"
+        print_info "  1. newgrp docker  (activates group in new shell)"
+        print_info "  2. Or log out and back in"
+        echo ""
+        print_info "Alternatively, you can continue with sudo (script will use sudo for docker commands)"
+        echo ""
+        read -p "Continue with sudo for docker commands? (y/n): " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            USE_SUDO_DOCKER=true
+            print_info "Will use sudo for docker commands"
+        else
+            print_info ""
+            print_info "Please run one of these commands to activate docker group:"
+            print_info "  newgrp docker"
+            print_info "Then run this script again: bash setup.sh"
+            exit 0
+        fi
+    else
+        print_error "User is not in docker group."
+        print_error "The script tried to add you, but you need to activate it."
+        print_error "Please run one of these:"
+        print_error "  1. newgrp docker  (then run this script again)"
+        print_error "  2. Log out and back in (then run this script again)"
+        FINAL_CHECK_FAILED=true
+    fi
 fi
 
 if [ "$FINAL_CHECK_FAILED" = true ]; then
@@ -318,9 +343,26 @@ fi
 print_info "All prerequisites verified successfully"
 echo ""
 
+# Helper function to run docker commands (with or without sudo)
+docker_cmd() {
+    if [ "$USE_SUDO_DOCKER" = true ]; then
+        sudo docker "$@"
+    else
+        docker "$@"
+    fi
+}
+
+docker_compose_cmd() {
+    if [ "$USE_SUDO_DOCKER" = true ]; then
+        sudo docker-compose "$@"
+    else
+        docker-compose "$@"
+    fi
+}
+
 # Check if PostgreSQL volume exists
 POSTGRES_VOLUME_EXISTS=false
-if docker volume ls | grep -q "monitorix_postgres_data"; then
+if docker_cmd volume ls | grep -q "monitorix_postgres_data"; then
     POSTGRES_VOLUME_EXISTS=true
     print_info "Existing PostgreSQL volume detected"
 fi
@@ -334,8 +376,8 @@ if [ ! -f .env ]; then
     if [ "$POSTGRES_VOLUME_EXISTS" = true ]; then
         print_warn "PostgreSQL volume exists but .env file is missing."
         print_warn "Removing existing PostgreSQL volume to avoid password mismatch..."
-        docker-compose down -v 2>/dev/null || true
-        docker volume rm monitorix_postgres_data 2>/dev/null || true
+        docker_compose_cmd down -v 2>/dev/null || true
+        docker_cmd volume rm monitorix_postgres_data 2>/dev/null || true
         POSTGRES_VOLUME_EXISTS=false
     fi
     
@@ -459,16 +501,16 @@ fi
 # Build and start services
 if [ "$SKIP_BUILD" = false ]; then
     print_info "Building Docker images (this may take a while)..."
-    docker-compose build
+    docker_compose_cmd build
 else
     print_info "Skipping build (using existing images)"
 fi
 
 print_info "Stopping existing services (if any)..."
-docker-compose down || true
+docker_compose_cmd down || true
 
 print_info "Starting services..."
-docker-compose up -d
+docker_compose_cmd up -d
 
 # Wait for services to start
 print_info "Waiting for services to start..."
@@ -476,21 +518,21 @@ sleep 20
 
 # Check service status
 print_info "Checking service status..."
-docker-compose ps
+docker_compose_cmd ps
 
 # Check if backend is running
-BACKEND_RUNNING=$(docker-compose ps backend 2>/dev/null | grep -c "Up" || echo "0")
+BACKEND_RUNNING=$(docker_compose_cmd ps backend 2>/dev/null | grep -c "Up" || echo "0")
 if [ "$BACKEND_RUNNING" = "0" ]; then
     print_error "Backend container is not running!"
     print_info "Backend logs:"
-    docker-compose logs backend --tail=50 || true
+    docker_compose_cmd logs backend --tail=50 || true
     print_warn "Please check the logs above for errors"
     print_warn "Common issues:"
     print_warn "  - Database connection problems"
     print_warn "  - Missing environment variables"
     print_warn "  - Import errors in Python code"
     print_warn ""
-    print_warn "You can check logs manually with: docker-compose logs backend"
+    print_warn "You can check logs manually with: docker_compose_cmd logs backend"
     ADMIN_PASSWORD=""
 else
     # Wait a bit more for backend to fully initialize
@@ -556,7 +598,7 @@ else
     if [ -z "$ADMIN_PASSWORD" ]; then
         print_warn "Could not retrieve admin password from logs."
         print_warn "Admin user may already exist. To reset the password, run:"
-        print_warn "  docker-compose exec backend python cli.py reset-admin-password"
+        print_warn "  docker_compose_cmd exec backend python cli.py reset-admin-password"
     fi
 fi
 
@@ -597,7 +639,7 @@ print_info "   Email:               admin@monitorix.local"
 if [ -n "$ADMIN_PASSWORD" ] && [ "$ADMIN_PASSWORD" != "***" ]; then
     print_info "   Password:            ${ADMIN_PASSWORD}"
 else
-    print_warn "   Password:            (Check backend logs: docker-compose logs backend | grep Password)"
+    print_warn "   Password:            (Check backend logs: docker_compose_cmd logs backend | grep Password)"
 fi
 print_info ""
 print_info "⚡ Performance Features:"
