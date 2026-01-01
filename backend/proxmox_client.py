@@ -73,6 +73,9 @@ class ProxmoxClient:
         """Get or create Proxmox API client"""
         if self._api is None:
             try:
+                # Log the URL being used for debugging
+                logger.debug(f"Creating ProxmoxAPI with URL: {self.url}")
+                
                 # Parse token (format: token_id=secret)
                 if "=" in self.token:
                     token_id, token_secret = self.token.split("=", 1)
@@ -87,8 +90,19 @@ class ProxmoxClient:
                     # If CA bundle is provided, use it for verification
                     verify_ssl = self.ca_bundle
 
+                # ProxmoxAPI expects the URL without trailing slash and without path
+                # Ensure URL is in the correct format: scheme://host:port
+                api_url = self.url
+                
+                # Double-check URL format before passing to ProxmoxAPI
+                parsed = urlparse(api_url)
+                if not parsed.scheme or not parsed.netloc:
+                    raise ValueError(f"Invalid URL format: {api_url}. Expected format: https://host:port")
+                
+                logger.debug(f"ProxmoxAPI parameters: url={api_url}, user={self.username}, token_name={token_id}, verify_ssl={verify_ssl}")
+                
                 self._api = ProxmoxAPI(
-                    self.url,
+                    api_url,
                     user=self.username,
                     token_name=token_id,
                     token_value=token_secret,
@@ -98,19 +112,37 @@ class ProxmoxClient:
                 if not self.verify_ssl:
                     logger.warning(f"SSL verification is DISABLED for Proxmox connection to {self.url}. "
                                  "This is a security risk! Enable SSL verification in production.")
+            except ValueError as e:
+                # Re-raise ValueError with more context
+                logger.error(f"Invalid URL format for Proxmox: {e}. URL was: {self.url}")
+                raise
             except Exception as e:
-                logger.error(f"Failed to connect to Proxmox: {e}")
+                logger.error(f"Failed to create ProxmoxAPI connection: {e}")
+                logger.error(f"URL: {self.url}, Username: {self.username}, Token format: {'token_id=secret' if '=' in self.token else 'secret only'}")
                 raise
         return self._api
 
     def test_connection(self) -> bool:
         """Test connection to Proxmox node"""
         try:
+            logger.debug(f"Testing connection to Proxmox node at {self.url}")
             api = self._get_api()
-            api.version.get()
+            result = api.version.get()
+            logger.debug(f"Connection test successful. Proxmox version: {result}")
             return True
+        except ValueError as e:
+            # ValueError usually means URL format issue
+            logger.error(f"Connection test failed - Invalid URL format: {e}")
+            logger.error(f"URL was: {self.url}")
+            return False
         except Exception as e:
-            logger.error(f"Connection test failed: {e}")
+            error_msg = str(e)
+            logger.error(f"Connection test failed: {error_msg}")
+            logger.error(f"URL: {self.url}, Username: {self.username}")
+            # Check if it's the IPv6 error specifically
+            if "Invalid IPv6 URL" in error_msg or "IPv6" in error_msg:
+                logger.error(f"IPv6 URL error detected. Original URL: {self.url}, Normalized URL: {self.url}")
+                logger.error("This might be a proxmoxer library issue. Try using IP address instead of hostname, or check URL format.")
             return False
 
     def get_node_status(self) -> Dict:
