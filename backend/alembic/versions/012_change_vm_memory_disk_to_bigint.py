@@ -1,6 +1,6 @@
 """change vm memory disk to bigint
 
-Revision ID: 012_change_vm_memory_disk_to_bigint
+Revision ID: 012_vm_mem_disk_bigint
 Revises: 011_add_node_verify_ssl
 Create Date: 2026-01-01 19:45:00.000000
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '012_change_vm_memory_disk_to_bigint'
+revision = '012_vm_mem_disk_bigint'
 down_revision = '011_add_node_verify_ssl'
 branch_labels = None
 depends_on = None
