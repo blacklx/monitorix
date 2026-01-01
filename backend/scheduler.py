@@ -10,6 +10,7 @@ from webhooks import send_alert_webhooks
 from notification_channels import send_alert_notifications
 from alert_rules import evaluate_alert_rules
 from cache import invalidate_cache
+from config import settings
 from datetime import datetime
 import logging
 from typing import Dict, List
