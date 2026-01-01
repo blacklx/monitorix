@@ -666,7 +666,8 @@ else
         print_warn "Admin user may already exist. To reset the password, run:"
         print_warn "  docker_compose_cmd exec backend python cli.py reset-admin-password"
     fi
-fi
+    fi  # Close if [ "$BACKEND_READY" = false ]
+fi  # Close if [ "$POSTGRES_READY" = false ]
 
 # Get local IP
 LOCAL_IP=$(hostname -I | awk '{print $1}')
