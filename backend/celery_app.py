@@ -51,15 +51,8 @@ celery_app.conf.update(
     result_expires=3600,  # Results expire after 1 hour
 )
 
-# Import tasks to register them
-from tasks import (  # noqa: E402, F401
-    bulk_create_nodes_task,
-    bulk_create_services_task,
-    sync_vms_task,
-    cleanup_metrics_task,
-    create_backup_task,
-    export_data_task,
-)
+# Note: Tasks are imported in main.py to avoid circular import issues
+# Celery will automatically register tasks when they are decorated with @celery_app.task
 
 logger.info("Celery app initialized")
 

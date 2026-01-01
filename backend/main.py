@@ -218,6 +218,15 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Could not write password to temp file: {e}")
     
+    # Import tasks to register them with Celery (if enabled)
+    # This must be done after celery_app is initialized to avoid circular imports
+    if settings.celery_enabled:
+        try:
+            import tasks  # noqa: F401 - Import to register tasks
+            logger.info("Celery tasks registered")
+        except Exception as e:
+            logger.warning(f"Failed to import Celery tasks: {e}")
+    
     logger.info("Starting scheduler...")
     # Set broadcast function for scheduler
     set_broadcast_function(broadcast_update)
