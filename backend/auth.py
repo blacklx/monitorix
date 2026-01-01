@@ -25,6 +25,7 @@ except Exception as e:
     
     class DirectBcryptContext:
         """Direct bcrypt wrapper when passlib fails"""
+        """Direct bcrypt wrapper when passlib fails"""
         @staticmethod
         def hash(password: str) -> str:
             # Ensure password is bytes and not too long (bcrypt limit: 72 bytes)
