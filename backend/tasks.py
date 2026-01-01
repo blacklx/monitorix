@@ -464,4 +464,8 @@ if settings.celery_enabled:
                     "success": False,
                     "error": str(e)
                 }
+    except ImportError as e:
+        logger.warning(f"Celery not available, tasks will not be registered: {e}")
+    except Exception as e:
+        logger.error(f"Error setting up Celery tasks: {e}")
 
