@@ -10,31 +10,54 @@ import re
 logger = logging.getLogger(__name__)
 
 # Workaround for proxmoxer "Invalid IPv6 URL" bug
-# This patches the URL validation in proxmoxer to allow IPv4 addresses
+# This is a known bug in proxmoxer 2.0.1 where IPv4 addresses trigger IPv6 validation errors
+# The bug is in proxmoxer's URL parsing - it incorrectly validates IPv4 addresses as IPv6
 def _patch_proxmoxer_url_validation():
     """Patch proxmoxer's URL validation to fix IPv6 bug with IPv4 addresses"""
     try:
+        import proxmoxer.core
         import proxmoxer.backends.https
-        # Check if the module has a URL validation function we can patch
-        if hasattr(proxmoxer.backends.https, 'ProxmoxHttpSession'):
-            original_init = proxmoxer.backends.https.ProxmoxHttpSession.__init__
+        
+        # Patch ProxmoxAPI.__init__ to normalize URLs before passing to backend
+        if hasattr(proxmoxer.core, 'ProxmoxAPI'):
+            original_proxmox_api_init = proxmoxer.core.ProxmoxAPI.__init__
             
-            def patched_init(self, *args, **kwargs):
-                # If URL is provided, ensure it's properly formatted
-                if 'url' in kwargs:
-                    url = kwargs['url']
-                    # If it's an IPv4 address, ensure it's not being misidentified as IPv6
+            def patched_proxmox_api_init(self, host, *args, **kwargs):
+                # Normalize the host/URL parameter
+                if isinstance(host, str):
+                    # Check if it's an IPv4 address URL
+                    ipv4_pattern = r'^https?://(\d{1,3}\.){3}\d{1,3}(:\d+)?/?$'
+                    if re.match(ipv4_pattern, host):
+                        # Remove trailing slash
+                        host = host.rstrip('/')
+                return original_proxmox_api_init(self, host, *args, **kwargs)
+            
+            proxmoxer.core.ProxmoxAPI.__init__ = patched_proxmox_api_init
+            logger.debug("Patched proxmoxer ProxmoxAPI.__init__")
+            
+        # Also try to patch the backend's URL validation
+        if hasattr(proxmoxer.backends.https, 'ProxmoxHttpSession'):
+            original_session_init = proxmoxer.backends.https.ProxmoxHttpSession.__init__
+            
+            def patched_session_init(self, *args, **kwargs):
+                # Normalize URL if provided
+                if args and isinstance(args[0], str):
+                    url = args[0]
                     ipv4_pattern = r'^https?://(\d{1,3}\.){3}\d{1,3}(:\d+)?/?$'
                     if re.match(ipv4_pattern, url):
-                        # Remove any trailing slash
-                        url = url.rstrip('/')
-                        kwargs['url'] = url
-                return original_init(self, *args, **kwargs)
+                        args = (url.rstrip('/'),) + args[1:]
+                elif 'url' in kwargs:
+                    url = kwargs['url']
+                    ipv4_pattern = r'^https?://(\d{1,3}\.){3}\d{1,3}(:\d+)?/?$'
+                    if re.match(ipv4_pattern, url):
+                        kwargs['url'] = url.rstrip('/')
+                return original_session_init(self, *args, **kwargs)
             
-            proxmoxer.backends.https.ProxmoxHttpSession.__init__ = patched_init
-            logger.debug("Patched proxmoxer URL validation")
+            proxmoxer.backends.https.ProxmoxHttpSession.__init__ = patched_session_init
+            logger.debug("Patched proxmoxer ProxmoxHttpSession.__init__")
+            
     except Exception as e:
-        logger.warning(f"Failed to patch proxmoxer URL validation: {e}")
+        logger.warning(f"Failed to patch proxmoxer URL validation: {e}. Will use workaround in connection code.")
 
 # Apply patch on import
 _patch_proxmoxer_url_validation()
