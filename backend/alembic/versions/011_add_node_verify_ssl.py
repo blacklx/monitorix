@@ -19,7 +19,7 @@ depends_on = None
 def upgrade():
     # Add verify_ssl column to nodes table
     # Default to True to maintain security by default
-    op.add_column('nodes', sa.Column('verify_ssl', sa.Boolean(), nullable=False, server_default='true'))
+    op.add_column('nodes', sa.Column('verify_ssl', sa.Boolean(), nullable=False, server_default=sa.text('true')))
 
 
 def downgrade():
