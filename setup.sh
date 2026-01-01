@@ -386,6 +386,28 @@ fi
 print_info "All prerequisites verified successfully"
 echo ""
 
+# Check and fix Redis memory overcommit warning (if possible)
+if [ -w /proc/sys/vm/overcommit_memory ] 2>/dev/null; then
+    CURRENT_OVERCOMMIT=$(cat /proc/sys/vm/overcommit_memory 2>/dev/null || echo "0")
+    if [ "$CURRENT_OVERCOMMIT" != "1" ]; then
+        print_info "Configuring Redis memory overcommit setting..."
+        if echo "1" | sudo tee /proc/sys/vm/overcommit_memory > /dev/null 2>&1; then
+            print_info "✓ Memory overcommit enabled (fixes Redis warning)"
+            # Make it persistent
+            if ! grep -q "vm.overcommit_memory = 1" /etc/sysctl.conf 2>/dev/null; then
+                echo "vm.overcommit_memory = 1" | sudo tee -a /etc/sysctl.conf > /dev/null 2>&1
+            fi
+        else
+            print_warn "Could not enable memory overcommit (requires sudo). Redis may show warnings."
+            print_warn "To fix manually, run: sudo sysctl vm.overcommit_memory=1"
+        fi
+    fi
+else
+    print_warn "Cannot configure memory overcommit (requires root). Redis may show warnings."
+    print_warn "To fix manually, run: sudo sysctl vm.overcommit_memory=1"
+fi
+echo ""
+
 # Helper functions - docker should work without sudo at this point
 docker_cmd() {
     docker "$@"
