@@ -9,7 +9,15 @@ from database import get_db
 from models import User
 from config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Configure CryptContext to avoid bcrypt wrap bug detection issues
+# This prevents the "password cannot be longer than 72 bytes" error during initialization
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__ident="2b",  # Use bcrypt 2b identifier
+    bcrypt__rounds=12,  # Use 12 rounds (default, but explicit)
+    bcrypt__vary_rounds=0.1  # Allow some variation in rounds
+)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
 
