@@ -282,14 +282,30 @@ class ProxmoxClient:
             logger.debug(f"Connection test successful. Proxmox version: {result}")
             return True
         except ValueError as e:
-            # ValueError usually means URL format issue
-            logger.error(f"Connection test failed - Invalid URL format: {e}")
-            logger.error(f"URL was: {self.url}")
+            # ValueError usually means URL format issue or SSL certificate issue
+            error_msg = str(e)
+            logger.error(f"Connection test failed - Invalid URL format or SSL issue: {error_msg}")
+            logger.error(f"URL was: {self.url}, verify_ssl={self.verify_ssl}")
+            # Check if it's an SSL certificate error
+            if "SSL certificate" in error_msg or "SSL verification" in error_msg:
+                logger.error(f"SSL certificate verification failed. Current verify_ssl setting: {self.verify_ssl}")
+                if self.verify_ssl:
+                    logger.error("To disable SSL verification, set verify_ssl=False when creating ProxmoxClient, or disable it in the node settings in web UI.")
             return False
         except Exception as e:
             error_msg = str(e)
             logger.error(f"Connection test failed: {error_msg}")
-            logger.error(f"URL: {self.url}, Username: {self.username}")
+            logger.error(f"URL: {self.url}, Username: {self.username}, verify_ssl={self.verify_ssl}")
+            
+            # Check for SSL certificate errors
+            if "SSL" in error_msg or "certificate" in error_msg.lower() or "CERTIFICATE_VERIFY_FAILED" in error_msg:
+                logger.error(f"SSL certificate verification failed. Current verify_ssl setting: {self.verify_ssl}")
+                if self.verify_ssl:
+                    logger.error("This usually means Proxmox is using a self-signed certificate.")
+                    logger.error("To disable SSL verification, set verify_ssl=False when creating ProxmoxClient, or disable it in the node settings in web UI.")
+                else:
+                    logger.error("SSL verification is disabled but still getting SSL error. Check that the Proxmox node is accessible.")
+            
             # Check if it's the IPv6 error specifically
             if "Invalid IPv6 URL" in error_msg or "IPv6" in error_msg:
                 logger.error(f"IPv6 URL error detected. Original URL: {self.url}, Normalized URL: {self.url}")
