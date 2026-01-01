@@ -1,4 +1,5 @@
 from proxmoxer import ProxmoxAPI
+from proxmoxer.backends.https import AuthenticationError
 from typing import Dict, List, Optional
 import logging
 from datetime import datetime
