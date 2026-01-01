@@ -66,6 +66,10 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         if request.url.path.startswith("/ws"):
             return await call_next(request)
         
+        # Skip OPTIONS requests (CORS preflight)
+        if request.method == "OPTIONS":
+            return await call_next(request)
+        
         # Check if path is exempt
         if any(request.url.path.startswith(path) for path in EXEMPT_PATHS):
             return await call_next(request)
