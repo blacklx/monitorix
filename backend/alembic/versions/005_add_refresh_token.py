@@ -1,7 +1,7 @@
 """add refresh token
 
-Revision ID: 005_refresh_token
-Revises: 004_password_reset
+Revision ID: 005_add_refresh_token
+Revises: 004_add_password_reset
 Create Date: 2024-12-31 14:00:00.000000
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '005_refresh_token'
-down_revision = '004_password_reset'
+revision = '005_add_refresh_token'
+down_revision = '004_add_password_reset'
 branch_labels = None
 depends_on = None
 

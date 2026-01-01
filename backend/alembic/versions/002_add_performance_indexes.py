@@ -1,7 +1,7 @@
 """Add performance indexes
 
-Revision ID: 002_performance_indexes
-Revises: 001_initial
+Revision ID: 002_add_performance_indexes
+Revises: 001_initial_schema
 Create Date: 2024-12-31 12:00:00.000000
 
 """
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = '002_performance_indexes'
-down_revision = '001_initial'
+revision = '002_add_performance_indexes'
+down_revision = '001_initial_schema'
 branch_labels = None
 depends_on = None
 

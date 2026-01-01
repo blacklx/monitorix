@@ -1,6 +1,6 @@
 """Add audit logs table
 
-Revision ID: 008_audit_logs
+Revision ID: 008_add_audit_logs
 Revises: 007_add_alert_rules
 Create Date: 2024-12-31 20:00:00.000000
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '008_audit_logs'
+revision = '008_add_audit_logs'
 down_revision = '007_add_alert_rules'
 branch_labels = None
 depends_on = None

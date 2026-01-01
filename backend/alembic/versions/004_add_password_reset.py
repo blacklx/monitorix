@@ -1,7 +1,7 @@
 """add password reset tokens
 
-Revision ID: 004_password_reset
-Revises: 003_admin_role
+Revision ID: 004_add_password_reset
+Revises: 003_add_user_admin_role
 Create Date: 2024-12-31 13:00:00.000000
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '004_password_reset'
-down_revision = '003_admin_role'
+revision = '004_add_password_reset'
+down_revision = '003_add_user_admin_role'
 branch_labels = None
 depends_on = None
 

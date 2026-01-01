@@ -1,7 +1,7 @@
 """add user admin role
 
-Revision ID: 003_admin_role
-Revises: 002_performance_indexes
+Revision ID: 003_add_user_admin_role
+Revises: 002_add_performance_indexes
 Create Date: 2024-12-31 12:00:00.000000
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '003_admin_role'
-down_revision = '002_performance_indexes'
+revision = '003_add_user_admin_role'
+down_revision = '002_add_performance_indexes'
 branch_labels = None
 depends_on = None
 
