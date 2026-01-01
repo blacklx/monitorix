@@ -167,8 +167,14 @@ def reset_admin_password(args):
         # Generate new password if not provided
         if args.password:
             new_password = args.password
+            # Ensure provided password is not too long for bcrypt (72 bytes max)
+            password_bytes = new_password.encode('utf-8')
+            if len(password_bytes) > 72:
+                new_password = new_password[:72]
+                print("Warning: Password was truncated to 72 bytes for bcrypt compatibility")
         else:
-            new_password = secrets.token_urlsafe(16)
+            # Use token_urlsafe(12) which generates ~16 chars, well under 72 bytes
+            new_password = secrets.token_urlsafe(12)
         
         # Update password
         admin_user.hashed_password = get_password_hash(new_password)

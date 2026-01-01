@@ -112,28 +112,32 @@ def create_admin_user_if_needed():
         # Generate password if not set
         if settings.admin_password:
             admin_password = settings.admin_password
+            # Ensure provided password is not too long for bcrypt (72 bytes max)
+            password_bytes = admin_password.encode('utf-8')
+            if len(password_bytes) > 72:
+                admin_password = admin_password[:72]
+                logger.warning("Admin password was truncated to 72 bytes for bcrypt compatibility")
         else:
             # Generate a secure password (max 72 bytes for bcrypt)
-            # token_urlsafe(16) generates ~22 chars, which is safe
-            admin_password = secrets.token_urlsafe(16)
+            # Use token_urlsafe(12) which generates ~16 chars, well under 72 bytes
+            # This ensures compatibility with bcrypt's 72-byte limit
+            admin_password = secrets.token_urlsafe(12)
             logger.info(f"Generated admin password: {admin_password}")
-        
-        # Ensure password is not too long for bcrypt (72 bytes max)
-        # Truncate if necessary (shouldn't happen with token_urlsafe(16))
-        if len(admin_password.encode('utf-8')) > 72:
-            admin_password = admin_password[:72]
-            logger.warning("Admin password was truncated to 72 bytes for bcrypt compatibility")
         
         # Create admin user
         try:
             hashed_password = get_password_hash(admin_password)
         except Exception as hash_error:
             logger.error(f"Password hashing failed: {hash_error}")
-            # Try with a shorter password as fallback
-            fallback_password = secrets.token_urlsafe(12)  # ~16 chars
+            # Try with an even shorter password as fallback
+            fallback_password = secrets.token_urlsafe(10)  # ~14 chars
             logger.info(f"Using fallback password: {fallback_password}")
             admin_password = fallback_password
-            hashed_password = get_password_hash(admin_password)
+            try:
+                hashed_password = get_password_hash(admin_password)
+            except Exception as fallback_error:
+                logger.error(f"Fallback password hashing also failed: {fallback_error}")
+                raise
         admin_user = User(
             username=settings.admin_username,
             email=settings.admin_email,
