@@ -169,17 +169,34 @@ class ProxmoxClient:
                 logger.info(f"ProxmoxAPI connection attempt: url={clean_url}, user={self.username}, token_name={token_id}, verify_ssl={verify_ssl}")
                 logger.debug(f"Original URL: {api_url}, Cleaned URL: {clean_url}, Hostname: {hostname}, Port: {port}")
                 
-                # Try with cleaned URL first
-                # Note: There's a known bug in proxmoxer 2.0.1 that causes "Invalid IPv6 URL" 
-                # errors even with valid IPv4 addresses. We've attempted to patch it above.
+                # ProxmoxAPI can accept either:
+                # 1. URL as first parameter: ProxmoxAPI("https://host:port", user=..., token_name=..., token_value=...)
+                # 2. Host and port separately: ProxmoxAPI(host, port=port, user=..., token_name=..., token_value=...)
+                # 
+                # The "Invalid IPv6 URL" error suggests proxmoxer is having trouble parsing the URL.
+                # Let's try using host and port separately first, which might avoid the URL parsing bug.
                 try:
-                    self._api = ProxmoxAPI(
-                        clean_url,
-                        user=self.username,
-                        token_name=token_id,
-                        token_value=token_secret,
-                        verify_ssl=verify_ssl
-                    )
+                    # Try using host and port as separate parameters (this might avoid the URL parsing bug)
+                    if port:
+                        logger.debug(f"Trying ProxmoxAPI with host={hostname}, port={port}")
+                        self._api = ProxmoxAPI(
+                            hostname,
+                            port=port,
+                            user=self.username,
+                            token_name=token_id,
+                            token_value=token_secret,
+                            verify_ssl=verify_ssl
+                        )
+                    else:
+                        # No port specified, use URL format
+                        logger.debug(f"Trying ProxmoxAPI with URL={clean_url}")
+                        self._api = ProxmoxAPI(
+                            clean_url,
+                            user=self.username,
+                            token_name=token_id,
+                            token_value=token_secret,
+                            verify_ssl=verify_ssl
+                        )
                 except Exception as e:
                     error_msg = str(e)
                     # If we get IPv6 error, it's a known proxmoxer bug
