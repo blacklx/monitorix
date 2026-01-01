@@ -17,6 +17,9 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 # Production stage
 FROM python:3.11-slim
 
+# Create non-root user
+RUN groupadd -r monitorix && useradd -r -g monitorix -u 1000 monitorix
+
 WORKDIR /app
 
 # Install runtime dependencies only
@@ -25,14 +28,23 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /root/.local
+# Copy Python dependencies from builder to user's home
+COPY --from=builder /root/.local /home/monitorix/.local
 
 # Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
+ENV PATH=/home/monitorix/.local/bin:$PATH
 
 # Copy application code
 COPY . .
+
+# Change ownership of app directory and Python packages
+RUN chown -R monitorix:monitorix /app /home/monitorix/.local
+
+# Create /tmp directory with proper permissions for admin password file
+RUN mkdir -p /tmp && chmod 1777 /tmp
+
+# Switch to non-root user
+USER monitorix
 
 # Expose port
 EXPOSE 8000

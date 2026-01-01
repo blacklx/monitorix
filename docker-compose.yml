@@ -58,6 +58,8 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+    # Note: In development, volumes may need proper permissions
+    # Run: sudo chown -R 1000:1000 ./backend on host if needed
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -91,7 +93,7 @@ services:
     volumes:
       - ./backend:/app
       - ./backend/backups:/app/backups
-    command: celery -A celery_app worker --loglevel=info --concurrency=4
+    command: celery -A celery_app worker --loglevel=info --concurrency=4 --uid=1000 --gid=1000
     healthcheck:
       test: ["CMD", "celery", "-A", "celery_app", "inspect", "ping"]
       interval: 30s
