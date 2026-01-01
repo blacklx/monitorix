@@ -596,8 +596,6 @@ const VMs = () => {
                   </div>
                 </div>
               ) : null}
-            </div>
-          )}
           </div>
         </div>
       )}
