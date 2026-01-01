@@ -182,7 +182,7 @@ class ProxmoxClient:
                 else:
                     clean_url = f"{parsed.scheme}://{hostname}"
                 
-                logger.info(f"ProxmoxAPI connection attempt: url={clean_url}, user={self.username}, token_name={token_id}, verify_ssl={verify_ssl}")
+                logger.info(f"ProxmoxAPI connection attempt: url={clean_url}, user={proxmox_user}, token_name={token_id}, verify_ssl={verify_ssl}")
                 logger.debug(f"Original URL: {api_url}, Cleaned URL: {clean_url}, Hostname: {hostname}, Port: {port}")
                 
                 # ProxmoxAPI can accept either:
@@ -194,21 +194,21 @@ class ProxmoxClient:
                 try:
                     # Try using host and port as separate parameters (this might avoid the URL parsing bug)
                     if port:
-                        logger.debug(f"Trying ProxmoxAPI with host={hostname}, port={port}")
+                        logger.debug(f"Trying ProxmoxAPI with host={hostname}, port={port}, user={proxmox_user}, token_name={token_id}")
                         self._api = ProxmoxAPI(
                             hostname,
                             port=port,
-                            user=self.username,
+                            user=proxmox_user,
                             token_name=token_id,
                             token_value=token_secret,
                             verify_ssl=verify_ssl
                         )
                     else:
                         # No port specified, use URL format
-                        logger.debug(f"Trying ProxmoxAPI with URL={clean_url}")
+                        logger.debug(f"Trying ProxmoxAPI with URL={clean_url}, user={proxmox_user}, token_name={token_id}")
                         self._api = ProxmoxAPI(
                             clean_url,
-                            user=self.username,
+                            user=proxmox_user,
                             token_name=token_id,
                             token_value=token_secret,
                             verify_ssl=verify_ssl
@@ -251,10 +251,10 @@ class ProxmoxClient:
                                 hostname_resolved = socket.gethostbyaddr(hostname)[0]
                                 logger.info(f"Resolved {hostname} to hostname: {hostname_resolved}")
                                 url_with_hostname = f"{parsed.scheme}://{hostname_resolved}:{port}"
-                                logger.info(f"Trying with hostname instead of IP: {url_with_hostname}")
+                                logger.info(f"Trying with hostname instead of IP: {url_with_hostname}, user={proxmox_user}, token_name={token_id}")
                                 self._api = ProxmoxAPI(
                                     url_with_hostname,
-                                    user=self.username,
+                                    user=proxmox_user,
                                     token_name=token_id,
                                     token_value=token_secret,
                                     verify_ssl=verify_ssl
