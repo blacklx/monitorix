@@ -458,19 +458,29 @@ else
     sleep 5
     
     # Try multiple times with different patterns
-    ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | tail -1 | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
+    # Pattern 1: Direct grep for "Password:"
+    ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | tail -1 | sed 's/.*Password: //' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
+    
     if [ -z "$ADMIN_PASSWORD" ]; then
-        # Try alternative pattern (from print statement)
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -A 1 "ADMIN USER CREATED" | grep "Password:" | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
+        # Pattern 2: Look for "ADMIN USER CREATED" block
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -A 3 "ADMIN USER CREATED" | grep -i "Password:" | sed 's/.*Password: //' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
     fi
+    
     if [ -z "$ADMIN_PASSWORD" ]; then
-        # Try pattern with equals signs (from logger.warning output)
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -E "Password: [a-zA-Z0-9_-]+" | tail -1 | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
+        # Pattern 3: Look for lines with "Password:" that contain alphanumeric tokens
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -E "Password: [a-zA-Z0-9_-]{10,}" | tail -1 | sed 's/.*Password: //' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
     fi
+    
     if [ -z "$ADMIN_PASSWORD" ]; then
-        # Try one more time after waiting longer
+        # Pattern 4: Wait longer and try again
+        print_info "Waiting a bit longer for backend to log password..."
         sleep 10
-        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | tail -1 | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | tail -1 | sed 's/.*Password: //' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
+    fi
+    
+    if [ -z "$ADMIN_PASSWORD" ]; then
+        # Pattern 5: Try to get it from stdout (print statements)
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -E "^Password: " | tail -1 | sed 's/^Password: //' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
     fi
 fi
 
