@@ -49,6 +49,7 @@ celery_app.conf.update(
     worker_prefetch_multiplier=1,
     worker_max_tasks_per_child=1000,
     result_expires=3600,  # Results expire after 1 hour
+    broker_connection_retry_on_startup=True,  # Fix deprecation warning
 )
 
 # Note: Tasks are imported in main.py to avoid circular import issues
