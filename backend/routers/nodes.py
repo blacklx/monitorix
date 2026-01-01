@@ -365,10 +365,9 @@ async def test_connection(
     """Test connection to a Proxmox node without saving it"""
     try:
         # Log the received data for debugging
-        logger.info(f"Testing connection to Proxmox node. URL: {node_data.url}, Username: {node_data.username}, verify_ssl={node_data.verify_ssl}")
-        
-        verify_ssl = node_data.verify_ssl if hasattr(node_data, 'verify_ssl') and node_data.verify_ssl is not None else True
-        logger.debug(f"Using verify_ssl={verify_ssl} for connection test")
+        # verify_ssl has a default value of True in NodeCreate schema, so it's always present
+        verify_ssl = node_data.verify_ssl
+        logger.info(f"Testing connection to Proxmox node. URL: {node_data.url}, Username: {node_data.username}, verify_ssl={verify_ssl}")
         client = ProxmoxClient(node_data.url, node_data.username, node_data.token, verify_ssl=verify_ssl)
         
         # Run test_connection in a thread pool to avoid blocking the event loop
