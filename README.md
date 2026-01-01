@@ -223,15 +223,23 @@ HTTP_TIMEOUT=5           # seconds
 PING_TIMEOUT=3           # seconds
 ```
 
-## 🌐 Integration with Nginx Proxy Manager
+## 🌐 Network Access
 
-The system is designed to run behind Nginx Proxy Manager:
+### Local Network Access (Default)
+The system runs with built-in Nginx reverse proxy in the frontend container:
+- **Frontend**: `http://localhost:3000` (or `http://<server-ip>:3000` for network access)
+- **Backend API**: Automatically proxied through frontend at `/api`
+- **WebSocket**: Automatically proxied through frontend at `/ws`
 
+No additional configuration needed for local network access.
+
+### External Access (Optional)
+For external/public access, you can use **Nginx Proxy Manager**:
 - **Backend API**: Port 8000
 - **Frontend**: Port 3000
 - **WebSocket**: Automatically supported
 
-See [INSTALL.md](INSTALL.md) for detailed setup.
+See [INSTALL.md](INSTALL.md) for detailed setup with Nginx Proxy Manager.
 
 ## 🐛 Troubleshooting
 

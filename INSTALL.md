@@ -23,8 +23,8 @@ This guide walks you through the complete installation process for Monitorix.
 ### Recommended
 - **4GB RAM** or more
 - **20GB disk space** for metrics history
-- **Nginx Proxy Manager** for public access
-- **SSL certificate** (Let's Encrypt)
+- **Nginx Proxy Manager** (only needed for external/public access)
+- **SSL certificate** (Let's Encrypt, only needed for external access)
 
 ### Proxmox Requirements
 - Proxmox VE 6.0 or newer
@@ -385,7 +385,18 @@ Metrics can grow over time. To clean up:
 docker-compose exec postgres psql -U monitorix monitorix -c "DELETE FROM metrics WHERE recorded_at < NOW() - INTERVAL '30 days';"
 ```
 
-## 🌐 Integration with Nginx Proxy Manager
+## 🌐 Network Access Configuration
+
+### Local Network Access (Default)
+The system is configured to work out of the box for local network access:
+- Frontend is accessible at `http://localhost:3000` or `http://<server-ip>:3000`
+- Backend API is automatically proxied through the frontend Nginx at `/api`
+- WebSocket connections are automatically proxied at `/ws`
+- No additional configuration needed
+
+### External Access (Optional) - Integration with Nginx Proxy Manager
+
+**Note**: Nginx Proxy Manager is only needed if you want to expose the system to the internet or need SSL/TLS certificates for external access. For local network use, the built-in Nginx proxy is sufficient.
 
 ### Backend API
 
