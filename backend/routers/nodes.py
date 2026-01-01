@@ -367,8 +367,9 @@ async def test_connection(
         # Log the received data for debugging
         # verify_ssl has a default value of True in NodeCreate schema, so it's always present
         verify_ssl = node_data.verify_ssl
-        logger.info(f"Testing connection to Proxmox node. URL: {node_data.url}, Username: {node_data.username}, verify_ssl={verify_ssl}")
-        logger.debug(f"Received node_data: {node_data.model_dump(exclude={'token'})}")
+        # Log the raw request data to see what was actually sent
+        logger.info(f"Testing connection to Proxmox node. URL: {node_data.url}, Username: {node_data.username}, verify_ssl={verify_ssl} (type: {type(verify_ssl).__name__})")
+        logger.debug(f"Full node_data dump (excluding token): {node_data.model_dump(exclude={'token'})}")
         client = ProxmoxClient(node_data.url, node_data.username, node_data.token, verify_ssl=verify_ssl)
         
         # Run test_connection in a thread pool to avoid blocking the event loop
