@@ -454,6 +454,9 @@ else
     
     # Get admin password from backend logs (always retrieved from logs, never from .env)
     print_info "Retrieving admin password from backend logs..."
+    # Wait a bit more for backend to fully initialize and log the password
+    sleep 5
+    
     # Try multiple times with different patterns
     ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | tail -1 | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
     if [ -z "$ADMIN_PASSWORD" ]; then
@@ -461,8 +464,12 @@ else
         ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -A 1 "ADMIN USER CREATED" | grep "Password:" | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
     fi
     if [ -z "$ADMIN_PASSWORD" ]; then
-        # Try one more time after waiting
-        sleep 5
+        # Try pattern with equals signs (from logger.warning output)
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -E "Password: [a-zA-Z0-9_-]+" | tail -1 | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
+    fi
+    if [ -z "$ADMIN_PASSWORD" ]; then
+        # Try one more time after waiting longer
+        sleep 10
         ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | tail -1 | sed 's/.*Password: //' | tr -d '\r\n' || echo "")
     fi
 fi
