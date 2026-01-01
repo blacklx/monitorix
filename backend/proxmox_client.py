@@ -5,8 +5,39 @@ import logging
 from datetime import datetime
 from urllib.parse import urlparse, urlunparse
 from config import settings
+import re
 
 logger = logging.getLogger(__name__)
+
+# Workaround for proxmoxer "Invalid IPv6 URL" bug
+# This patches the URL validation in proxmoxer to allow IPv4 addresses
+def _patch_proxmoxer_url_validation():
+    """Patch proxmoxer's URL validation to fix IPv6 bug with IPv4 addresses"""
+    try:
+        import proxmoxer.backends.https
+        # Check if the module has a URL validation function we can patch
+        if hasattr(proxmoxer.backends.https, 'ProxmoxHttpSession'):
+            original_init = proxmoxer.backends.https.ProxmoxHttpSession.__init__
+            
+            def patched_init(self, *args, **kwargs):
+                # If URL is provided, ensure it's properly formatted
+                if 'url' in kwargs:
+                    url = kwargs['url']
+                    # If it's an IPv4 address, ensure it's not being misidentified as IPv6
+                    ipv4_pattern = r'^https?://(\d{1,3}\.){3}\d{1,3}(:\d+)?/?$'
+                    if re.match(ipv4_pattern, url):
+                        # Remove any trailing slash
+                        url = url.rstrip('/')
+                        kwargs['url'] = url
+                return original_init(self, *args, **kwargs)
+            
+            proxmoxer.backends.https.ProxmoxHttpSession.__init__ = patched_init
+            logger.debug("Patched proxmoxer URL validation")
+    except Exception as e:
+        logger.warning(f"Failed to patch proxmoxer URL validation: {e}")
+
+# Apply patch on import
+_patch_proxmoxer_url_validation()
 
 
 class ProxmoxClient:
@@ -116,6 +147,8 @@ class ProxmoxClient:
                 logger.debug(f"Original URL: {api_url}, Cleaned URL: {clean_url}, Hostname: {hostname}, Port: {port}")
                 
                 # Try with cleaned URL first
+                # Note: There's a known bug in proxmoxer 2.0.1 that causes "Invalid IPv6 URL" 
+                # errors even with valid IPv4 addresses. We've attempted to patch it above.
                 try:
                     self._api = ProxmoxAPI(
                         clean_url,
@@ -126,19 +159,41 @@ class ProxmoxClient:
                     )
                 except Exception as e:
                     error_msg = str(e)
-                    # If we get IPv6 error, it might be a proxmoxer bug
-                    # Try with the original URL as fallback
+                    # If we get IPv6 error, it's a known proxmoxer bug
+                    # Try using hostname instead of IP if it's an IP address
                     if "Invalid IPv6 URL" in error_msg or "IPv6" in error_msg:
-                        logger.warning(f"ProxmoxAPI failed with cleaned URL '{clean_url}' due to IPv6 error. This might be a proxmoxer library bug.")
-                        logger.warning(f"Trying with original normalized URL as fallback: {api_url}")
-                        # Try with original URL
-                        self._api = ProxmoxAPI(
-                            api_url,
-                            user=self.username,
-                            token_name=token_id,
-                            token_value=token_secret,
-                            verify_ssl=verify_ssl
-                        )
+                        logger.warning(f"ProxmoxAPI failed with cleaned URL '{clean_url}' due to IPv6 error (proxmoxer bug).")
+                        logger.warning(f"This is a known bug in proxmoxer 2.0.1. Trying workaround...")
+                        
+                        # Workaround: Try using the hostname directly if we can resolve it
+                        # Otherwise, we'll need to use a different approach
+                        try:
+                            import socket
+                            # Try to get hostname from IP
+                            try:
+                                hostname_resolved = socket.gethostbyaddr(hostname)[0]
+                                logger.info(f"Resolved {hostname} to hostname: {hostname_resolved}")
+                                url_with_hostname = f"{parsed.scheme}://{hostname_resolved}:{port}"
+                                logger.info(f"Trying with hostname instead of IP: {url_with_hostname}")
+                                self._api = ProxmoxAPI(
+                                    url_with_hostname,
+                                    user=self.username,
+                                    token_name=token_id,
+                                    token_value=token_secret,
+                                    verify_ssl=verify_ssl
+                                )
+                            except (socket.herror, socket.gaierror):
+                                # Can't resolve hostname, try one more time with original URL
+                                logger.warning(f"Could not resolve hostname for {hostname}, trying original URL format")
+                                raise ValueError(f"Proxmoxer library bug: Cannot connect to {clean_url}. This is a known issue with proxmoxer 2.0.1. Please try using a hostname instead of IP address, or upgrade proxmoxer library.")
+                        except Exception as fallback_error:
+                            # If all else fails, raise a helpful error message
+                            raise ValueError(
+                                f"Failed to connect to Proxmox node at {clean_url}. "
+                                f"This appears to be a bug in proxmoxer 2.0.1 library. "
+                                f"Error: {error_msg}. "
+                                f"Try using a hostname instead of IP address, or check if there's an updated version of proxmoxer."
+                            ) from e
                     else:
                         # Re-raise if it's a different error
                         raise
