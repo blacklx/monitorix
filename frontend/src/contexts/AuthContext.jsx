@@ -139,8 +139,12 @@ export const AuthProvider = ({ children }) => {
 
       const login = async (username, password, totpToken = null) => {
         try {
+          console.log(`[AuthContext] Attempting login for user: ${username}`)
+          console.log(`[AuthContext] API_URL: ${API_URL}`)
+          
           // If TOTP token is provided, use the verify-2fa endpoint
           if (totpToken) {
+            console.log(`[AuthContext] Using 2FA login endpoint`)
             const response = await axios.post(`${API_URL}/api/auth/login/verify-2fa`, {
               username,
               password,
@@ -156,15 +160,18 @@ export const AuthProvider = ({ children }) => {
             return true
           } else {
             // Regular login - use URLSearchParams for OAuth2PasswordRequestForm
+            console.log(`[AuthContext] Using regular login endpoint: ${API_URL}/api/auth/login`)
             const params = new URLSearchParams()
             params.append('username', username)
             params.append('password', password)
 
+            console.log(`[AuthContext] Sending login request...`)
             const response = await axios.post(`${API_URL}/api/auth/login`, params, {
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
               },
             })
+            console.log(`[AuthContext] Login response received:`, response.status)
 
             // Check if 2FA is required
             if (response.data.requires_2fa) {
@@ -181,10 +188,23 @@ export const AuthProvider = ({ children }) => {
             return true
           }
         } catch (error) {
+          console.error(`[AuthContext] Login error:`, error)
+          console.error(`[AuthContext] Error message:`, error.message)
+          console.error(`[AuthContext] Error response:`, error.response)
+          console.error(`[AuthContext] Error request:`, error.request)
+          
           // Check if error indicates 2FA is required
           if (error.response?.status === 401 && error.response?.data?.detail?.includes('2FA')) {
             return { requires_2fa: true }
           }
+          
+          // Log network errors
+          if (error.request && !error.response) {
+            console.error(`[AuthContext] Network error - request did not reach server`)
+            console.error(`[AuthContext] Request URL: ${error.config?.url}`)
+            console.error(`[AuthContext] Request method: ${error.config?.method}`)
+          }
+          
           throw error
         }
       }

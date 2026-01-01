@@ -48,6 +48,7 @@ const Login = () => {
     }
 
     try {
+      console.log(`[Login] Attempting login for: ${username}`)
       const result = await login(username, password)
       if (result && result.requires_2fa) {
         setRequires2FA(true)
@@ -56,7 +57,31 @@ const Login = () => {
         navigate('/dashboard')
       }
     } catch (err) {
-      setError(err.response?.data?.detail || t('auth.loginFailed'))
+      console.error(`[Login] Login failed:`, err)
+      console.error(`[Login] Error details:`, {
+        message: err.message,
+        response: err.response,
+        request: err.request,
+        config: err.config
+      })
+      
+      // Provide more detailed error messages
+      let errorMessage = t('auth.loginFailed')
+      if (err.response) {
+        // Server responded with error
+        errorMessage = err.response.data?.detail || errorMessage
+        console.error(`[Login] Server error: ${err.response.status} - ${errorMessage}`)
+      } else if (err.request) {
+        // Request was made but no response received
+        errorMessage = 'Network error: Could not reach server. Please check if backend is running.'
+        console.error(`[Login] Network error: Request made but no response received`)
+      } else {
+        // Error setting up request
+        errorMessage = `Request error: ${err.message}`
+        console.error(`[Login] Request setup error: ${err.message}`)
+      }
+      
+      setError(errorMessage)
     }
   }
 
