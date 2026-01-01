@@ -80,11 +80,23 @@ class Settings(BaseSettings):
     # CORS Configuration
     # Default to localhost:3000 for development (frontend port)
     # Note: When allow_credentials=True, you cannot use "*" for origins
-    _cors_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
-    cors_origins: List[str] = _cors_origins_env.split(",") if _cors_origins_env != "*" else ["*"]
+    # Parse CORS_ORIGINS manually to avoid Pydantic trying to parse as JSON
+    cors_origins: List[str] = Field(
+        default_factory=lambda: os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",") 
+        if os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000") != "*" 
+        else ["*"]
+    )
     cors_allow_credentials: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
-    cors_allow_methods: List[str] = os.getenv("CORS_ALLOW_METHODS", "*").split(",") if os.getenv("CORS_ALLOW_METHODS", "*") != "*" else ["*"]
-    cors_allow_headers: List[str] = os.getenv("CORS_ALLOW_HEADERS", "*").split(",") if os.getenv("CORS_ALLOW_HEADERS", "*") != "*" else ["*"]
+    cors_allow_methods: List[str] = Field(
+        default_factory=lambda: os.getenv("CORS_ALLOW_METHODS", "*").split(",") 
+        if os.getenv("CORS_ALLOW_METHODS", "*") != "*" 
+        else ["*"]
+    )
+    cors_allow_headers: List[str] = Field(
+        default_factory=lambda: os.getenv("CORS_ALLOW_HEADERS", "*").split(",") 
+        if os.getenv("CORS_ALLOW_HEADERS", "*") != "*" 
+        else ["*"]
+    )
     
     # Rate Limiting
     rate_limit_per_hour: int = int(os.getenv("RATE_LIMIT_PER_HOUR", "1000"))
