@@ -410,8 +410,17 @@ class ProxmoxClient:
                 try:
                     qemu_vms = api.nodes(node_name).qemu.get()
                     logger.info(f"Found {len(qemu_vms)} QEMU VMs on node {node_name}")
+                    if len(qemu_vms) == 0:
+                        logger.debug(f"No QEMU VMs found on node {node_name} (this might be normal if the node has no VMs)")
+                    else:
+                        vm_ids = [vm.get("vmid", "unknown") for vm in qemu_vms]
+                        logger.debug(f"QEMU VM IDs on {node_name}: {vm_ids}")
                 except Exception as e:
+                    error_msg = str(e)
                     logger.error(f"Failed to get QEMU VMs from node {node_name}: {e}")
+                    # Check for permission errors
+                    if "403" in error_msg or "Forbidden" in error_msg or "Permission" in error_msg:
+                        logger.error(f"Permission denied when trying to list QEMU VMs on node {node_name}. Token might need 'VM.Audit' or 'Datastore.Audit' permission.")
                     qemu_vms = []
                 
                 for vm in qemu_vms:
@@ -443,8 +452,17 @@ class ProxmoxClient:
                 try:
                     lxc_containers = api.nodes(node_name).lxc.get()
                     logger.info(f"Found {len(lxc_containers)} LXC containers on node {node_name}")
+                    if len(lxc_containers) == 0:
+                        logger.debug(f"No LXC containers found on node {node_name} (this might be normal if the node has no containers)")
+                    else:
+                        container_ids = [ct.get("vmid", "unknown") for ct in lxc_containers]
+                        logger.debug(f"LXC container IDs on {node_name}: {container_ids}")
                 except Exception as e:
+                    error_msg = str(e)
                     logger.error(f"Failed to get LXC containers from node {node_name}: {e}")
+                    # Check for permission errors
+                    if "403" in error_msg or "Forbidden" in error_msg or "Permission" in error_msg:
+                        logger.error(f"Permission denied when trying to list LXC containers on node {node_name}. Token might need 'VM.Audit' or 'Datastore.Audit' permission.")
                     lxc_containers = []
                 
                 for container in lxc_containers:
