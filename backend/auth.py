@@ -104,11 +104,25 @@ def get_user_by_username(db: Session, username: str) -> Optional[User]:
 
 def authenticate_user(db: Session, username: str, password: str) -> Optional[User]:
     """Authenticate a user"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     user = get_user_by_username(db, username)
     if not user:
+        logger.warning(f"User '{username}' not found")
         return None
-    if not verify_password(password, user.hashed_password):
+    
+    # Verify password
+    try:
+        password_valid = verify_password(password, user.hashed_password)
+        if not password_valid:
+            logger.warning(f"Password verification failed for user '{username}'")
+            return None
+        logger.debug(f"Password verified successfully for user '{username}'")
+    except Exception as e:
+        logger.error(f"Error verifying password for user '{username}': {e}")
         return None
+    
     return user
 
 
