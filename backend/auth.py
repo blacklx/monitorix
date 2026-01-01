@@ -9,15 +9,42 @@ from database import get_db
 from models import User
 from config import settings
 
-# Configure CryptContext to avoid bcrypt wrap bug detection issues
-# This prevents the "password cannot be longer than 72 bytes" error during initialization
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__ident="2b",  # Use bcrypt 2b identifier
-    bcrypt__rounds=12,  # Use 12 rounds (default, but explicit)
-    bcrypt__vary_rounds=0.1  # Allow some variation in rounds
-)
+# Initialize CryptContext with error handling for bcrypt initialization issues
+# Some bcrypt versions have issues with passlib's wrap bug detection
+try:
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    # Force initialization by attempting to hash a short test password
+    # This will trigger any initialization errors early
+    _test_hash = pwd_context.hash("test123")
+except Exception as e:
+    # If passlib fails during initialization, use bcrypt directly
+    import bcrypt
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning(f"Passlib initialization failed ({e}), using bcrypt directly")
+    
+    class DirectBcryptContext:
+        """Direct bcrypt wrapper when passlib fails"""
+        @staticmethod
+        def hash(password: str) -> str:
+            # Ensure password is bytes and not too long (bcrypt limit: 72 bytes)
+            password_bytes = password.encode('utf-8')
+            if len(password_bytes) > 72:
+                password_bytes = password_bytes[:72]
+            salt = bcrypt.gensalt()
+            hashed = bcrypt.hashpw(password_bytes, salt)
+            return hashed.decode('utf-8')
+        
+        @staticmethod
+        def verify(plain_password: str, hashed_password: str) -> bool:
+            password_bytes = plain_password.encode('utf-8')
+            if len(password_bytes) > 72:
+                password_bytes = password_bytes[:72]
+            hashed_bytes = hashed_password.encode('utf-8')
+            return bcrypt.checkpw(password_bytes, hashed_bytes)
+    
+    pwd_context = DirectBcryptContext()
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
 
@@ -28,6 +55,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     """Hash a password"""
+    # Ensure password is not too long for bcrypt (72 bytes max)
+    password_bytes = password.encode('utf-8')
+    if len(password_bytes) > 72:
+        password = password[:72]
     return pwd_context.hash(password)
 
 
