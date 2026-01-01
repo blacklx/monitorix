@@ -432,28 +432,35 @@ class ProxmoxClient:
                         vm_status = {"status": "unknown"}
                     
                     # Calculate memory usage
-                    # Proxmox API reports:
-                    # - mem: memory used by VM (can be allocated memory, not actual usage inside VM)
-                    # - maxmem: maximum allocated memory
-                    # - balloon: memory that has been "ballooned" out (if available)
+                    # Proxmox API reports various memory fields:
+                    # - mem: memory used by VM (in bytes) - this is what Proxmox sees as allocated/used
+                    # - maxmem: maximum allocated memory (in bytes)
+                    # - balloon: memory that has been "ballooned" out (if available, in bytes)
+                    # 
+                    # The issue: Proxmox may report mem as the allocated memory to the VM,
+                    # not the actual memory usage inside the VM. This is why you see 100% in Proxmox
+                    # but lower usage inside the VM (e.g., pfSense showing 21%).
                     #
-                    # The issue: For VMs with balloon driver, Proxmox may report mem as allocated
-                    # memory rather than actual usage. The actual usage inside VM is typically lower.
-                    # However, from Proxmox's perspective, mem is what's actually allocated/used.
-                    #
-                    # Note: This is a known limitation - Proxmox reports memory from hypervisor
-                    # perspective, which may differ from what the VM reports internally.
+                    # For accurate reporting, we should use mem directly, but be aware that
+                    # this represents memory from Proxmox's perspective (allocated to VM),
+                    # not necessarily what the VM is actually using internally.
                     mem_used = vm_status.get("mem", 0)
                     mem_total = vm_status.get("maxmem", 0)
                     balloon = vm_status.get("balloon", 0)
                     
-                    # Log balloon info for debugging
-                    if balloon > 0:
-                        logger.debug(f"VM {vm.get('vmid', 'unknown')} ({vm.get('name', 'unknown')}) has balloon memory: "
-                                   f"{balloon / (1024**3):.2f} GB. mem={mem_used / (1024**3):.2f} GB, "
-                                   f"maxmem={mem_total / (1024**3):.2f} GB")
-                        # Note: mem - balloon would give actual memory available to VM,
-                        # but mem is already the actual used memory from Proxmox perspective
+                    # Log detailed memory info for debugging (especially for VMs showing 100%)
+                    vm_name = vm.get("name", f"VM {vm.get('vmid', 'unknown')}")
+                    if mem_total > 0:
+                        mem_usage_pct = (mem_used / mem_total) * 100
+                        # Log if usage is very high (>= 95%) to help debug
+                        if mem_usage_pct >= 95:
+                            logger.info(f"VM {vm.get('vmid', 'unknown')} ({vm_name}) shows high memory usage: "
+                                      f"{mem_usage_pct:.1f}% ({mem_used / (1024**3):.2f} GB / {mem_total / (1024**3):.2f} GB)")
+                            if balloon > 0:
+                                logger.info(f"  - Balloon memory: {balloon / (1024**3):.2f} GB")
+                                logger.info(f"  - Note: Actual memory available to VM may be: {mem_total - balloon / (1024**3):.2f} GB")
+                            logger.info(f"  - This may differ from memory usage reported inside the VM")
+                            logger.debug(f"  - Full vm_status keys: {list(vm_status.keys())}")
                     
                     # Calculate memory usage percentage
                     # This shows memory usage from Proxmox's perspective (allocated/used memory)
