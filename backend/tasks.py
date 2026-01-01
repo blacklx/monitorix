@@ -82,10 +82,12 @@ if settings.celery_enabled:
                             continue
                         
                         # Test connection
+                        verify_ssl = node_data.get("verify_ssl", True)  # Default to True if not provided
                         client = ProxmoxClient(
                             node_data["url"],
                             node_data["username"],
-                            node_data["token"]
+                            node_data["token"],
+                            verify_ssl=verify_ssl
                         )
                         if not client.test_connection():
                             failed.append({

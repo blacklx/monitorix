@@ -35,6 +35,7 @@ class Node(Base):
     url = Column(String, nullable=False)
     username = Column(String, nullable=False)
     token = Column(String, nullable=False)
+    verify_ssl = Column(Boolean, default=True)  # Whether to verify SSL certificates
     is_local = Column(Boolean, default=True)
     is_active = Column(Boolean, default=True)
     maintenance_mode = Column(Boolean, default=False)

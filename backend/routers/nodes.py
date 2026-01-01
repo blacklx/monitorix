@@ -78,7 +78,7 @@ async def create_node(
         )
     
     # Test connection (run in thread pool to avoid blocking event loop)
-    client = ProxmoxClient(node_data.url, node_data.username, node_data.token)
+    client = ProxmoxClient(node_data.url, node_data.username, node_data.token, verify_ssl=node_data.verify_ssl)
     loop = asyncio.get_event_loop()
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = loop.run_in_executor(executor, client.test_connection)
@@ -101,6 +101,7 @@ async def create_node(
         url=node_data.url,
         username=node_data.username,
         token=node_data.token,
+        verify_ssl=node_data.verify_ssl,
         is_local=node_data.is_local,
         tags=node_data.tags
     )
@@ -175,7 +176,7 @@ async def bulk_create_nodes(
                     continue
                 
                 # Test connection (run in thread pool to avoid blocking event loop)
-                client = ProxmoxClient(node_data.url, node_data.username, node_data.token)
+                client = ProxmoxClient(node_data.url, node_data.username, node_data.token, verify_ssl=node_data.verify_ssl)
                 future = loop.run_in_executor(executor, client.test_connection)
                 try:
                     connection_result = await asyncio.wait_for(future, timeout=10.0)
@@ -199,6 +200,7 @@ async def bulk_create_nodes(
                     url=node_data.url,
                     username=node_data.username,
                     token=node_data.token,
+                    verify_ssl=node_data.verify_ssl,
                     is_local=node_data.is_local,
                     tags=node_data.tags
                 )
@@ -265,6 +267,8 @@ async def update_node(
         node.username = node_data.username
     if node_data.token is not None:
         node.token = node_data.token
+    if node_data.verify_ssl is not None:
+        node.verify_ssl = node_data.verify_ssl
     if node_data.is_active is not None:
         node.is_active = node_data.is_active
     if node_data.is_local is not None:
@@ -363,7 +367,8 @@ async def test_connection(
         # Log the received data for debugging
         logger.info(f"Testing connection to Proxmox node. URL: {node_data.url}, Username: {node_data.username}")
         
-        client = ProxmoxClient(node_data.url, node_data.username, node_data.token)
+        verify_ssl = getattr(node_data, 'verify_ssl', True)  # Default to True if not provided
+        client = ProxmoxClient(node_data.url, node_data.username, node_data.token, verify_ssl=verify_ssl)
         
         # Run test_connection in a thread pool to avoid blocking the event loop
         # This prevents WebSocket connections from being affected

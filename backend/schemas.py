@@ -133,6 +133,7 @@ class NodeCreate(BaseModel):
     url: str = Field(..., min_length=1, max_length=500)
     username: str = Field(..., min_length=1, max_length=100)
     token: str = Field(..., min_length=1, max_length=500)
+    verify_ssl: bool = Field(default=True, description="Whether to verify SSL certificates")
     is_local: bool = True
     tags: Optional[List[str]] = None
     
@@ -177,6 +178,7 @@ class NodeUpdate(BaseModel):
     url: Optional[str] = None
     username: Optional[str] = None
     token: Optional[str] = None
+    verify_ssl: Optional[bool] = None
     is_active: Optional[bool] = None
     is_local: Optional[bool] = None
     maintenance_mode: Optional[bool] = None

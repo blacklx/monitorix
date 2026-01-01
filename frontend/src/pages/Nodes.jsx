@@ -18,6 +18,7 @@ const Nodes = () => {
     url: '',
     username: '',
     token: '',
+    verify_ssl: true,
     is_local: true,
     maintenance_mode: false,
     tags: []
@@ -100,6 +101,7 @@ const Nodes = () => {
       url: node.url,
       username: node.username || '',
       token: '', // Don't show existing token for security
+      verify_ssl: node.verify_ssl !== undefined ? node.verify_ssl : true,
       is_local: node.is_local,
       maintenance_mode: node.maintenance_mode || false,
       tags: node.tags || []
@@ -267,6 +269,7 @@ const Nodes = () => {
       if (formData.url !== editingNode.url) updateData.url = formData.url
       if (formData.username && formData.username !== editingNode.username) updateData.username = formData.username
       if (formData.token && formData.token.trim().length > 0) updateData.token = formData.token
+      if (formData.verify_ssl !== editingNode.verify_ssl) updateData.verify_ssl = formData.verify_ssl
       if (formData.is_local !== editingNode.is_local) updateData.is_local = formData.is_local
       
       try {
@@ -490,6 +493,18 @@ const Nodes = () => {
                 {validationErrors.token && (
                   <span className="field-error">{validationErrors.token}</span>
                 )}
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.verify_ssl}
+                    onChange={(e) => setFormData({ ...formData, verify_ssl: e.target.checked })}
+                  />
+                  {t('nodes.verifySsl')}
+                </label>
+                <small>{t('nodes.verifySslDescription')}</small>
               </div>
 
               <div className="form-group">

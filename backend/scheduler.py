@@ -38,7 +38,7 @@ async def check_node(node: Node) -> Dict:
             logger.debug(f"Node {node.name} is in maintenance mode, skipping check")
             return {"status": "maintenance"}
         
-        client = ProxmoxClient(node.url, node.username, node.token)
+        client = ProxmoxClient(node.url, node.username, node.token, verify_ssl=node.verify_ssl)
         
         # Test connection
         if not client.test_connection():
@@ -194,7 +194,7 @@ async def check_node(node: Node) -> Dict:
 async def sync_vms(node: Node):
     """Sync VMs from Proxmox node"""
     try:
-        client = ProxmoxClient(node.url, node.username, node.token)
+        client = ProxmoxClient(node.url, node.username, node.token, verify_ssl=node.verify_ssl)
         vms_data = client.get_vms()
         
         db = SessionLocal()

@@ -119,6 +119,8 @@
     "url": "URL",
     "username": "Username",
     "token": "Token",
+    "verifySsl": "Verify SSL Certificate",
+    "verifySslDescription": "Enable SSL certificate verification. Disable only if using self-signed certificates (security risk).",
     "isLocal": "Local Node",
     "isRemote": "Remote Node",
     "local": "Local",

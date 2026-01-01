@@ -214,7 +214,7 @@ def test_node(args):
             return
         
         print(f"Testing connection to node '{node.name}' ({node.url})...")
-        client = ProxmoxClient(node.url, node.username, node.token)
+        client = ProxmoxClient(node.url, node.username, node.token, verify_ssl=node.verify_ssl)
         
         if client.test_connection():
             print("✓ Connection successful!")
