@@ -61,6 +61,11 @@ async def login(
     from datetime import datetime
     from auth import create_refresh_token
     
+    logger.info(f"Login attempt for username: {form_data.username}")
+    logger.debug(f"Request headers: {dict(request.headers)}")
+    logger.debug(f"Request method: {request.method}")
+    logger.debug(f"Request URL: {request.url}")
+    
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         log_action(db, "login_failed", f"Attempted login for username: {form_data.username}", get_client_ip(request), get_user_agent(request), success=False)
