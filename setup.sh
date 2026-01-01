@@ -663,8 +663,22 @@ else
     # If still no password, admin user might already exist
     if [ -z "$ADMIN_PASSWORD" ]; then
         print_warn "Could not retrieve admin password from logs."
-        print_warn "Admin user may already exist. To reset the password, run:"
-        print_warn "  docker_compose_cmd exec backend python cli.py reset-admin-password"
+        print_info "Admin user may already exist. Attempting to reset password..."
+        
+        # Try to reset admin password
+        RESET_OUTPUT=$(docker_compose_cmd exec -T backend python cli.py reset-admin-password 2>&1)
+        if echo "$RESET_OUTPUT" | grep -q "Generated new admin password:"; then
+            ADMIN_PASSWORD=$(echo "$RESET_OUTPUT" | grep "Generated new admin password:" | sed 's/.*Generated new admin password: *//' | awk '{print $1}' | tr -d '\r\n')
+            print_info "✓ Admin password reset successfully"
+        elif echo "$RESET_OUTPUT" | grep -q "Setting admin password to:"; then
+            ADMIN_PASSWORD=$(echo "$RESET_OUTPUT" | grep "Setting admin password to:" | sed 's/.*Setting admin password to: *//' | awk '{print $1}' | tr -d '\r\n')
+            print_info "✓ Admin password set successfully"
+        else
+            print_warn "Could not reset admin password automatically."
+            print_warn "Please run manually:"
+            print_warn "  docker-compose exec backend python cli.py reset-admin-password"
+            print_warn "The password will be displayed in the output."
+        fi
     fi
     fi  # Close if [ "$BACKEND_READY" = false ]
 fi  # Close if [ "$POSTGRES_READY" = false ]
