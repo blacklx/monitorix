@@ -4,7 +4,7 @@ import axios from 'axios'
 import { useAuth } from '../contexts/AuthContext'
 import './Profile.css'
 
-const API_URL = import.meta.env.REACT_APP_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL || ''
 
 const Profile = () => {
   const { t } = useTranslation()

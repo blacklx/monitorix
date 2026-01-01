@@ -6,7 +6,7 @@ import { requestNotificationPermission, showAlertNotification, isNotificationSup
 import { useWebSocket } from '../hooks/useWebSocket'
 import './Alerts.css'
 
-const API_URL = import.meta.env.REACT_APP_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL || ''
 
 const Alerts = () => {
   const { t } = useTranslation()
