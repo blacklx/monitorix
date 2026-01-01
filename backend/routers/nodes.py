@@ -360,6 +360,9 @@ async def test_connection(
 ):
     """Test connection to a Proxmox node without saving it"""
     try:
+        # Log the received data for debugging
+        logger.info(f"Testing connection to Proxmox node. URL: {node_data.url}, Username: {node_data.username}")
+        
         client = ProxmoxClient(node_data.url, node_data.username, node_data.token)
         
         # Run test_connection in a thread pool to avoid blocking the event loop
@@ -371,15 +374,25 @@ async def test_connection(
             try:
                 result = await asyncio.wait_for(future, timeout=10.0)
                 if result:
+                    logger.info(f"Connection test successful for {node_data.url}")
                     return {"success": True, "message": "Connection successful"}
                 else:
-                    return {"success": False, "message": "Failed to connect to Proxmox node"}
+                    logger.warning(f"Connection test failed for {node_data.url}")
+                    return {"success": False, "message": "Failed to connect to Proxmox node. Check URL, username, and token."}
             except asyncio.TimeoutError:
                 logger.warning(f"Connection test timeout for {node_data.url}")
                 return {"success": False, "message": "Connection test timed out after 10 seconds"}
+    except ValueError as e:
+        # ValueError usually means URL format issue
+        logger.error(f"Invalid URL format for connection test: {e}")
+        return {"success": False, "message": f"Invalid URL format: {str(e)}"}
     except Exception as e:
-        logger.error(f"Error testing connection to {node_data.url}: {e}", exc_info=True)
-        return {"success": False, "message": str(e)}
+        error_msg = str(e)
+        logger.error(f"Error testing connection to {node_data.url}: {error_msg}", exc_info=True)
+        # Provide more helpful error message for IPv6 URL errors
+        if "Invalid IPv6 URL" in error_msg or "IPv6" in error_msg:
+            return {"success": False, "message": f"Invalid URL format. Please use format: https://hostname:port or https://ip:port (e.g., https://192.168.1.10:8006)"}
+        return {"success": False, "message": error_msg}
 
 
 @router.post("/{node_id}/maintenance-mode")
