@@ -1,6 +1,26 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 
-const WS_URL = import.meta.env.REACT_APP_WS_URL || import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
+// Determine WebSocket URL
+// Use relative path when running in production (nginx proxy), or full URL for development
+const getWebSocketURL = () => {
+  const envUrl = import.meta.env.REACT_APP_WS_URL || import.meta.env.VITE_WS_URL
+  if (envUrl) {
+    return envUrl
+  }
+  
+  // Use relative path - construct from current window location
+  // This works when frontend is served by nginx proxy
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const host = window.location.host
+    return `${protocol}//${host}`
+  }
+  
+  // Fallback for SSR or when window is not available
+  return 'ws://localhost:8000'
+}
+
+const WS_URL = getWebSocketURL()
 
 const RECONNECT_INTERVAL = 3000 // 3 seconds
 const MAX_RECONNECT_ATTEMPTS = 10
