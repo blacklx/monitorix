@@ -387,15 +387,21 @@ class ProxmoxClient:
             nodes = api.nodes.get()
             all_vms = []
             
-            logger.debug(f"Found {len(nodes)} nodes in Proxmox cluster")
+            logger.info(f"Found {len(nodes)} nodes in Proxmox cluster")
+            if len(nodes) == 0:
+                logger.warning("No nodes found in Proxmox cluster. This might indicate a permission issue or empty cluster.")
 
             for node in nodes:
                 node_name = node["node"]
-                logger.debug(f"Processing node: {node_name}")
+                logger.info(f"Processing node: {node_name}")
                 
                 # Get QEMU VMs
-                qemu_vms = api.nodes(node_name).qemu.get()
-                logger.debug(f"Found {len(qemu_vms)} QEMU VMs on node {node_name}")
+                try:
+                    qemu_vms = api.nodes(node_name).qemu.get()
+                    logger.info(f"Found {len(qemu_vms)} QEMU VMs on node {node_name}")
+                except Exception as e:
+                    logger.error(f"Failed to get QEMU VMs from node {node_name}: {e}")
+                    qemu_vms = []
                 
                 for vm in qemu_vms:
                     vm_status = api.nodes(node_name).qemu(vm["vmid"]).status.current.get()
@@ -417,11 +423,21 @@ class ProxmoxClient:
                     })
                 
                 # Get LXC containers
-                lxc_containers = api.nodes(node_name).lxc.get()
-                logger.debug(f"Found {len(lxc_containers)} LXC containers on node {node_name}")
+                try:
+                    lxc_containers = api.nodes(node_name).lxc.get()
+                    logger.info(f"Found {len(lxc_containers)} LXC containers on node {node_name}")
+                except Exception as e:
+                    logger.error(f"Failed to get LXC containers from node {node_name}: {e}")
+                    lxc_containers = []
                 
                 for container in lxc_containers:
-                    container_status = api.nodes(node_name).lxc(container["vmid"]).status.current.get()
+                    try:
+                        container_status = api.nodes(node_name).lxc(container["vmid"]).status.current.get()
+                    except Exception as e:
+                        logger.warning(f"Failed to get status for container {container.get('vmid', 'unknown')} on node {node_name}: {e}")
+                        # Use basic container info if status can't be retrieved
+                        container_status = {"status": "unknown"}
+                    
                     all_vms.append({
                         "vmid": container["vmid"],
                         "name": container.get("name", f"CT {container['vmid']}"),
