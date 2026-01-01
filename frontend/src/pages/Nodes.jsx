@@ -84,6 +84,7 @@ const Nodes = () => {
       url: '',
       username: '',
       token: '',
+      verify_ssl: true,
       is_local: true,
       maintenance_mode: false,
       tags: []
