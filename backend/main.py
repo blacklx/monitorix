@@ -154,6 +154,7 @@ async def lifespan(app: FastAPI):
     logger.info("Checking for admin user...")
     admin_password = create_admin_user_if_needed()
     if admin_password:
+        # Log with explicit format for easy parsing
         logger.warning("=" * 60)
         logger.warning("ADMIN USER CREATED")
         logger.warning(f"Username: {settings.admin_username}")
@@ -162,13 +163,28 @@ async def lifespan(app: FastAPI):
         logger.warning("=" * 60)
         logger.warning("SAVE THIS PASSWORD - IT WILL NOT BE SHOWN AGAIN!")
         logger.warning("=" * 60)
-        # Also print to stdout for easier extraction
-        print(f"\n{'=' * 60}")
-        print(f"ADMIN USER CREATED")
-        print(f"Username: {settings.admin_username}")
-        print(f"Email: {settings.admin_email}")
-        print(f"Password: {admin_password}")
-        print(f"{'=' * 60}\n")
+        
+        # Also print to stdout/stderr for easier extraction (Docker logs capture both)
+        # Use explicit format that's easy to grep
+        import sys
+        print("", file=sys.stderr)  # Force newline
+        print("=" * 60, file=sys.stderr)
+        print("ADMIN USER CREATED", file=sys.stderr)
+        print(f"Username: {settings.admin_username}", file=sys.stderr)
+        print(f"Email: {settings.admin_email}", file=sys.stderr)
+        print(f"Password: {admin_password}", file=sys.stderr)
+        print("=" * 60, file=sys.stderr)
+        print("", file=sys.stderr)
+        
+        # Also print to stdout
+        print("", file=sys.stdout)
+        print("=" * 60, file=sys.stdout)
+        print("ADMIN USER CREATED", file=sys.stdout)
+        print(f"Username: {settings.admin_username}", file=sys.stdout)
+        print(f"Email: {settings.admin_email}", file=sys.stdout)
+        print(f"Password: {admin_password}", file=sys.stdout)
+        print("=" * 60, file=sys.stdout)
+        print("", file=sys.stdout)
         
         # Write password to temporary file for setup script to read
         # This file is only readable by the container and will be cleaned up
@@ -178,6 +194,7 @@ async def lifespan(app: FastAPI):
             with open(temp_password_file, 'w') as f:
                 f.write(admin_password)
             os.chmod(temp_password_file, 0o600)  # Read/write for owner only
+            logger.info(f"Password written to {temp_password_file} for setup script")
         except Exception as e:
             logger.warning(f"Could not write password to temp file: {e}")
     

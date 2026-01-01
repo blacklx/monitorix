@@ -474,8 +474,14 @@ else
         fi
         
         # Pattern 2: Direct grep for "Password:" (handles container prefix like "monitorix_backend | ")
-        # Remove container prefix and extract password
+        # Remove container prefix and extract password - try both with and without timestamp
         ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep -i "Password:" | grep -v "ADMIN_PASSWORD" | tail -1 | sed 's/.*Password: *//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
+        if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ]; then
+            break
+        fi
+        
+        # Pattern 2b: Try with explicit "Password: " pattern (handles log formatting)
+        ADMIN_PASSWORD=$(docker-compose logs backend 2>/dev/null | grep "Password:" | tail -1 | sed -E 's/.*Password:[[:space:]]+//' | sed 's/[[:space:]]*$//' | tr -d '\r\n' || echo "")
         if [ -n "$ADMIN_PASSWORD" ] && [ ${#ADMIN_PASSWORD} -ge 16 ]; then
             break
         fi
