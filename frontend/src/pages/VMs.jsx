@@ -30,6 +30,7 @@ const VMs = () => {
   const [vmMetrics, setVmMetrics] = useState([])
   const [vmUptime, setVmUptime] = useState(null)
   const [loadingDetails, setLoadingDetails] = useState(false)
+  const [detailsError, setDetailsError] = useState(null)
 
   useEffect(() => {
     fetchNodes()
@@ -135,6 +136,11 @@ const VMs = () => {
     if (!selectedVM) return
     
     setLoadingDetails(true)
+    setDetailsError(null)
+    setVmDetails(null)
+    setVmMetrics([])
+    setVmUptime(null)
+    
     try {
       const [vmResponse, metricsResponse, uptimeResponse] = await Promise.all([
         axios.get(`${API_URL}/api/vms/${selectedVM.id}`),
@@ -183,6 +189,7 @@ const VMs = () => {
       setVmMetrics(combined)
     } catch (error) {
       console.error('Failed to fetch VM details:', error)
+      setDetailsError(error.response?.data?.detail || error.message || 'Failed to load VM details')
     } finally {
       setLoadingDetails(false)
     }
@@ -200,8 +207,65 @@ const VMs = () => {
     }
   }
 
-  const handleViewDetails = (vm) => {
+  const handleViewDetails = async (vm) => {
     setSelectedVM(vm)
+    setVmDetails(null)
+    setVmMetrics([])
+    setVmUptime(null)
+    setLoadingDetails(true)
+    
+    try {
+      const [vmResponse, metricsResponse, uptimeResponse] = await Promise.all([
+        axios.get(`${API_URL}/api/vms/${vm.id}`),
+        axios.get(`${API_URL}/api/metrics?vm_id=${vm.id}&hours=24`),
+        axios.get(`${API_URL}/api/vms/${vm.id}/uptime?hours=24`)
+      ])
+      
+      setVmDetails(vmResponse.data)
+      setVmUptime(uptimeResponse.data)
+      
+      // Process metrics for charts
+      const cpuMetrics = metricsResponse.data.filter(m => m.metric_type === 'cpu')
+      const memoryMetrics = metricsResponse.data.filter(m => m.metric_type === 'memory')
+      const diskMetrics = metricsResponse.data.filter(m => m.metric_type === 'disk')
+      
+      // Combine metrics by timestamp
+      const timeMap = new Map()
+      
+      cpuMetrics.forEach(m => {
+        const time = new Date(m.recorded_at).getTime()
+        if (!timeMap.has(time)) {
+          timeMap.set(time, { time: formatShortDateTime(m.recorded_at) })
+        }
+        timeMap.get(time).cpu = m.value
+      })
+      
+      memoryMetrics.forEach(m => {
+        const time = new Date(m.recorded_at).getTime()
+        if (!timeMap.has(time)) {
+          timeMap.set(time, { time: formatShortDateTime(m.recorded_at) })
+        }
+        timeMap.get(time).memory = m.value
+      })
+      
+      diskMetrics.forEach(m => {
+        const time = new Date(m.recorded_at).getTime()
+        if (!timeMap.has(time)) {
+          timeMap.set(time, { time: formatShortDateTime(m.recorded_at) })
+        }
+        timeMap.get(time).disk = m.value
+      })
+      
+      const combined = Array.from(timeMap.values())
+        .sort((a, b) => new Date(a.time) - new Date(b.time))
+      
+      setVmMetrics(combined)
+    } catch (error) {
+      console.error('Failed to fetch VM details:', error)
+      setError(error.response?.data?.detail || error.message || 'Failed to load VM details')
+    } finally {
+      setLoadingDetails(false)
+    }
   }
 
   if (loading) {
@@ -339,21 +403,43 @@ const VMs = () => {
       </div>
 
       {selectedVM && (
-        <div className="modal-overlay" onClick={() => setSelectedVM(null)}>
+        <div className="modal-overlay" onClick={() => {
+          setSelectedVM(null)
+          setVmDetails(null)
+          setVmMetrics([])
+          setVmUptime(null)
+          setDetailsError(null)
+        }}>
           <div className="modal-content vm-details-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{selectedVM.name} - {t('vms.details')}</h2>
-              <button className="close-button" onClick={() => setSelectedVM(null)}>
-                {t('common.close')}
+              <button className="close-button" onClick={() => {
+                setSelectedVM(null)
+                setVmDetails(null)
+                setVmMetrics([])
+                setVmUptime(null)
+                setDetailsError(null)
+              }}>
+                ×
               </button>
             </div>
 
             {loadingDetails ? (
               <div className="loading">{t('common.loading')}</div>
-            ) : (
+            ) : detailsError ? (
               <div className="vm-details-content">
-                {vmDetails && (
-                  <div className="vm-details-info">
+                <div className="error-message" style={{ padding: '1rem', margin: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px' }}>
+                  <strong>Error:</strong> {detailsError}
+                </div>
+                <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                  <button className="action-button details-button" onClick={() => fetchVMDetails()}>
+                    {t('common.retry') || 'Retry'}
+                  </button>
+                </div>
+              </div>
+            ) : vmDetails ? (
+              <div className="vm-details-content">
+                <div className="vm-details-info">
                     <div className="info-section">
                       <h3>{t('vms.generalInfo')}</h3>
                       <div className="info-grid">
@@ -496,7 +582,13 @@ const VMs = () => {
                       </button>
                       <button
                         className="action-button"
-                        onClick={() => setSelectedVM(null)}
+                        onClick={() => {
+                          setSelectedVM(null)
+                          setVmDetails(null)
+                          setVmMetrics([])
+                          setVmUptime(null)
+                          setDetailsError(null)
+                        }}
                       >
                         {t('common.close')}
                       </button>
