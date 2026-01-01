@@ -55,6 +55,28 @@ export const WebSocketProvider = ({ children }) => {
     }
   }, [])
 
+  // Helper function to safely close WebSocket
+  const safeCloseWebSocket = useCallback((ws, code = 1000, reason = '') => {
+    if (!ws || !(ws instanceof WebSocket)) {
+      return
+    }
+    
+    // Only close if WebSocket is in a state where it can be closed
+    // OPEN (1) or CONNECTING (0) states can be closed
+    // CLOSING (2) or CLOSED (3) states should not be closed again
+    if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+      try {
+        ws.close(code, reason)
+      } catch (error) {
+        // Ignore errors when closing - WebSocket might already be closed
+        // Only log if it's not a DOMException (which is expected when already closed)
+        if (!(error instanceof DOMException)) {
+          console.error('Error closing WebSocket:', error)
+        }
+      }
+    }
+  }, [])
+
   const startHeartbeat = useCallback(() => {
     clearHeartbeat()
     
@@ -73,11 +95,7 @@ export const WebSocketProvider = ({ children }) => {
         // Check if we received a pong recently
         if (now - lastPongRef.current > HEARTBEAT_TIMEOUT) {
           console.warn('WebSocket heartbeat timeout - connection may be dead')
-          try {
-            ws.close(1006, 'Heartbeat timeout')
-          } catch (error) {
-            console.error('Error closing WebSocket:', error)
-          }
+          safeCloseWebSocket(ws, 1006, 'Heartbeat timeout')
           clearHeartbeat()
           return
         }
@@ -93,13 +111,7 @@ export const WebSocketProvider = ({ children }) => {
               if (timeSinceLastPong > HEARTBEAT_TIMEOUT) {
                 console.warn('WebSocket pong timeout - closing connection')
                 const currentWs = wsRef.current
-                if (currentWs && currentWs.readyState === WebSocket.OPEN) {
-                  try {
-                    currentWs.close(1006, 'Pong timeout')
-                  } catch (error) {
-                    console.error('Error closing WebSocket on pong timeout:', error)
-                  }
-                }
+                safeCloseWebSocket(currentWs, 1006, 'Pong timeout')
                 clearHeartbeat()
               }
             }, HEARTBEAT_TIMEOUT)
@@ -114,7 +126,7 @@ export const WebSocketProvider = ({ children }) => {
         clearHeartbeat()
       }
     }, HEARTBEAT_INTERVAL)
-  }, [clearHeartbeat])
+  }, [clearHeartbeat, safeCloseWebSocket])
 
   const connect = useCallback(() => {
     if (!shouldReconnectRef.current) return
@@ -251,11 +263,11 @@ export const WebSocketProvider = ({ children }) => {
     setReconnectAttempt(0)
     setConnectionError(null)
     if (wsRef.current) {
-      wsRef.current.close(1000, 'Manual reconnect')
+      safeCloseWebSocket(wsRef.current, 1000, 'Manual reconnect')
     } else {
       connect()
     }
-  }, [connect])
+  }, [connect, safeCloseWebSocket])
 
   // Initialize connection on mount
   useEffect(() => {
@@ -268,11 +280,9 @@ export const WebSocketProvider = ({ children }) => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
       }
-      if (wsRef.current) {
-        wsRef.current.close(1000, 'Provider unmounting')
-      }
+      safeCloseWebSocket(wsRef.current, 1000, 'Provider unmounting')
     }
-  }, [connect, clearHeartbeat])
+  }, [connect, clearHeartbeat, safeCloseWebSocket])
 
   const value = {
     isConnected,
