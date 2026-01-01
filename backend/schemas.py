@@ -496,3 +496,22 @@ class AlertRuleResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AuditLogResponse(BaseModel):
+    id: int
+    user_id: Optional[int] = None
+    username: Optional[str] = None
+    action: str
+    resource_type: str
+    resource_id: Optional[int] = None
+    resource_name: Optional[str] = None
+    changes: Optional[Dict[str, Any]] = None
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    success: bool
+    error_message: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
