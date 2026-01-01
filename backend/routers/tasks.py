@@ -16,10 +16,23 @@ limitations under the License.
 from fastapi import APIRouter, Depends, HTTPException, status
 from auth import get_current_active_user
 from config import settings
-from celery_app import celery_app
 import logging
 
 logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/api/tasks", tags=["tasks"])
+
+
+def get_celery_app():
+    """Get Celery app if enabled, otherwise return None"""
+    if not settings.celery_enabled:
+        return None
+    try:
+        from celery_app import celery_app
+        return celery_app
+    except ImportError:
+        return None
+
 
 @router.get("/{task_id}/status")
 async def get_task_status(
@@ -39,7 +52,7 @@ async def get_task_status(
         )
     
     try:
-        task = celery_app.AsyncResult(task_id)
+        task = app.AsyncResult(task_id)
         
         response = {
             "task_id": task_id,
@@ -89,7 +102,7 @@ async def get_task_result(
         )
     
     try:
-        task = celery_app.AsyncResult(task_id)
+        task = app.AsyncResult(task_id)
         
         if task.state == "PENDING":
             raise HTTPException(
