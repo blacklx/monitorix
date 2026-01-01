@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { validateNode } from '../utils/validation'
+import { handleApiError } from '../utils/errorHandler'
 import './Nodes.css'
 
 const API_URL = import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL || ''
