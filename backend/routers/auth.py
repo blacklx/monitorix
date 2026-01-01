@@ -70,7 +70,7 @@ async def login(
         user = authenticate_user(db, form_data.username, form_data.password)
         if not user:
             try:
-                log_action(db, "login_failed", f"Attempted login for username: {form_data.username}", get_client_ip(request), get_user_agent(request), success=False)
+                log_action(db, None, "login_failed", "auth", ip_address=get_client_ip(request), user_agent=get_user_agent(request), success=False, error_message=f"Attempted login for username: {form_data.username}")
             except Exception as e:
                 logger.error(f"Failed to log login failure: {e}")
             raise HTTPException(
@@ -82,7 +82,7 @@ async def login(
         # Check if 2FA is enabled - if so, user must use /login/verify-2fa endpoint
         if user.totp_enabled and user.totp_secret:
             try:
-                log_action(db, "login_failed", f"User '{user.username}' attempted login but 2FA is required", get_client_ip(request), get_user_agent(request), user_id=user.id, success=False)
+                log_action(db, user.id, "login_failed", "auth", ip_address=get_client_ip(request), user_agent=get_user_agent(request), success=False, error_message=f"User '{user.username}' attempted login but 2FA is required")
             except Exception as e:
                 logger.error(f"Failed to log 2FA requirement: {e}")
             raise HTTPException(
@@ -134,7 +134,7 @@ async def login(
             )
         
         try:
-            log_action(db, "login_success", f"User '{user.username}' logged in", get_client_ip(request), get_user_agent(request), user_id=user.id)
+            log_action(db, user.id, "login_success", "auth", ip_address=get_client_ip(request), user_agent=get_user_agent(request), success=True)
         except Exception as e:
             logger.error(f"Failed to log login success: {e}")
         
@@ -192,7 +192,7 @@ async def login_verify_2fa(
         )
     
     if not verify_totp(user.totp_secret, login_data.totp_token):
-        log_action(db, "login_failed", f"Invalid 2FA token for user '{login_data.username}'", get_client_ip(request), get_user_agent(request), user_id=user.id, success=False)
+        log_action(db, user.id, "login_failed", "auth", ip_address=get_client_ip(request), user_agent=get_user_agent(request), success=False, error_message=f"Invalid 2FA token for user '{login_data.username}'")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid 2FA token"
@@ -215,7 +215,7 @@ async def login_verify_2fa(
     user.refresh_token_expires = datetime.utcnow() + refresh_token_expires
     db.commit()
     
-    log_action(db, "login_success", f"User '{user.username}' logged in with 2FA", get_client_ip(request), get_user_agent(request), user_id=user.id)
+    log_action(db, user.id, "login_success", "auth", ip_address=get_client_ip(request), user_agent=get_user_agent(request), success=True)
     logger.info(f"User '{user.username}' logged in successfully with 2FA.")
     
     return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
