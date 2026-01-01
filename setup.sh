@@ -301,64 +301,81 @@ if ! command -v docker-compose > /dev/null 2>&1; then
     FINAL_CHECK_FAILED=true
 fi
 
-# Check Docker permissions
-USE_SUDO_DOCKER=false
+# Check Docker permissions - must work without sudo
 if ! docker ps > /dev/null 2>&1; then
-    # Check if user is in docker group (check both current session and system)
+    # Check if user is in docker group (check system, not just current session)
     IN_DOCKER_GROUP=false
-    if groups | grep -q docker || id -nG | grep -q docker; then
-        IN_DOCKER_GROUP=true
-    elif getent group docker | grep -q "$USER"; then
+    if getent group docker | grep -q "$USER"; then
         IN_DOCKER_GROUP=true
     fi
     
     if [ "$IN_DOCKER_GROUP" = true ]; then
-        print_warn "User is in docker group, but it's not active in this session."
-        print_info "To activate docker group, run one of these commands:"
-        print_info "  1. newgrp docker  (activates group in new shell)"
-        print_info "  2. Or log out and back in"
-        echo ""
-        print_info "Alternatively, you can continue with sudo (script will use sudo for docker commands)"
-        echo ""
-        read -p "Continue with sudo for docker commands? (y/n): " -n 1 -r
-        echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            USE_SUDO_DOCKER=true
-            print_info "Will use sudo for docker commands"
-        else
-            print_info ""
-            print_info "Please run one of these commands to activate docker group:"
-            print_info "  newgrp docker"
-            print_info "Then run this script again: bash setup.sh"
-            exit 0
-        fi
+        print_warn "══════════════════════════════════════════════════════════"
+        print_warn "Docker group membership detected, but not active in this session"
+        print_warn "══════════════════════════════════════════════════════════"
+        print_info ""
+        print_info "You are in the docker group, but it needs to be activated."
+        print_info ""
+        print_info "To fix this, run ONE of these commands:"
+        print_info ""
+        print_info "  Option 1 (Recommended - activates in new shell):"
+        print_info "    newgrp docker"
+        print_info "    bash setup.sh"
+        print_info ""
+        print_info "  Option 2 (Alternative - requires logout/login):"
+        print_info "    # Log out and back in, then run:"
+        print_info "    bash setup.sh"
+        print_info ""
+        print_warn "This script will now exit. Please activate docker group and run again."
+        print_warn "══════════════════════════════════════════════════════════"
+        exit 0
     else
-        # User might have been just added, but group not active yet
-        # Check if docker group exists and was recently modified
-        if getent group docker > /dev/null 2>&1; then
-            print_warn "Docker group exists, but user membership may not be active yet."
-            print_info "The script added you to the docker group, but it needs to be activated."
-            echo ""
-            print_info "You have two options:"
-            print_info "  1. Run: newgrp docker  (then run this script again)"
-            print_info "  2. Continue with sudo (script will use sudo for docker commands)"
-            echo ""
-            read -p "Continue with sudo for docker commands? (y/n): " -n 1 -r
-            echo ""
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                USE_SUDO_DOCKER=true
-                print_info "Will use sudo for docker commands"
-            else
-                print_info ""
-                print_info "Please run: newgrp docker"
-                print_info "Then run this script again: bash setup.sh"
-                exit 0
-            fi
+        # User is not in docker group at all
+        print_warn "══════════════════════════════════════════════════════════"
+        print_warn "Docker commands require root privileges"
+        print_warn "══════════════════════════════════════════════════════════"
+        print_info ""
+        print_info "You need to be added to the docker group to run docker commands."
+        print_info ""
+        print_info "The script will add you to the docker group, but you'll need to"
+        print_info "activate it in a new session before continuing."
+        print_info ""
+        print_info "Steps:"
+        print_info "  1. This script will add you to docker group"
+        print_info "  2. Run: newgrp docker"
+        print_info "  3. Run: bash setup.sh"
+        print_info ""
+        print_info "Adding you to docker group now..."
+        if sudo usermod -aG docker "$USER" 2>/dev/null; then
+            print_info "✓ Added to docker group"
+            print_info ""
+            print_warn "══════════════════════════════════════════════════════════"
+            print_warn "ACTION REQUIRED: Activate docker group"
+            print_warn "══════════════════════════════════════════════════════════"
+            print_info ""
+            print_info "Run this command to activate docker group:"
+            print_info ""
+            print_info "  newgrp docker"
+            print_info ""
+            print_info "Then run this script again:"
+            print_info ""
+            print_info "  bash setup.sh"
+            print_info ""
+            print_warn "This script will now exit. Please activate docker group and run again."
+            print_warn "══════════════════════════════════════════════════════════"
+            exit 0
         else
-            print_error "Docker group does not exist. Docker may not be installed correctly."
+            print_error "Failed to add user to docker group"
+            print_error "Please run manually: sudo usermod -aG docker $USER"
             FINAL_CHECK_FAILED=true
         fi
     fi
+fi
+
+# If we get here, docker works without sudo - verify it
+if ! docker ps > /dev/null 2>&1; then
+    print_error "Docker commands still not working. Please check your docker installation."
+    FINAL_CHECK_FAILED=true
 fi
 
 if [ "$FINAL_CHECK_FAILED" = true ]; then
@@ -369,21 +386,13 @@ fi
 print_info "All prerequisites verified successfully"
 echo ""
 
-# Helper function to run docker commands (with or without sudo)
+# Helper functions - docker should work without sudo at this point
 docker_cmd() {
-    if [ "$USE_SUDO_DOCKER" = true ]; then
-        sudo docker "$@"
-    else
-        docker "$@"
-    fi
+    docker "$@"
 }
 
 docker_compose_cmd() {
-    if [ "$USE_SUDO_DOCKER" = true ]; then
-        sudo docker-compose "$@"
-    else
-        docker-compose "$@"
-    fi
+    docker-compose "$@"
 }
 
 # Check if PostgreSQL volume exists
