@@ -304,8 +304,15 @@ fi
 # Check Docker permissions
 USE_SUDO_DOCKER=false
 if ! docker ps > /dev/null 2>&1; then
-    # Check if user is in docker group
+    # Check if user is in docker group (check both current session and system)
+    IN_DOCKER_GROUP=false
     if groups | grep -q docker || id -nG | grep -q docker; then
+        IN_DOCKER_GROUP=true
+    elif getent group docker | grep -q "$USER"; then
+        IN_DOCKER_GROUP=true
+    fi
+    
+    if [ "$IN_DOCKER_GROUP" = true ]; then
         print_warn "User is in docker group, but it's not active in this session."
         print_info "To activate docker group, run one of these commands:"
         print_info "  1. newgrp docker  (activates group in new shell)"
@@ -326,12 +333,31 @@ if ! docker ps > /dev/null 2>&1; then
             exit 0
         fi
     else
-        print_error "User is not in docker group."
-        print_error "The script tried to add you, but you need to activate it."
-        print_error "Please run one of these:"
-        print_error "  1. newgrp docker  (then run this script again)"
-        print_error "  2. Log out and back in (then run this script again)"
-        FINAL_CHECK_FAILED=true
+        # User might have been just added, but group not active yet
+        # Check if docker group exists and was recently modified
+        if getent group docker > /dev/null 2>&1; then
+            print_warn "Docker group exists, but user membership may not be active yet."
+            print_info "The script added you to the docker group, but it needs to be activated."
+            echo ""
+            print_info "You have two options:"
+            print_info "  1. Run: newgrp docker  (then run this script again)"
+            print_info "  2. Continue with sudo (script will use sudo for docker commands)"
+            echo ""
+            read -p "Continue with sudo for docker commands? (y/n): " -n 1 -r
+            echo ""
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                USE_SUDO_DOCKER=true
+                print_info "Will use sudo for docker commands"
+            else
+                print_info ""
+                print_info "Please run: newgrp docker"
+                print_info "Then run this script again: bash setup.sh"
+                exit 0
+            fi
+        else
+            print_error "Docker group does not exist. Docker may not be installed correctly."
+            FINAL_CHECK_FAILED=true
+        fi
     fi
 fi
 
