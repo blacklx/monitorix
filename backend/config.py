@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from pydantic_settings import BaseSettings
-from pydantic import Field
-from typing import List, Optional
+from pydantic import Field, field_validator
+from typing import List, Optional, Union
 import os
 from dotenv import load_dotenv
 
@@ -81,23 +81,49 @@ class Settings(BaseSettings):
     # CORS Configuration
     # Default to localhost:3000 for development (frontend port)
     # Note: When allow_credentials=True, you cannot use "*" for origins
-    # Parse CORS_ORIGINS manually to avoid Pydantic trying to parse as JSON
-    cors_origins: List[str] = Field(
-        default_factory=lambda: os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",") 
-        if os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000") != "*" 
-        else ["*"]
+    # Use Union[str, List[str]] to accept both string (from env) and list (parsed)
+    cors_origins: Union[str, List[str]] = Field(
+        default="http://localhost:3000,http://127.0.0.1:3000"
     )
-    cors_allow_credentials: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
-    cors_allow_methods: List[str] = Field(
-        default_factory=lambda: os.getenv("CORS_ALLOW_METHODS", "*").split(",") 
-        if os.getenv("CORS_ALLOW_METHODS", "*") != "*" 
-        else ["*"]
-    )
-    cors_allow_headers: List[str] = Field(
-        default_factory=lambda: os.getenv("CORS_ALLOW_HEADERS", "*").split(",") 
-        if os.getenv("CORS_ALLOW_HEADERS", "*") != "*" 
-        else ["*"]
-    )
+    cors_allow_credentials: bool = True
+    cors_allow_methods: Union[str, List[str]] = Field(default="*")
+    cors_allow_headers: Union[str, List[str]] = Field(default="*")
+    
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Union[str, List[str], None]) -> List[str]:
+        """Parse CORS origins from comma-separated string or list"""
+        if v is None:
+            return ["http://localhost:3000", "http://127.0.0.1:3000"]
+        if isinstance(v, list):
+            return v
+        if v == "*":
+            return ["*"]
+        return [item.strip() for item in v.split(",") if item.strip()]
+    
+    @field_validator("cors_allow_methods", mode="before")
+    @classmethod
+    def parse_cors_methods(cls, v: Union[str, List[str], None]) -> List[str]:
+        """Parse CORS methods from comma-separated string or list"""
+        if v is None:
+            return ["*"]
+        if isinstance(v, list):
+            return v
+        if v == "*":
+            return ["*"]
+        return [item.strip() for item in v.split(",") if item.strip()]
+    
+    @field_validator("cors_allow_headers", mode="before")
+    @classmethod
+    def parse_cors_headers(cls, v: Union[str, List[str], None]) -> List[str]:
+        """Parse CORS headers from comma-separated string or list"""
+        if v is None:
+            return ["*"]
+        if isinstance(v, list):
+            return v
+        if v == "*":
+            return ["*"]
+        return [item.strip() for item in v.split(",") if item.strip()]
     
     # Rate Limiting
     rate_limit_per_hour: int = int(os.getenv("RATE_LIMIT_PER_HOUR", "1000"))
