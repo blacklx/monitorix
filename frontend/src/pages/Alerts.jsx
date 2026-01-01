@@ -17,6 +17,7 @@ const Alerts = () => {
   const [severityFilter, setSeverityFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
   const [selectedAlerts, setSelectedAlerts] = useState(new Set())
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
 
   useEffect(() => {
     fetchAlerts()
