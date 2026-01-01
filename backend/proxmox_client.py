@@ -2,6 +2,7 @@ from proxmoxer import ProxmoxAPI
 from typing import Dict, List, Optional
 import logging
 from datetime import datetime
+from urllib.parse import urlparse, urlunparse
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -19,12 +20,54 @@ class ProxmoxClient:
             verify_ssl: Whether to verify SSL certificates (defaults to PROXMOX_VERIFY_SSL from config)
             ca_bundle: Path to CA bundle file for SSL verification (optional)
         """
-        self.url = url
+        # Normalize URL: remove trailing slash, ensure proper format
+        self.url = self._normalize_url(url)
         self.username = username
         self.token = token
         self.verify_ssl = verify_ssl if verify_ssl is not None else settings.proxmox_verify_ssl
         self.ca_bundle = ca_bundle or settings.proxmox_ca_bundle
         self._api = None
+    
+    def _normalize_url(self, url: str) -> str:
+        """
+        Normalize Proxmox URL to prevent proxmoxer parsing errors.
+        
+        Removes trailing slashes and ensures proper URL format.
+        """
+        if not url:
+            return url
+        
+        # Strip whitespace
+        url = url.strip()
+        
+        # Remove trailing slash
+        url = url.rstrip('/')
+        
+        # Parse and reconstruct URL to ensure proper format
+        try:
+            parsed = urlparse(url)
+            
+            # Ensure scheme is present
+            if not parsed.scheme:
+                # If no scheme, assume https
+                url = f"https://{url}"
+                parsed = urlparse(url)
+            
+            # Reconstruct URL without path (proxmoxer doesn't need it)
+            # Keep only: scheme, netloc (host:port)
+            normalized = urlunparse((
+                parsed.scheme,
+                parsed.netloc,  # This includes host:port
+                '',  # No path
+                '',  # No params
+                '',  # No query
+                ''   # No fragment
+            ))
+            
+            return normalized
+        except Exception as e:
+            logger.warning(f"Failed to normalize URL '{url}': {e}. Using original URL.")
+            return url.rstrip('/')
 
     def _get_api(self):
         """Get or create Proxmox API client"""
