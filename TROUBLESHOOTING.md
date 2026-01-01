@@ -319,8 +319,10 @@ This guide helps you diagnose and fix common issues with Monitorix.
 
 **Solutions**:
 1. Check WebSocket URL:
-   - Verify `VITE_WS_URL` in `frontend/.env`
-   - Ensure URL uses `ws://` (HTTP) or `wss://` (HTTPS)
+   - WebSocket URL is automatically constructed from the current page URL
+   - For local development: Uses `ws://localhost:8000/ws`
+   - For production (Nginx proxy): Uses relative path `ws://` or `wss://` based on page protocol
+   - No manual configuration needed when using Nginx proxy
 
 2. Check firewall rules:
    - Ensure port 8000 is open
@@ -354,6 +356,12 @@ This guide helps you diagnose and fix common issues with Monitorix.
 3. Check network stability
 4. Review WebSocket heartbeat settings
 5. Check browser console for errors
+6. **If WebSocket disconnects when testing Proxmox connections**:
+   - This was a known issue where connection tests blocked the event loop
+   - Fixed in recent versions: Connection tests now run in thread pool with 10-second timeout
+   - Ensure you're running the latest version
+   - Check backend logs for any errors during connection tests
+   - If issue persists, check if Proxmox node is reachable and responding
 
 ## Authentication Issues
 

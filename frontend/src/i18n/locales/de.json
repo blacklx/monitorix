@@ -231,6 +231,10 @@
     "showResolved": "Gelöste anzeigen",
     "resolve": "Lösen",
     "noAlerts": "Keine Warnungen gefunden",
+    "notificationsEnabled": "Browser-Benachrichtigungen aktiviert",
+    "notificationsDisabled": "Browser-Benachrichtigungen deaktiviert",
+    "enableNotifications": "Benachrichtigungen aktivieren",
+    "selectAll": "Alle auswählen",
     "severity": {
       "critical": "Kritisch",
       "warning": "Warnung",

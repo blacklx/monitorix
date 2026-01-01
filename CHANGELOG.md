@@ -19,12 +19,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive documentation (Developer Guide, Architecture, Deployment, Troubleshooting, FAQ)
 - WebSocket broadcasting for alerts
 - Enhanced Swagger/OpenAPI documentation
+- Improved UI styling with CSS variables for better theme support
+- Alert checkbox spacing improvements
+- Profile link styling in navigation
+
+### Fixed
+- WebSocket connection blocking when testing Proxmox node connections
+- Proxmox connection tests now run in thread pool to prevent event loop blocking
+- Missing `handleApiError` import in Nodes.jsx
+- Missing `settings` import in nodes.py router
+- Missing `requests` dependency for proxmoxer library
+- Incorrect `log_action` function calls in auth.py
+- Modal styling using hardcoded colors instead of CSS variables
+- Alert checkbox layout issues
+- Profile link missing CSS styling
+- Indentation error in bulk_create_nodes exception handler
 
 ### Improved
 - Docker images optimized with multi-stage builds
 - Alert notifications now include WebSocket broadcasting
 - Theme system extended with multiple color schemes
 - Documentation structure and completeness
+- Proxmox connection tests now have 10-second timeout to prevent hanging
+- Better error handling for connection tests
+- All modals now use CSS variables for consistent theming
+- Improved UI consistency across all pages
 
 ### Planned
 - See [TODO.md](TODO.md) for remaining items

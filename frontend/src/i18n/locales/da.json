@@ -231,6 +231,10 @@
     "showResolved": "Vis løste",
     "resolve": "Løs",
     "noAlerts": "Ingen advarsler fundet",
+    "notificationsEnabled": "Browserbeskeder aktiveret",
+    "notificationsDisabled": "Browserbeskeder deaktiveret",
+    "enableNotifications": "Aktiver beskeder",
+    "selectAll": "Vælg alle",
     "severity": {
       "critical": "Kritisk",
       "warning": "Advarsel",

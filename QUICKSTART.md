@@ -76,13 +76,13 @@ The script will:
    cd ~/monitorix
    ```
 
-2. **Configure .env:**
+2. **Configure .env (if needed):**
    ```bash
    nano .env
    ```
-   - Set database password
-   - Set SECRET_KEY
-   - Add Proxmox nodes
+   - Database password is auto-generated
+   - SECRET_KEY is auto-generated
+   - **Note**: Proxmox nodes are added via the web UI, not in .env
 
 3. **Restart services:**
    ```bash

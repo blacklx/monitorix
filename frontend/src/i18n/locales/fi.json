@@ -231,6 +231,10 @@
     "showResolved": "Näytä ratkaistut",
     "resolve": "Ratkaise",
     "noAlerts": "Hälytyksiä ei löytynyt",
+    "notificationsEnabled": "Selainilmoitukset käytössä",
+    "notificationsDisabled": "Selainilmoitukset pois käytöstä",
+    "enableNotifications": "Ota ilmoitukset käyttöön",
+    "selectAll": "Valitse kaikki",
     "severity": {
       "critical": "Kriittinen",
       "warning": "Varoitus",

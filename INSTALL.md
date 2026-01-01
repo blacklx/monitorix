@@ -265,9 +265,26 @@ docker-compose logs -f
 
 You will be automatically logged in.
 
-### Step 11: Add Proxmox Nodes (if not configured in .env)
+### Step 11: Add Proxmox Nodes
 
-If you didn't configure nodes in `.env`, you can add them via API:
+**Proxmox nodes are managed via the web UI, not through environment variables.**
+
+Add Proxmox nodes via the web interface:
+
+1. Log in to Monitorix at `http://localhost:3000` (or your configured URL)
+2. Navigate to **"Proxmox Nodes"** in the sidebar
+3. Click **"Add Node"** button
+4. Enter node details:
+   - **Name**: A friendly name (e.g., `node1`, `pve1`, `home-lab`)
+   - **URL**: Proxmox API URL (e.g., `https://192.168.1.10:8006` or `https://pve.example.com:8006`)
+   - **Username**: Proxmox username (e.g., `user@pam`)
+   - **Token**: Proxmox API token (format: `token_id=token_secret`)
+5. Click **"Test Connection"** to verify the connection
+6. Click **"Save"** to add the node
+
+Nodes are stored in the database and can be managed through the web interface.
+
+**Alternative: Add via API** (for automation):
 
 ```bash
 # First, get access token
@@ -287,8 +304,6 @@ curl -X POST "http://localhost:8000/api/nodes" \
     "is_local": true
   }'
 ```
-
-Or use the web interface (if "Add Node" function is implemented).
 
 ## ✅ Verification
 

@@ -231,6 +231,10 @@
     "showResolved": "Vis løste",
     "resolve": "Løs",
     "noAlerts": "Ingen varsler funnet",
+    "notificationsEnabled": "Nettleservarsler aktivert",
+    "notificationsDisabled": "Nettleservarsler deaktivert",
+    "enableNotifications": "Aktiver varsler",
+    "selectAll": "Velg alle",
     "severity": {
       "critical": "Kritisk",
       "warning": "Advarsel",

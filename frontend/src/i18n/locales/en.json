@@ -234,6 +234,7 @@
     "notificationsEnabled": "Browser notifications enabled",
     "notificationsDisabled": "Browser notifications disabled",
     "enableNotifications": "Enable Notifications",
+    "selectAll": "Select All",
     "severity": {
       "critical": "Critical",
       "warning": "Warning",

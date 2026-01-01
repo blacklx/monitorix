@@ -193,9 +193,36 @@ Prioritization is based on:
 
 ---
 
-## 🔧 Recent Fixes and Improvements (2024-12-31)
+## 🔧 Recent Fixes and Improvements (2025-01-01)
 
 ### Critical Bugs Fixed
+
+1. **WebSocket Connection Issues** - Fixed:
+   - WebSocket disconnecting when testing Proxmox node connections
+   - Connection tests now run in thread pool to prevent event loop blocking
+   - Added 10-second timeout for connection tests
+   - Improved error handling for connection tests
+
+2. **Import Errors** - Fixed:
+   - Missing `handleApiError` import in Nodes.jsx
+   - Missing `settings` import in nodes.py router
+   - Missing `requests` dependency for proxmoxer library
+
+3. **Audit Logging** - Fixed:
+   - Incorrect `log_action` function calls in auth.py (wrong parameter order)
+   - All log_action calls now use correct signature
+
+4. **UI Styling** - Fixed:
+   - Modal styling using hardcoded colors instead of CSS variables
+   - Alert checkbox layout issues (spacing problems)
+   - Profile link missing CSS styling
+   - All modals now use CSS variables for consistent theming
+
+5. **Code Quality** - Fixed:
+   - Indentation error in bulk_create_nodes exception handler
+   - All translation files updated with missing keys (selectAll, notificationsEnabled, etc.)
+
+### Previous Fixes (2024-12-31)
 
 1. **Import Errors** - Fixed missing imports in:
    - `main.py`: Added limiter, RateLimitExceeded, webhooks imports

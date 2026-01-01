@@ -231,6 +231,10 @@
     "showResolved": "Visa lösta",
     "resolve": "Lös",
     "noAlerts": "Inga varningar hittades",
+    "notificationsEnabled": "Webbläsaraviseringar aktiverade",
+    "notificationsDisabled": "Webbläsaraviseringar inaktiverade",
+    "enableNotifications": "Aktivera aviseringar",
+    "selectAll": "Välj alla",
     "severity": {
       "critical": "Kritisk",
       "warning": "Varning",
