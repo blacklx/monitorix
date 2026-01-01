@@ -28,6 +28,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         self.enable_hsts = enable_hsts
     
     async def dispatch(self, request: Request, call_next):
+        # Skip OPTIONS requests (CORS preflight) - let CORS middleware handle them
+        if request.method == "OPTIONS":
+            return await call_next(request)
+        
         response: Response = await call_next(request)
         
         # Content Security Policy

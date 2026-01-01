@@ -357,15 +357,7 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Security headers middleware (add before CORS)
-# Only enable HSTS if explicitly enabled (should be used with HTTPS)
-enable_hsts = settings.enable_hsts
-app.add_middleware(SecurityHeadersMiddleware, enable_hsts=enable_hsts)
-
-# CSRF protection middleware (add before CORS to validate tokens)
-app.add_middleware(CSRFMiddleware, enabled=settings.csrf_enabled)
-
-# CORS middleware
+# CORS middleware (MUST be first to handle preflight requests)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -373,6 +365,14 @@ app.add_middleware(
     allow_methods=settings.cors_allow_methods,
     allow_headers=settings.cors_allow_headers,
 )
+
+# Security headers middleware (after CORS)
+# Only enable HSTS if explicitly enabled (should be used with HTTPS)
+enable_hsts = settings.enable_hsts
+app.add_middleware(SecurityHeadersMiddleware, enable_hsts=enable_hsts)
+
+# CSRF protection middleware (after CORS to validate tokens)
+app.add_middleware(CSRFMiddleware, enabled=settings.csrf_enabled)
 
 # Include routers
 # All routers are included with /api prefix for backward compatibility
