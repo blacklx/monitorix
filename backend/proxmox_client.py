@@ -205,7 +205,7 @@ class ProxmoxClient:
                         logger.warning(f"SSL certificate verification failed for {clean_url}")
                         logger.warning(f"This usually means Proxmox is using a self-signed certificate.")
                         logger.warning(f"Current verify_ssl setting: {verify_ssl}")
-                        if verify_ssl = verify_ssl
+                        if verify_ssl:
                             raise ValueError(
                                 f"SSL certificate verification failed for {clean_url}. "
                                 f"This usually means Proxmox is using a self-signed certificate. "
