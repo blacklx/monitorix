@@ -211,11 +211,11 @@ async def bulk_create_nodes(
                 
                 created.append(node)
             except Exception as e:
-            db.rollback()
-            failed.append({
-                "node": node_data.dict(),
-                "error": str(e)
-            })
+                db.rollback()
+                failed.append({
+                    "node": node_data.dict(),
+                    "error": str(e)
+                })
     
     # Invalidate cache after bulk create
     if created:
