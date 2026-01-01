@@ -44,8 +44,8 @@ async def get_task_status(
     
     Returns task status, result (if completed), and progress information.
     """
-    celery_app = get_celery_app()
-    if not celery_app:
+    app = get_celery_app()
+    if not app:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Celery is not enabled"
@@ -94,8 +94,8 @@ async def get_task_result(
     
     Returns the full task result if the task has completed successfully.
     """
-    celery_app = get_celery_app()
-    if not celery_app:
+    app = get_celery_app()
+    if not app:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Celery is not enabled"
