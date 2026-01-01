@@ -71,9 +71,9 @@ This document tracks planned improvements, new features, and known issues.
 ### Features
 
 - [ ] 📝 **Mobile app** - Native or PWA
-- [ ] 📝 **CLI tool** - Command-line tool
+- [x] ✅ **CLI tool** - Command-line tool (Implemented with commands for nodes, VMs, services, alerts, users, and data export)
 - [ ] 📝 **Grafana integration** - Export metrics to Grafana
-- [ ] 📝 **Prometheus exporter** - Prometheus metrics endpoint
+- [x] ✅ **Prometheus exporter** - Prometheus metrics endpoint (Implemented at /api/prometheus/metrics)
 - [ ] 📝 **SNMP monitoring** - Support for SNMP
 - [ ] 📝 **Docker container monitoring** - Monitor Docker containers
 - [ ] 📝 **Kubernetes integration** - Monitor K8s clusters
@@ -84,22 +84,22 @@ This document tracks planned improvements, new features, and known issues.
 ### UI/UX
 
 - [ ] 📝 **Dashboard widgets** - Customizable dashboard widgets
-- [ ] 📝 **Themes** - Multiple color schemes and themes
-- [ ] 📝 **Keyboard shortcuts** - Shortcuts for power users
-- [ ] 📝 **Bulk actions** - Perform actions on multiple items
+- [x] ✅ **Themes** - Multiple color schemes and themes (5 themes: light, dark, blue, green, purple)
+- [x] ✅ **Keyboard shortcuts** - Shortcuts for power users (Navigation shortcuts implemented: Ctrl/Cmd+D/N/V/S/A/M/U/P, Esc for modals)
+- [x] ✅ **Bulk actions** - Perform actions on multiple items (Bulk operations for nodes and services implemented, bulk resolve for alerts)
 - [ ] 📝 **Drag and drop** - Reorganize dashboard
 - [ ] 📝 **Charts library** - Better chart library (Chart.js, D3.js)
-- [ ] 📝 **Real-time notifications** - Browser notifications
+- [x] ✅ **Real-time notifications** - Browser notifications (Browser notification API integrated with WebSocket alerts)
 - [ ] 📝 **Print views** - Printer-friendly views
 
 ### Technical
 
-- [ ] 📝 **Unit tests** - Test coverage for backend
+- [x] ✅ **Unit tests** - Test coverage for backend (Pytest framework with test coverage for auth, password policy, input validation)
 - [ ] 📝 **Integration tests** - Test entire system
 - [ ] 📝 **E2E tests** - Test frontend with Playwright/Cypress
-- [ ] 📝 **CI/CD pipeline** - Automatic testing and deployment
-- [ ] 📝 **Docker optimizations** - Multi-stage builds, smaller images
-- [ ] 📝 **Health checks** - Container health checks
+- [x] ✅ **CI/CD pipeline** - Automatic testing and deployment (GitHub Actions workflow with backend tests, frontend build, Docker build)
+- [x] ✅ **Docker optimizations** - Multi-stage builds, smaller images (Backend Dockerfile optimized with multi-stage build)
+- [x] ✅ **Health checks** - Container health checks (Implemented in docker-compose.yml)
 - [x] ✅ **Monitoring** - Monitor the system itself (System metrics implemented)
 - [x] ✅ **Logging** - Structured JSON logging implemented with auto-detection (JSON in production, text in development), configurable log levels, and optional file logging
 - [x] ✅ **Error tracking** - Sentry error tracking implemented with FastAPI integration, automatic exception capture, user context, and performance monitoring
@@ -135,13 +135,13 @@ This document tracks planned improvements, new features, and known issues.
 
 ## 📚 Documentation
 
-- [ ] 📝 **API documentation** - Improve Swagger documentation
-- [ ] 📝 **Developer guide** - Guide for developers
-- [ ] 📝 **Architecture diagram** - Visualize system architecture
-- [ ] 📝 **Deployment guide** - Detailed deployment guide
-- [ ] 📝 **Troubleshooting guide** - Extended troubleshooting guide
-- [ ] 📝 **FAQ** - Frequently asked questions
-- [ ] 📝 **Changelog** - Track changes
+- [x] ✅ **API documentation** - Improve Swagger documentation (Enhanced with detailed descriptions, examples, and tags metadata)
+- [x] ✅ **Developer guide** - Guide for developers (DEVELOPER_GUIDE.md created)
+- [x] ✅ **Architecture diagram** - Visualize system architecture (ARCHITECTURE.md with detailed architecture description)
+- [x] ✅ **Deployment guide** - Detailed deployment guide (DEPLOYMENT.md with production deployment instructions)
+- [x] ✅ **Troubleshooting guide** - Extended troubleshooting guide (TROUBLESHOOTING.md with comprehensive troubleshooting)
+- [x] ✅ **FAQ** - Frequently asked questions (FAQ.md created)
+- [x] ✅ **Changelog** - Track changes (CHANGELOG.md maintained and updated)
 
 ## 🔒 Security
 
