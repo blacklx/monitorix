@@ -6,7 +6,7 @@ from database import get_db
 from models import AuditLog, User
 from schemas import AuditLogResponse
 from auth import get_current_admin_user
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func
 
 router = APIRouter(prefix="/api/audit-logs", tags=["audit-logs"])
 
@@ -67,19 +67,19 @@ async def get_audit_stats(
     ).count()
     
     # Count by action
-    actions = db.query(AuditLog.action, db.func.count(AuditLog.id)).filter(
+    actions = db.query(AuditLog.action, func.count(AuditLog.id)).filter(
         AuditLog.created_at >= since
     ).group_by(AuditLog.action).all()
     
     # Count by resource type
-    resource_types = db.query(AuditLog.resource_type, db.func.count(AuditLog.id)).filter(
+    resource_types = db.query(AuditLog.resource_type, func.count(AuditLog.id)).filter(
         AuditLog.created_at >= since
     ).group_by(AuditLog.resource_type).all()
     
     # Count by user
-    users = db.query(AuditLog.username, db.func.count(AuditLog.id)).filter(
+    users = db.query(AuditLog.username, func.count(AuditLog.id)).filter(
         AuditLog.created_at >= since
-    ).group_by(AuditLog.username).order_by(db.func.count(AuditLog.id).desc()).limit(10).all()
+    ).group_by(AuditLog.username).order_by(func.count(AuditLog.id).desc()).limit(10).all()
     
     return {
         "total": total_logs,
