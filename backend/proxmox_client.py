@@ -404,7 +404,13 @@ class ProxmoxClient:
                     qemu_vms = []
                 
                 for vm in qemu_vms:
-                    vm_status = api.nodes(node_name).qemu(vm["vmid"]).status.current.get()
+                    try:
+                        vm_status = api.nodes(node_name).qemu(vm["vmid"]).status.current.get()
+                    except Exception as e:
+                        logger.warning(f"Failed to get status for VM {vm.get('vmid', 'unknown')} on node {node_name}: {e}")
+                        # Use basic VM info if status can't be retrieved
+                        vm_status = {"status": "unknown"}
+                    
                     all_vms.append({
                         "vmid": vm["vmid"],
                         "name": vm.get("name", f"VM {vm['vmid']}"),
