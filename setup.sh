@@ -330,8 +330,8 @@ if [ ! -f .env ]; then
     # It is NOT stored in .env for security reasons
     
     # Create .env file
-    # Note: We need to escape $ in heredoc to prevent variable expansion
-    # Docker Compose will expand ${POSTGRES_PASSWORD} when reading .env
+    # Note: POSTGRES_PASSWORD is expanded here to the actual password value
+    # DATABASE_URL is also set with the actual password to ensure it matches
     cat > .env << EOF
 # Monitorix Environment Configuration
 # Auto-generated on $(date)
@@ -340,8 +340,9 @@ if [ ! -f .env ]; then
 POSTGRES_USER=monitorix
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 POSTGRES_DB=monitorix
-# DATABASE_URL will be constructed by docker-compose.yml using the variables above
-# This ensures the password is always in sync
+# DATABASE_URL is set here to ensure it matches POSTGRES_PASSWORD
+# docker-compose.yml will also construct it, but having it here ensures consistency
+DATABASE_URL=postgresql://monitorix:${POSTGRES_PASSWORD}@postgres:5432/monitorix
 
 # Security
 SECRET_KEY=${SECRET_KEY}
