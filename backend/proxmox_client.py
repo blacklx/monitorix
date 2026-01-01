@@ -199,6 +199,28 @@ class ProxmoxClient:
                         )
                 except Exception as e:
                     error_msg = str(e)
+                    
+                    # Check for SSL certificate errors
+                    if "SSL" in error_msg or "certificate" in error_msg.lower() or "CERTIFICATE_VERIFY_FAILED" in error_msg:
+                        logger.warning(f"SSL certificate verification failed for {clean_url}")
+                        logger.warning(f"This usually means Proxmox is using a self-signed certificate.")
+                        logger.warning(f"Current verify_ssl setting: {verify_ssl}")
+                        if verify_ssl:
+                            logger.warning(f"To disable SSL verification, set PROXMOX_VERIFY_SSL=false in .env file")
+                            raise ValueError(
+                                f"SSL certificate verification failed for {clean_url}. "
+                                f"This usually means Proxmox is using a self-signed certificate. "
+                                f"To disable SSL verification (for testing only), set PROXMOX_VERIFY_SSL=false in .env file. "
+                                f"Note: Disabling SSL verification is a security risk and should only be used in trusted networks."
+                            ) from e
+                        else:
+                            # SSL verification is already disabled, but still getting SSL error
+                            raise ValueError(
+                                f"SSL connection failed for {clean_url} even with SSL verification disabled. "
+                                f"Error: {error_msg}. "
+                                f"Please check that the Proxmox node is accessible and the URL is correct."
+                            ) from e
+                    
                     # If we get IPv6 error, it's a known proxmoxer bug
                     # Try using hostname instead of IP if it's an IP address
                     if "Invalid IPv6 URL" in error_msg or "IPv6" in error_msg:
