@@ -110,17 +110,16 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        # Leave empty to use relative paths (nginx proxy)
+        # Set to full URL only if frontend runs outside Docker
+        VITE_API_URL: ${VITE_API_URL:-}
     container_name: monitorix_frontend
     ports:
       - "3000:80"
     depends_on:
       backend:
         condition: service_healthy
-    environment:
-      # Leave empty to use relative paths (nginx proxy)
-      # Set to full URL only if frontend runs outside Docker
-      REACT_APP_API_URL: ${REACT_APP_API_URL:-}
-      VITE_API_URL: ${VITE_API_URL:-${REACT_APP_API_URL:-}}
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
       interval: 30s
