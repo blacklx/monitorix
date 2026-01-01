@@ -11,6 +11,10 @@ from uptime import calculate_node_uptime
 from rate_limiter import limiter
 from cache import get, set, get_cache_key, invalidate_cache
 import asyncio
+import concurrent.futures
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/nodes", tags=["nodes"])
 
@@ -72,13 +76,24 @@ async def create_node(
             detail="Node with this name already exists"
         )
     
-    # Test connection
+    # Test connection (run in thread pool to avoid blocking event loop)
     client = ProxmoxClient(node_data.url, node_data.username, node_data.token)
-    if not client.test_connection():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to connect to Proxmox node"
-        )
+    loop = asyncio.get_event_loop()
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = loop.run_in_executor(executor, client.test_connection)
+        try:
+            connection_result = await asyncio.wait_for(future, timeout=10.0)
+            if not connection_result:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to connect to Proxmox node"
+                )
+        except asyncio.TimeoutError:
+            logger.warning(f"Connection test timeout for {node_data.url}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Connection test timed out after 10 seconds"
+            )
     
     node = Node(
         name=node_data.name,
@@ -144,45 +159,58 @@ async def bulk_create_nodes(
     created = []
     failed = []
     
-    for node_data in bulk_data.nodes:
-        try:
-            # Check if node name already exists
-            existing = db.query(Node).filter(Node.name == node_data.name).first()
-            if existing:
-                failed.append({
-                    "node": node_data.dict(),
-                    "error": "Node with this name already exists"
-                })
-                continue
-            
-            # Test connection
-            client = ProxmoxClient(node_data.url, node_data.username, node_data.token)
-            if not client.test_connection():
-                failed.append({
-                    "node": node_data.dict(),
-                    "error": "Failed to connect to Proxmox node"
-                })
-                continue
-            
-            # Create node
-            node = Node(
-                name=node_data.name,
-                url=node_data.url,
-                username=node_data.username,
-                token=node_data.token,
-                is_local=node_data.is_local,
-                tags=node_data.tags
-            )
-            db.add(node)
-            db.commit()
-            db.refresh(node)
-            
-            # Initial sync (don't wait for completion)
-            asyncio.create_task(check_node(node))
-            asyncio.create_task(sync_vms(node))
-            
-            created.append(node)
-        except Exception as e:
+    # Use a single thread pool executor for all connection tests
+    loop = asyncio.get_event_loop()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        for node_data in bulk_data.nodes:
+            try:
+                # Check if node name already exists
+                existing = db.query(Node).filter(Node.name == node_data.name).first()
+                if existing:
+                    failed.append({
+                        "node": node_data.dict(),
+                        "error": "Node with this name already exists"
+                    })
+                    continue
+                
+                # Test connection (run in thread pool to avoid blocking event loop)
+                client = ProxmoxClient(node_data.url, node_data.username, node_data.token)
+                future = loop.run_in_executor(executor, client.test_connection)
+                try:
+                    connection_result = await asyncio.wait_for(future, timeout=10.0)
+                    if not connection_result:
+                        failed.append({
+                            "node": node_data.dict(),
+                            "error": "Failed to connect to Proxmox node"
+                        })
+                        continue
+                except asyncio.TimeoutError:
+                    logger.warning(f"Connection test timeout for {node_data.url}")
+                    failed.append({
+                        "node": node_data.dict(),
+                        "error": "Connection test timed out after 10 seconds"
+                    })
+                    continue
+                
+                # Create node
+                node = Node(
+                    name=node_data.name,
+                    url=node_data.url,
+                    username=node_data.username,
+                    token=node_data.token,
+                    is_local=node_data.is_local,
+                    tags=node_data.tags
+                )
+                db.add(node)
+                db.commit()
+                db.refresh(node)
+                
+                # Initial sync (don't wait for completion)
+                asyncio.create_task(check_node(node))
+                asyncio.create_task(sync_vms(node))
+                
+                created.append(node)
+            except Exception as e:
             db.rollback()
             failed.append({
                 "node": node_data.dict(),
@@ -332,11 +360,24 @@ async def test_connection(
     """Test connection to a Proxmox node without saving it"""
     try:
         client = ProxmoxClient(node_data.url, node_data.username, node_data.token)
-        if client.test_connection():
-            return {"success": True, "message": "Connection successful"}
-        else:
-            return {"success": False, "message": "Failed to connect to Proxmox node"}
+        
+        # Run test_connection in a thread pool to avoid blocking the event loop
+        # This prevents WebSocket connections from being affected
+        loop = asyncio.get_event_loop()
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Set timeout to 10 seconds to prevent hanging
+            future = loop.run_in_executor(executor, client.test_connection)
+            try:
+                result = await asyncio.wait_for(future, timeout=10.0)
+                if result:
+                    return {"success": True, "message": "Connection successful"}
+                else:
+                    return {"success": False, "message": "Failed to connect to Proxmox node"}
+            except asyncio.TimeoutError:
+                logger.warning(f"Connection test timeout for {node_data.url}")
+                return {"success": False, "message": "Connection test timed out after 10 seconds"}
     except Exception as e:
+        logger.error(f"Error testing connection to {node_data.url}: {e}", exc_info=True)
         return {"success": False, "message": str(e)}
 
 
