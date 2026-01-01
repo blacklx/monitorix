@@ -12,8 +12,9 @@ COPY . .
 
 # Build the app
 # VITE_API_URL is set at build time - leave empty to use relative paths
-ARG VITE_API_URL=
-ENV VITE_API_URL=$VITE_API_URL
+# Explicitly unset any existing VITE_API_URL to ensure relative paths are used
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL:-}
 RUN npm run build
 
 # Production stage

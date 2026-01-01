@@ -111,9 +111,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        # Leave empty to use relative paths (nginx proxy)
+        # Explicitly set to empty string to use relative paths (nginx proxy)
         # Set to full URL only if frontend runs outside Docker
-        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_API_URL: ""
     container_name: monitorix_frontend
     ports:
       - "3000:80"
