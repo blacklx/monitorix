@@ -594,9 +594,10 @@ const VMs = () => {
                       </button>
                     </div>
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              ) : null}
+            </div>
+          )}
           </div>
         </div>
       )}
