@@ -506,8 +506,16 @@ const Nodes = () => {
                 <label>
                   <input
                     type="checkbox"
-                    checked={formData.verify_ssl}
-                    onChange={(e) => setFormData({ ...formData, verify_ssl: e.target.checked })}
+                    checked={formData.verify_ssl === true}
+                    onChange={(e) => {
+                      const newValue = e.target.checked
+                      console.log('[Nodes] verify_ssl checkbox changed:', newValue, 'old value:', formData.verify_ssl)
+                      setFormData(prev => {
+                        const updated = { ...prev, verify_ssl: newValue }
+                        console.log('[Nodes] Updated formData:', updated)
+                        return updated
+                      })
+                    }}
                   />
                   {t('nodes.verifySsl')}
                 </label>

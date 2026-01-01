@@ -132,11 +132,21 @@ class ProxmoxClient:
                 logger.debug(f"Creating ProxmoxAPI with URL: {self.url}")
                 
                 # Parse token (format: token_id=secret)
+                # Proxmox tokens can be in two formats:
+                # 1. token_id=secret (e.g., "monitorix=abc123...")
+                # 2. Just the secret (in which case we need to extract token_id from username)
                 if "=" in self.token:
                     token_id, token_secret = self.token.split("=", 1)
                 else:
-                    # Assume it's just the secret, use username as token_id
-                    token_id = self.username.split("@")[0]
+                    # Token is just the secret, extract token_id from username
+                    # Username format: user@realm!token_id (e.g., "root@pam!monitorix")
+                    # If username contains "!", use the part after "!" as token_id
+                    if "!" in self.username:
+                        # Username format: user@realm!token_id
+                        token_id = self.username.split("!")[-1]
+                    else:
+                        # Fallback: use the part before "@" as token_id
+                        token_id = self.username.split("@")[0]
                     token_secret = self.token
 
                 # Determine SSL verification setting
