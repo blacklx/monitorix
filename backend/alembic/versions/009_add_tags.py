@@ -17,13 +17,14 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Add tags column to nodes table
-    op.add_column('nodes', sa.Column('tags', postgresql.JSON(astext_type=sa.Text()), nullable=True))
+    # Add tags column to nodes table (using JSONB for better indexing support)
+    op.add_column('nodes', sa.Column('tags', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
     
-    # Add tags column to vms table
-    op.add_column('vms', sa.Column('tags', postgresql.JSON(astext_type=sa.Text()), nullable=True))
+    # Add tags column to vms table (using JSONB for better indexing support)
+    op.add_column('vms', sa.Column('tags', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
     
-    # Create index for tag filtering (using GIN index for JSON array queries)
+    # Create index for tag filtering (using GIN index for JSONB array queries)
+    # JSONB supports GIN indexes natively without needing to specify operator class
     op.create_index('ix_nodes_tags', 'nodes', ['tags'], unique=False, postgresql_using='gin')
     op.create_index('ix_vms_tags', 'vms', ['tags'], unique=False, postgresql_using='gin')
 

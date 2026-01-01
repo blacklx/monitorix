@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, JSON
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -39,7 +40,7 @@ class Node(Base):
     maintenance_mode = Column(Boolean, default=False)
     last_check = Column(DateTime, nullable=True)
     status = Column(String, default="unknown")  # online, offline, error
-    tags = Column(JSON, nullable=True)  # Array of tag strings
+    tags = Column(JSONB, nullable=True)  # Array of tag strings
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -61,7 +62,7 @@ class VM(Base):
     disk_usage = Column(Float, default=0.0)
     disk_total = Column(Integer, default=0)
     uptime = Column(Integer, default=0)
-    tags = Column(JSON, nullable=True)  # Array of tag strings
+    tags = Column(JSONB, nullable=True)  # Array of tag strings
     last_check = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
